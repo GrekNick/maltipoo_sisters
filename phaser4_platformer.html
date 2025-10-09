@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser 4 Platformer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        #game-container {
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .controls {
+            color: white;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div id="game-container"></div>
+        <div class="controls">
+            Керування: A/D або ←/→ для руху, W або ↑/Пробіл для стрибка
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+    <script>
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+            }
+
+            preload() {
+                // Phaser 3 не потребує preload для програмно створених текстур
+                // Все буде створено в create()
+            }
+
+            create() {
+                // Додаємо фон
+                this.add.rectangle(400, 300, 800, 600, 0x87ceeb);
+
+                // Створюємо текстури програмно
+                // Текстура для персонажа
+                this.add.graphics()
+                    .fillStyle(0x3498db)
+                    .fillRect(0, 0, 32, 48)
+                    .generateTexture('player', 32, 48);
+                
+                // Текстура для платформи
+                this.add.graphics()
+                    .fillStyle(0x2ecc71)
+                    .fillRect(0, 0, 400, 32)
+                    .generateTexture('ground', 400, 32);
+                
+                // Текстура для малих платформ
+                this.add.graphics()
+                    .fillStyle(0x27ae60)
+                    .fillRect(0, 0, 200, 32)
+                    .generateTexture('platform', 200, 32);
+
+                // Створюємо групу для платформ
+                this.platforms = this.physics.add.staticGroup();
+
+                // Земля
+                this.platforms.create(400, 568, 'ground').setScale(2, 1).refreshBody();
+
+                // Платформи
+                this.platforms.create(600, 400, 'platform');
+                this.platforms.create(50, 250, 'platform');
+                this.platforms.create(750, 220, 'platform');
+
+                // Створюємо гравця
+                this.player = this.physics.add.sprite(100, 450, 'player');
+
+                // Налаштування фізики гравця
+                this.player.setBounce(0.2);
+                this.player.setCollideWorldBounds(true);
+                this.player.body.setGravityY(300);
+
+                // Колізія гравця з платформами
+                this.physics.add.collider(this.player, this.platforms);
+
+                // Керування
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.wasd = this.input.keyboard.addKeys('W,S,A,D');
+                this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+                // Додаємо анімацію для руху (простий флип)
+                this.player.anims.create({
+                    key: 'left',
+                    frames: [{ key: 'player', frame: 0 }],
+                    frameRate: 10
+                });
+
+                this.player.anims.create({
+                    key: 'turn',
+                    frames: [{ key: 'player', frame: 0 }],
+                    frameRate: 20
+                });
+
+                this.player.anims.create({
+                    key: 'right',
+                    frames: [{ key: 'player', frame: 0 }],
+                    frameRate: 10
+                });
+
+                // Додаємо текст з інформацією
+                this.add.text(16, 16, 'Прототип платформера', {
+                    fontSize: '20px',
+                    fill: '#ffffff'
+                });
+
+                this.add.text(16, 50, 'Позиція: X: 0, Y: 0', {
+                    fontSize: '16px',
+                    fill: '#ffffff'
+                }).setName('positionText');
+            }
+
+            update() {
+                // Рух вліво
+                if (this.cursors.left.isDown || this.wasd.A.isDown) {
+                    this.player.setVelocityX(-160);
+                    this.player.anims.play('left', true);
+                    this.player.setFlipX(true);
+                }
+                // Рух вправо
+                else if (this.cursors.right.isDown || this.wasd.D.isDown) {
+                    this.player.setVelocityX(160);
+                    this.player.anims.play('right', true);
+                    this.player.setFlipX(false);
+                }
+                // Зупинка
+                else {
+                    this.player.setVelocityX(0);
+                    this.player.anims.play('turn');
+                }
+
+                // Стрибок
+                if ((this.cursors.up.isDown || this.wasd.W.isDown || this.spaceKey.isDown) && this.player.body.touching.down) {
+                    this.player.setVelocityY(-530);
+                }
+
+                // Оновлення позиції в тексті
+                const positionText = this.children.getByName('positionText');
+                if (positionText) {
+                    positionText.setText(`Позиція: X: ${Math.floor(this.player.x)}, Y: ${Math.floor(this.player.y)}`);
+                }
+            }
+        }
+
+        // Конфігурація гри
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },
+                    debug: false
+                }
+            },
+            scene: MainScene
+        };
+
+        // Запуск гри
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>
