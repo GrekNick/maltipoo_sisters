@@ -28,10 +28,38 @@
             margin-top: 10px;
             font-size: 14px;
         }
+
+        /* New styles for character selector */
+        .top-bar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            z-index: 10;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+        .top-bar label { color: #ecf0f1; }
+        .top-bar select {
+            background: #34495e;
+            color: #ecf0f1;
+            border: 1px solid #566573;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <div>
+    <div style="position:relative;">
+        <div class="top-bar">
+            <label for="character-select">Персонаж:</label>
+            <select id="character-select">
+                <option value="sofi" selected>Sofi</option>
+                <option value="kiwi">Kiwi</option>
+            </select>
+        </div>
         <div id="game-container"></div>
         <div class="controls">
             Керування: A/D або ←/→ для руху, W або ↑/Пробіл для стрибка

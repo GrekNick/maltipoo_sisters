@@ -6,10 +6,13 @@ class MainScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MainScene' });
         this.debugText = null;
+        this.currentCharacter = Math.random() < 0.5 ? 'kiwi' : 'sofi';
     }
 
     preload() {
-       
+        // Load both character images
+        this.load.image('sofi', sofi);
+        this.load.image('kiwi', kiwi);
     }
 
     create() {
@@ -19,30 +22,20 @@ class MainScene extends Phaser.Scene {
         // Add background
         this.add.rectangle(400, 300, 800, 600, 0x87ceeb);
 
-        // Load the sprite directly
-        const image = new Image();
-        image.onload = () => {
-            try {
-                this.textures.addImage('dog', image);
-                this.debugText.setText('Dog texture loaded successfully');
-                this.createGame();
-            } catch (error) {
-                this.debugText.setText('Error creating texture: ' + error.message);
-                console.error('Error creating texture:', error);
-            }
-        };
-        image.onerror = (error) => {
-            console.error('Error loading dog texture:', error);
-        };
-        image.src = sofi;
+        this.createGame();
+
+        // Update the UI select dropdown to match the current character
+        this.updateCharacterSelect();
+    }
+
+    updateCharacterSelect() {
+        const select = document.getElementById('character-select');
+        if (select) {
+            select.value = this.currentCharacter;
+        }
     }
 
     createGame() {
-        // Make sure the texture exists before creating the sprite
-        if (!this.textures.exists('dog')) {
-            console.error('Dog texture not loaded yet');
-            return;
-        }
         // Create platform textures
         this.add.graphics()
             .fillStyle(0x24cc71)
@@ -53,47 +46,43 @@ class MainScene extends Phaser.Scene {
             .fillStyle(0x27ae60)
             .fillRect(0, 0, 200, 32)
             .generateTexture('platform', 200, 32);
-        // Створюємо групу для платформ
-        this.platforms = this.physics.add.staticGroup();
 
-        // Create ground and platforms
+        // Create platforms
+        this.platforms = this.physics.add.staticGroup();
         this.platforms.create(400, 568, 'ground').setScale(2, 1).refreshBody();
         this.platforms.create(600, 400, 'platform');
         this.platforms.create(50, 250, 'platform');
         this.platforms.create(750, 220, 'platform');
 
-        // Create player with the dog sprite
-        this.player = this.physics.add.sprite(100, 400, 'dog');
+        // Create player with current character
+        this.player = this.physics.add.sprite(100, 400, this.currentCharacter);
         this.player.setScale(0.1);
+        this.player.body.setSize(this.player.displayWidth, this.player.displayHeight + 568, true);
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
         this.player.body.setGravityY(300);
-
-        // Add collision between player and platforms
         this.physics.add.collider(this.player, this.platforms);
 
-        // Create simple animations
+        // Simple placeholder animations (single frame)
         this.anims.create({
             key: 'left',
-            frames: [ { key: 'dog' } ],
+            frames: [{ key: this.currentCharacter }],
             frameRate: 10,
             repeat: -1
         });
-
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dog' } ],
+            frames: [{ key: this.currentCharacter }],
             frameRate: 20
         });
-
         this.anims.create({
             key: 'right',
-            frames: [ { key: 'dog' } ],
+            frames: [{ key: this.currentCharacter }],
             frameRate: 10,
             repeat: -1
         });
 
-        // Set up keyboard input
+        // Input
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = this.input.keyboard.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
@@ -103,9 +92,25 @@ class MainScene extends Phaser.Scene {
         });
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-        // Add debug text for controls
+        // Debug / info text
         this.add.text(16, 16, 'Use arrow keys or WASD to move', { fontSize: '18px', fill: '#fff' });
         this.add.text(16, 50, 'Position: X: 0, Y: 0', { fontSize: '16px', fill: '#ffffff' }).setName('positionText');
+        this.debugText.setText('Character: ' + this.currentCharacter);
+    }
+
+    switchCharacter(characterKey) {
+        if (!this.player || !this.textures.exists(characterKey)) return;
+        this.currentCharacter = characterKey;
+        this.player.setTexture(characterKey);
+        this.player.setScale(0.1);
+        // Recreate simple single-frame animations bound to new texture
+        ['left', 'turn', 'right'].forEach(key => this.anims.remove(key));
+        this.anims.create({ key: 'left', frames: [{ key: characterKey }], frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'turn', frames: [{ key: characterKey }], frameRate: 20 });
+        this.anims.create({ key: 'right', frames: [{ key: characterKey }], frameRate: 10, repeat: -1 });
+        // Update body size to match new texture (after scale)
+        this.player.body.setSize(this.player.displayWidth, this.player.displayHeight + 568, true);
+        if (this.debugText) this.debugText.setText('Character: ' + characterKey);
     }
 
     update() {
@@ -137,7 +142,7 @@ class MainScene extends Phaser.Scene {
             this.player.setVelocityY(-530);
         }
 
-        // Оновлення позиції в тексті
+        // Update position text
         const positionText = this.children.getByName('positionText');
         if (positionText) {
             positionText.setText(`Позиція: X: ${Math.floor(this.player.x)}, Y: ${Math.floor(this.player.y)}`);
@@ -145,7 +150,7 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-// Конфігурація гри
+// Game config
 const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -161,5 +166,17 @@ const config = {
     scene: MainScene
 };
 
-// Запуск гри
+// Start game
 const game = new Phaser.Game(config);
+
+// Hook up the character select DOM element if present
+window.addEventListener('DOMContentLoaded', () => {
+    const select = document.getElementById('character-select');
+    if (select) {
+        select.addEventListener('change', (e) => {
+            const key = e.target.value;
+            const scene = game.scene.keys['MainScene'];
+            if (scene) scene.switchCharacter(key);
+        });
+    }
+});
