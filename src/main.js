@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import kiwi from '../assests/kiwi_sprites/chill.png';
+import kiwi_move from '../assests/kiwi_sprites/chill_move.png';
+import kiwi_jump from '../assests/kiwi_sprites/chill_jump.png';
 import sofi from '../assests/sofi_sprites/smiley.png';
+import sofi_move from '../assests/sofi_sprites/smiley_move.png';
+import sofi_jump from '../assests/sofi_sprites/smiley_jump.png';
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -12,7 +16,11 @@ class MainScene extends Phaser.Scene {
     preload() {
         // Load both character images
         this.load.image('sofi', sofi);
+        this.load.image('sofi_move', sofi_move);
+        this.load.image('sofi_jump', sofi_jump);
         this.load.image('kiwi', kiwi);
+        this.load.image('kiwi_jump', kiwi_jump);
+        this.load.image('kiwi_move', kiwi_move);
     }
 
     create() {
@@ -63,10 +71,10 @@ class MainScene extends Phaser.Scene {
         this.player.body.setGravityY(300);
         this.physics.add.collider(this.player, this.platforms);
 
-        // Simple placeholder animations (single frame)
+        // Create animations with different sprites for each state
         this.anims.create({
             key: 'left',
-            frames: [{ key: this.currentCharacter }],
+            frames: [{ key: `${this.currentCharacter}_move` }],
             frameRate: 10,
             repeat: -1
         });
@@ -77,7 +85,13 @@ class MainScene extends Phaser.Scene {
         });
         this.anims.create({
             key: 'right',
-            frames: [{ key: this.currentCharacter }],
+            frames: [{ key: `${this.currentCharacter}_move` }],
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: 'jump',
+            frames: [{ key: `${this.currentCharacter}_jump` }],
             frameRate: 10,
             repeat: -1
         });
@@ -103,11 +117,12 @@ class MainScene extends Phaser.Scene {
         this.currentCharacter = characterKey;
         this.player.setTexture(characterKey);
         this.player.setScale(0.1);
-        // Recreate simple single-frame animations bound to new texture
-        ['left', 'turn', 'right'].forEach(key => this.anims.remove(key));
-        this.anims.create({ key: 'left', frames: [{ key: characterKey }], frameRate: 10, repeat: -1 });
+        // Recreate animations with appropriate sprites for each state
+        ['left', 'turn', 'right', 'jump'].forEach(key => this.anims.remove(key));
+        this.anims.create({ key: 'left', frames: [{ key: `${characterKey}_move` }], frameRate: 10, repeat: -1 });
         this.anims.create({ key: 'turn', frames: [{ key: characterKey }], frameRate: 20 });
-        this.anims.create({ key: 'right', frames: [{ key: characterKey }], frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'right', frames: [{ key: `${characterKey}_move` }], frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'jump', frames: [{ key: `${characterKey}_jump` }], frameRate: 10, repeat: -1 });
         // Update body size to match new texture (after scale)
         this.player.body.setSize(this.player.displayWidth, this.player.displayHeight + 568, true);
         if (this.debugText) this.debugText.setText('Character: ' + characterKey);
@@ -140,6 +155,9 @@ class MainScene extends Phaser.Scene {
         // Jump logic
         if (canJump) {
             this.player.setVelocityY(-530);
+            this.player.anims.play('jump', true);
+        } else if (!this.player.body.touching.down) {
+            this.player.anims.play('jump', true);
         }
 
         // Update position text
