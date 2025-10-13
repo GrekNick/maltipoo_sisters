@@ -34,13 +34,15 @@ npm run dev
 ```
 
 This will start the Vite development server. Open your browser and navigate to:
+
 ```
 http://localhost:5173
 ```
 
 **Controls:**
+
 - **Move Left:** A or ← (Left Arrow)
-- **Move Right:** D or → (Right Arrow)  
+- **Move Right:** D or → (Right Arrow)
 - **Jump:** W or ↑ (Up Arrow) or Space
 - **Switch Character:** Use the dropdown menu in the top-right corner
 
@@ -57,6 +59,7 @@ npm run server
 ```
 
 The server will start on port 3000. You should see:
+
 ```
 Server running on port 3000
 ```
@@ -79,6 +82,7 @@ This will start the game client on port 5173.
 4. Play together in real-time!
 
 **Multiplayer Notes:**
+
 - Character selection is automatic - the first player gets one character, the second player gets the other
 - Character switching is disabled in multiplayer mode to prevent conflicts
 - Player movements are synchronized in real-time
@@ -100,11 +104,11 @@ npm run preview
 
 ## Game Controls
 
-| Action | Keys |
-|--------|------|
-| Move Left | A or ← |
-| Move Right | D or → |
-| Jump | W, ↑, or Space |
+| Action     | Keys           |
+| ---------- | -------------- |
+| Move Left  | A or ←         |
+| Move Right | D or →         |
+| Jump       | W, ↑, or Space |
 
 ## Project Structure
 
@@ -133,6 +137,7 @@ maltipoo_sisters/
 ### Port Already in Use
 
 If you get an error that port 3000 or 5173 is already in use:
+
 - For the server: Change the PORT in `server.js`
 - For the client: Vite will automatically suggest another port
 
@@ -145,6 +150,7 @@ If you get an error that port 3000 or 5173 is already in use:
 ### Animation Issues
 
 If animations look laggy:
+
 - Check your browser's performance settings
 - Try closing other tabs/applications
 - Make sure you're using a modern browser (Chrome, Firefox, Safari, Edge)
