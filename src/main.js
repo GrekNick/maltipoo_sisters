@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { io } from 'socket.io-client';
 import kiwi from '../assests/kiwi_sprites/chill.png';
 import kiwi_move from '../assests/kiwi_sprites/chill_move.png';
 import kiwi_jump from '../assests/kiwi_sprites/chill_jump.png';
@@ -11,6 +12,11 @@ class MainScene extends Phaser.Scene {
         super({ key: 'MainScene' });
         this.debugText = null;
         this.currentCharacter = Math.random() < 0.5 ? 'kiwi' : 'sofi';
+        this.otherPlayers = {};
+        this.socket = null;
+        this.lastPlayerState = { x: 0, y: 0, flipX: false, animation: 'turn' };
+        this.updateInterval = 50; // Send updates every 50ms instead of every frame
+        this.lastUpdateTime = 0;
     }
 
     preload() {
@@ -34,6 +40,121 @@ class MainScene extends Phaser.Scene {
 
         // Update the UI select dropdown to match the current character
         this.updateCharacterSelect();
+
+        // Initialize Socket.IO connection
+        this.initializeSocket();
+    }
+
+    initializeSocket() {
+        // Connect to the server (change this URL if your server is on a different host)
+        this.socket = io('http://localhost:3000');
+
+        // Listen for current players
+        this.socket.on('currentPlayers', (players) => {
+            Object.keys(players).forEach((id) => {
+                if (id !== this.socket.id) {
+                    this.addOtherPlayer(players[id]);
+                }
+            });
+        });
+
+        // Listen for new players
+        this.socket.on('newPlayer', (playerInfo) => {
+            this.addOtherPlayer(playerInfo);
+        });
+
+        // Listen for player movement
+        this.socket.on('playerMoved', (playerInfo) => {
+            if (this.otherPlayers[playerInfo.id]) {
+                const otherPlayer = this.otherPlayers[playerInfo.id];
+                otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+                otherPlayer.setFlipX(playerInfo.flipX);
+                if (playerInfo.animation && otherPlayer.lastAnimation !== playerInfo.animation) {
+                    otherPlayer.anims.play(playerInfo.id + '_' + playerInfo.animation, true);
+                    otherPlayer.lastAnimation = playerInfo.animation;
+                }
+            }
+        });
+
+        // Listen for character changes
+        this.socket.on('playerCharacterChanged', (data) => {
+            if (this.otherPlayers[data.id]) {
+                const otherPlayer = this.otherPlayers[data.id];
+                const oldPos = { x: otherPlayer.x, y: otherPlayer.y };
+                const oldFlip = otherPlayer.flipX;
+                
+                // Remove old sprite
+                otherPlayer.destroy();
+                
+                // Create new sprite with new character
+                const newPlayer = this.add.sprite(oldPos.x, oldPos.y, data.character);
+                newPlayer.setScale(0.1);
+                newPlayer.setFlipX(oldFlip);
+                newPlayer.setTint(0x00ff00); // Green tint for other players
+                
+                // Create animations for this player
+                this.createAnimationsForPlayer(data.id, data.character);
+                
+                this.otherPlayers[data.id] = newPlayer;
+                this.otherPlayers[data.id].lastAnimation = '';
+            }
+        });
+
+        // Listen for player disconnections
+        this.socket.on('playerDisconnected', (playerId) => {
+            if (this.otherPlayers[playerId]) {
+                this.otherPlayers[playerId].destroy();
+                delete this.otherPlayers[playerId];
+                // Remove animations for this player
+                ['left', 'turn', 'right', 'jump'].forEach(anim => {
+                    const key = playerId + '_' + anim;
+                    if (this.anims.exists(key)) {
+                        this.anims.remove(key);
+                    }
+                });
+            }
+        });
+    }
+
+    addOtherPlayer(playerInfo) {
+        // Use add.sprite instead of physics.add.sprite - other players don't need physics
+        const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, playerInfo.character);
+        otherPlayer.setScale(0.1);
+        otherPlayer.setTint(0x00ff00); // Green tint to distinguish from local player
+        this.otherPlayers[playerInfo.id] = otherPlayer;
+        
+        // Store last animation state to prevent blinking
+        this.otherPlayers[playerInfo.id].lastAnimation = '';
+        
+        // Create animations for this player
+        this.createAnimationsForPlayer(playerInfo.id, playerInfo.character);
+    }
+
+    createAnimationsForPlayer(playerId, character) {
+        // Create unique animations for each other player
+        this.anims.create({
+            key: playerId + '_left',
+            frames: [{ key: `${character}_move` }],
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: playerId + '_turn',
+            frames: [{ key: character }],
+            frameRate: 20
+        });
+        this.anims.create({
+            key: playerId + '_right',
+            frames: [{ key: `${character}_move` }],
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: playerId + '_jump',
+            frames: [{ key: `${character}_jump` }],
+            frameRate: 10,
+            repeat: -1
+        });
     }
 
     updateCharacterSelect() {
@@ -126,9 +247,14 @@ class MainScene extends Phaser.Scene {
         // Update body size to match new texture (after scale)
         this.player.body.setSize(this.player.displayWidth, this.player.displayHeight + 568, true);
         if (this.debugText) this.debugText.setText('Character: ' + characterKey);
+        
+        // Notify server about character change
+        if (this.socket) {
+            this.socket.emit('characterChange', { character: characterKey });
+        }
     }
 
-    update() {
+    update(time) {
         if (!this.cursors || !this.wasd) return;
 
         // Handle movement
@@ -136,16 +262,20 @@ class MainScene extends Phaser.Scene {
         const moveRight = this.cursors.right?.isDown || this.wasd.D?.isDown;
         const canJump = this.player.body.touching.down && (this.cursors.up?.isDown || this.wasd.W?.isDown || this.spaceKey?.isDown);
 
+        let currentAnimation = 'turn';
+
         // Movement logic
         if (moveLeft) {
             this.player.setVelocityX(-160);
             this.player.anims.play('left', true);
             this.player.setFlipX(true);
+            currentAnimation = 'left';
         }
         else if (moveRight) {
             this.player.setVelocityX(160);
             this.player.anims.play('right', true);
             this.player.setFlipX(false);
+            currentAnimation = 'right';
         }
         else {
             this.player.setVelocityX(0);
@@ -156,8 +286,31 @@ class MainScene extends Phaser.Scene {
         if (canJump) {
             this.player.setVelocityY(-530);
             this.player.anims.play('jump', true);
+            currentAnimation = 'jump';
         } else if (!this.player.body.touching.down) {
             this.player.anims.play('jump', true);
+            currentAnimation = 'jump';
+        }
+
+        // Only send updates if enough time has passed and state has changed
+        if (this.socket && time > this.lastUpdateTime + this.updateInterval) {
+            const currentState = {
+                x: Math.round(this.player.x),
+                y: Math.round(this.player.y),
+                flipX: this.player.flipX,
+                animation: currentAnimation
+            };
+
+            // Check if state has actually changed
+            if (currentState.x !== this.lastPlayerState.x ||
+                currentState.y !== this.lastPlayerState.y ||
+                currentState.flipX !== this.lastPlayerState.flipX ||
+                currentState.animation !== this.lastPlayerState.animation) {
+                
+                this.socket.emit('playerMovement', currentState);
+                this.lastPlayerState = currentState;
+                this.lastUpdateTime = time;
+            }
         }
 
         // Update position text
