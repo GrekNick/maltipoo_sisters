@@ -15,7 +15,7 @@ class MainScene extends Phaser.Scene {
         this.otherPlayers = {};
         this.socket = null;
         this.lastPlayerState = { x: 0, y: 0, flipX: false, animation: 'turn' };
-        this.updateInterval = 50; // Send updates every 50ms instead of every frame
+        this.updateInterval = 1; 
         this.lastUpdateTime = 0;
         this.gameCreated = false; // Track if game has been created
     }
