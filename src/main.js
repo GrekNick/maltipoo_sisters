@@ -1,32 +1,30 @@
 import Phaser from 'phaser';
-import { io } from 'socket.io-client';
-import kiwi from '../assests/kiwi_sprites/chill.png';
-// import man from '../assests/kiwi_sprites/man.png';
-import kiwi_move from '../assests/kiwi_sprites/chill_move.png';
-import kiwi_jump from '../assests/kiwi_sprites/chill_jump.png';
-import sofi from '../assests/sofi_sprites/smiley.png';
-import sofi_move from '../assests/sofi_sprites/smiley_move.png';
-import sofi_jump from '../assests/sofi_sprites/smiley_jump.png';
 import { Player } from './Player.js';
 import { KeyboardTracker } from './KeyboardTracker.js';
+import { NetworkManager, SocketEvents } from './NetworkManager.js';
 import charactersConfig from './charactersConfig.json';
 
 const CharacterNames = Object.keys(charactersConfig);
 
+const USE_MULTIPLAYER = true;
+/** Send movement at ~60 Hz for smooth sync (1000/60 ≈ 16.67ms). */
+const MOVEMENT_UPDATE_INTERVAL_MS = 1000 / 60;
+const CHARACTER_ASSIGN_FALLBACK_MS = 2000;
+/** Lerp factor per frame for remote player position. */
+const REMOTE_PLAYER_LERP = 0.28;
+
 class MainScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MainScene' });
-        // this.debugText = null;
-        // this.currentCharacter = Math.random() < 0.5 ? 'kiwi' : 'sofi';
-        this.currentCharacter = CharacterNames[Math.floor(Math.random() * CharacterNames.length)];
-        // this.currentCharacter = null; // Don't assign random character initially
-        // this.otherPlayers = {};
-        // this.socket = null;
-        // this.lastPlayerState = { x: 0, y: 0, flipX: false, animation: 'turn' };
-        // this.updateInterval = 1; 
-        // this.lastUpdateTime = 0;
-        this.gameCreated = false; // Track if game has been created
-        // this.charactersConfig = JSON.parse(charactersConfig);
+        this.gameCreated = false;
+        if (USE_MULTIPLAYER) {
+            this.currentCharacter = null;
+            this.otherPlayers = {};
+            this.lastPlayerState = { x: 0, y: 0, flipX: false, animation: 'idle' };
+            this.lastUpdateTime = 0;
+        } else {
+            this.currentCharacter = CharacterNames[Math.floor(Math.random() * CharacterNames.length)];
+        }
     }
 
     preload() {
@@ -53,27 +51,159 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        // Add debug text first so it's always visible
-        // this.debugText = this.add.text(16, 50, 'Waiting for server...', { fontSize: '18px', fill: '#fff' });
-        
-        // Initialize keyboard tracker after scene is created
         this.keyboardTracker = new KeyboardTracker(this);
-        
-        // Add background
-       this.createBackground();
-
-        // Create platforms first (they don't depend on character)
+        this.createBackground();
         this.createPlatforms();
-        this.createPlayer();
-
-        this.physics.add.collider(this.player, this.platforms);
-        
-        // Create character selection UI
         this.createCharacterSelectUI();
-        this.gameCreated = true;
 
-        // Initialize Socket.IO connection - wait for character assignment before creating player
-        // this.initializeSocket();
+        if (USE_MULTIPLAYER) {
+            this.initializeSocket();
+        } else {
+            this.createPlayer();
+            this.physics.add.collider(this.player, this.platforms);
+            this.gameCreated = true;
+        }
+    }
+
+    initializeSocket() {
+        this.networkManager = new NetworkManager();
+        const fallbackTimeout = setTimeout(() => {
+            if (!this.currentCharacter) {
+                this.currentCharacter = CharacterNames[Math.floor(Math.random() * CharacterNames.length)];
+                this.createPlayer();
+                this.physics.add.collider(this.player, this.platforms);
+                this.gameCreated = true;
+                this.updateCharacterSelect();
+            }
+        }, CHARACTER_ASSIGN_FALLBACK_MS);
+
+        this.networkManager.on(SocketEvents.CONNECT_ERROR, (err) => {
+            console.warn('Socket connect_error:', err?.message ?? err);
+        });
+        this.networkManager.on(SocketEvents.CONNECT, () => {
+            console.log('Connected to server');
+        });
+        this.networkManager.on(SocketEvents.CHARACTER_ASSIGNED, (data) => {
+            clearTimeout(fallbackTimeout);
+            if (!this.currentCharacter) {
+                this.currentCharacter = data.character;
+                this.createPlayer();
+                this.physics.add.collider(this.player, this.platforms);
+                this.gameCreated = true;
+                this.updateCharacterSelect();
+                this.checkMultiplayerMode();
+            }
+        });
+        this.networkManager.on(SocketEvents.CURRENT_PLAYERS, (players) => {
+            Object.keys(players).forEach((id) => {
+                if (id !== this.networkManager.id) {
+                    this.addOtherPlayer(players[id]);
+                }
+            });
+            this.checkMultiplayerMode();
+        });
+        this.networkManager.on(SocketEvents.NEW_PLAYER, (playerInfo) => {
+            this.addOtherPlayer(playerInfo);
+            this.checkMultiplayerMode();
+        });
+        this.networkManager.on(SocketEvents.PLAYER_MOVED, (playerInfo) => {
+            const other = this.otherPlayers[playerInfo.id];
+            if (!other) return;
+            other.targetX = playerInfo.x;
+            other.targetY = playerInfo.y;
+            other.setFlipX(!!playerInfo.flipX);
+            const anim = playerInfo.animation === 'turn' ? 'idle' : (playerInfo.animation || 'idle');
+            if (other.lastAnimation !== anim) {
+                const key = `${playerInfo.id}_${anim}`;
+                if (this.anims.exists(key)) {
+                    other.play(key, true);
+                }
+                other.lastAnimation = anim;
+            }
+        });
+        this.networkManager.on(SocketEvents.CHARACTER_CHANGE_REJECTED, (data) => {
+            console.warn(data.message);
+            this.currentCharacter = data.assignedCharacter;
+            this.updateCharacterSelect();
+        });
+        this.networkManager.on(SocketEvents.PLAYER_CHARACTER_CHANGED, (data) => {
+            const other = this.otherPlayers[data.id];
+            if (!other) return;
+            const x = other.x;
+            const y = other.y;
+            const flipX = other.flipX;
+            other.destroy();
+            const config = charactersConfig[data.character];
+            if (!config) return;
+            const sprite = this.add.sprite(x, y, config.spriteKey);
+            sprite.setScale(config.scale);
+            sprite.setFlipX(flipX);
+            sprite.targetX = x;
+            sprite.targetY = y;
+            sprite.lastAnimation = '';
+            this.otherPlayers[data.id] = sprite;
+            this.createAnimationsForPlayer(data.id, data.character);
+        });
+        this.networkManager.on(SocketEvents.PLAYER_DISCONNECTED, (playerId) => {
+            const other = this.otherPlayers[playerId];
+            if (other) {
+                other.destroy();
+                delete this.otherPlayers[playerId];
+                ['idle', 'walk', 'jump'].forEach((anim) => {
+                    const key = `${playerId}_${anim}`;
+                    if (this.anims.exists(key)) this.anims.remove(key);
+                });
+            }
+            this.checkMultiplayerMode();
+        });
+
+        this.networkManager.connect();
+    }
+
+    checkMultiplayerMode() {
+        const count = Object.keys(this.otherPlayers).length + (this.player ? 1 : 0);
+        const select = document.getElementById('character-select');
+        if (select) {
+            select.disabled = count > 1;
+            select.title = count > 1 ? 'Character selection disabled in multiplayer' : 'Select your character';
+        }
+    }
+
+    addOtherPlayer(playerInfo) {
+        const config = charactersConfig[playerInfo.character];
+        if (!config) return;
+        const x = playerInfo.x ?? 100;
+        const y = playerInfo.y ?? 400;
+        const sprite = this.add.sprite(x, y, config.spriteKey);
+        sprite.setScale(config.scale);
+        sprite.setFlipX(!!playerInfo.flipX);
+        sprite.targetX = x;
+        sprite.targetY = y;
+        sprite.lastAnimation = '';
+        this.otherPlayers[playerInfo.id] = sprite;
+        this.createAnimationsForPlayer(playerInfo.id, playerInfo.character);
+    }
+
+    createAnimationsForPlayer(playerId, characterKey) {
+        const config = charactersConfig[characterKey];
+        if (!config?.animations) return;
+        /** Match display refresh for 60 fps feel. */
+        const frameRate = 60;
+        Object.entries(config.animations).forEach(([animKey, frames]) => {
+            const key = `${playerId}_${animKey}`;
+            if (this.anims.exists(key)) return;
+            this.anims.create({
+                key,
+                frames: this.anims.generateFrameNumbers(config.spriteKey, frames),
+                frameRate,
+                repeat: animKey === 'idle' ? -1 : 0
+            });
+        });
+    }
+
+    updateCharacterSelect() {
+        const select = document.getElementById('character-select');
+        if (select && this.currentCharacter) select.value = this.currentCharacter;
     }
 
     createBackground() {
@@ -117,11 +247,19 @@ class MainScene extends Phaser.Scene {
             const option = document.createElement('option');
             option.value = characterKey;
             option.textContent = charactersConfig[characterKey].name;
-            if (characterKey === this.currentCharacter) {
+            if (this.currentCharacter && characterKey === this.currentCharacter) {
                 option.selected = true;
             }
             select.appendChild(option);
         });
+        if (USE_MULTIPLAYER && !this.currentCharacter) {
+            const waitOpt = document.createElement('option');
+            waitOpt.value = '';
+            waitOpt.textContent = '— очікування сервера —';
+            waitOpt.disabled = true;
+            select.insertBefore(waitOpt, select.firstChild);
+            select.value = '';
+        }
 
         // Add event listener for character change
         select.addEventListener('change', (e) => {
@@ -210,199 +348,6 @@ class MainScene extends Phaser.Scene {
         // this.gameCreated = true;
     }
 
-    // initializeSocket() {
-    //     // Connect to the server (change this URL if your server is on a different host)
-    //     this.socket = io('http://localhost:3000', {
-    //         reconnection: true,
-    //         reconnectionDelay: 1000,
-    //         reconnectionAttempts: 3
-    //     });
-
-    //     // Fallback: If no character assigned within 2 seconds, assign random character
-    //     const fallbackTimeout = setTimeout(() => {
-    //         if (!this.currentCharacter) {
-    //             console.log('Server not responding, using fallback character assignment');
-    //             this.currentCharacter = Math.random() < 0.5 ? 'kiwi' : 'sofi';
-    //             this.createPlayer();
-    //             this.updateCharacterSelect();
-    //         }
-    //     }, 2000);
-
-    //     // Listen for connection errors
-    //     this.socket.on('connect_error', (error) => {
-    //         console.log('Connection error:', error.message);
-    //     });
-
-    //     this.socket.on('connect', () => {
-    //         console.log('Connected to server');
-    //     });
-
-    //     // Listen for character assignment from server
-    //     this.socket.on('characterAssigned', (data) => {
-    //         clearTimeout(fallbackTimeout);
-    //         console.log('Server assigned character:', data.character);
-    //         this.currentCharacter = data.character;
-            
-    //         // Create the player now that we have the character assignment
-    //         this.createPlayer();
-            
-    //         // Update the UI
-    //         this.updateCharacterSelect();
-            
-    //         // Check if we should disable character selection
-    //         this.checkMultiplayerMode();
-    //     });
-
-    //     // Listen for current players
-    //     this.socket.on('currentPlayers', (players) => {
-    //         Object.keys(players).forEach((id) => {
-    //             if (id !== this.socket.id) {
-    //                 this.addOtherPlayer(players[id]);
-    //             }
-    //         });
-            
-    //         // Check if we're in multiplayer mode
-    //         this.checkMultiplayerMode();
-    //     });
-
-    //     // Listen for new players
-    //     this.socket.on('newPlayer', (playerInfo) => {
-    //         this.addOtherPlayer(playerInfo);
-            
-    //         // Disable character selection when another player joins
-    //         this.checkMultiplayerMode();
-    //     });
-
-    //     // Listen for player movement
-    //     this.socket.on('playerMoved', (playerInfo) => {
-    //         if (this.otherPlayers[playerInfo.id]) {
-    //             const otherPlayer = this.otherPlayers[playerInfo.id];
-    //             otherPlayer.setPosition(playerInfo.x, playerInfo.y);
-    //             otherPlayer.setFlipX(playerInfo.flipX);
-    //             if (playerInfo.animation && otherPlayer.lastAnimation !== playerInfo.animation) {
-    //                 otherPlayer.anims.play(playerInfo.id + '_' + playerInfo.animation, true);
-    //                 otherPlayer.lastAnimation = playerInfo.animation;
-    //             }
-    //         }
-    //     });
-
-    //     // Listen for character change rejection
-    //     this.socket.on('characterChangeRejected', (data) => {
-    //         console.log(data.message);
-    //         alert('Cannot change character in multiplayer mode!');
-            
-    //         // Revert to assigned character
-    //         this.currentCharacter = data.assignedCharacter;
-    //         this.updateCharacterSelect();
-    //     });
-
-    //     // Listen for character changes
-    //     this.socket.on('playerCharacterChanged', (data) => {
-    //         if (this.otherPlayers[data.id]) {
-    //             const otherPlayer = this.otherPlayers[data.id];
-    //             const oldPos = { x: otherPlayer.x, y: otherPlayer.y };
-    //             const oldFlip = otherPlayer.flipX;
-                
-    //             // Remove old sprite
-    //             otherPlayer.destroy();
-                
-    //             // Create new sprite with new character - no green tint
-    //             const newPlayer = this.add.sprite(oldPos.x, oldPos.y, data.character);
-    //             newPlayer.setScale(0.1);
-    //             newPlayer.setFlipX(oldFlip);
-                
-    //             // Create animations for this player
-    //             this.createAnimationsForPlayer(data.id, data.character);
-                
-    //             this.otherPlayers[data.id] = newPlayer;
-    //             this.otherPlayers[data.id].lastAnimation = '';
-    //         }
-    //     });
-
-    //     // Listen for player disconnections
-    //     this.socket.on('playerDisconnected', (playerId) => {
-    //         if (this.otherPlayers[playerId]) {
-    //             this.otherPlayers[playerId].destroy();
-    //             delete this.otherPlayers[playerId];
-    //             // Remove animations for this player
-    //             ['left', 'turn', 'right', 'jump'].forEach(anim => {
-    //                 const key = playerId + '_' + anim;
-    //                 if (this.anims.exists(key)) {
-    //                     this.anims.remove(key);
-    //                 }
-    //             });
-    //         }
-            
-    //         // Re-enable character selection if we're back to single player
-    //         this.checkMultiplayerMode();
-    //     });
-    // }
-
-    // checkMultiplayerMode() {
-    //     const playerCount = Object.keys(this.otherPlayers).length + 1; // +1 for local player
-    //     const select = document.getElementById('character-select');
-        
-    //     if (select) {
-    //         if (playerCount > 1) {
-    //             // Multiplayer mode - disable character selection
-    //             select.disabled = true;
-    //             select.title = 'Character selection disabled in multiplayer mode';
-    //         } else {
-    //             // Single player mode - enable character selection
-    //             select.disabled = false;
-    //             select.title = 'Select your character';
-    //         }
-    //     }
-    // }
-
-    // addOtherPlayer(playerInfo) {
-    //     // Use add.sprite instead of physics.add.sprite - other players don't need physics
-    //     const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, playerInfo.character);
-    //     otherPlayer.setScale(0.1);
-    //     // Removed green tint - other players now appear in their natural colors
-    //     this.otherPlayers[playerInfo.id] = otherPlayer;
-        
-    //     // Store last animation state to prevent blinking
-    //     this.otherPlayers[playerInfo.id].lastAnimation = '';
-        
-    //     // Create animations for this player
-    //     this.createAnimationsForPlayer(playerInfo.id, playerInfo.character);
-    // }
-
-    // createAnimationsForPlayer(playerId, character) {
-    //     // Create unique animations for each other player
-    //     this.anims.create({
-    //         key: playerId + '_left',
-    //         frames: [{ key: `${character}_move` }],
-    //         frameRate: 10,
-    //         repeat: -1
-    //     });
-    //     this.anims.create({
-    //         key: playerId + '_turn',
-    //         frames: [{ key: character }],
-    //         frameRate: 20
-    //     });
-    //     this.anims.create({
-    //         key: playerId + '_right',
-    //         frames: [{ key: `${character}_move` }],
-    //         frameRate: 10,
-    //         repeat: -1
-    //     });
-    //     this.anims.create({
-    //         key: playerId + '_jump',
-    //         frames: [{ key: `${character}_jump` }],
-    //         frameRate: 10,
-    //         repeat: -1
-    //     });
-    // }
-
-    // updateCharacterSelect() {
-    //     const select = document.getElementById('character-select');
-    //     if (select) {
-    //         select.value = this.currentCharacter;
-    //     }
-    // }
-
     switchCharacter(characterKey) {
         if (!this.player || !charactersConfig[characterKey]) return;
         
@@ -427,15 +372,13 @@ class MainScene extends Phaser.Scene {
         
         // Re-add physics collider
         this.physics.add.collider(this.player, this.platforms);
-        
-        // Notify server about character change if needed
-        // if (this.socket) {
-        //     this.socket.emit('characterChange', { character: characterKey });
-        // }
+        if (USE_MULTIPLAYER && this.networkManager?.isConnected) {
+            this.networkManager.emit(SocketEvents.CHARACTER_CHANGE, { character: characterKey });
+        }
     }
 
     update(time) {
-        // Horizontal movement and jump are independent (can do both at once)
+        if (!this.player) return;
         if (this.keyboardTracker.moveLeft) {
             this.player.moveLeft();
         } else if (this.keyboardTracker.moveRight) {
@@ -446,36 +389,30 @@ class MainScene extends Phaser.Scene {
         if (this.keyboardTracker.jump) {
             this.player.jump();
         }
-        
-  
-        // this.player.idle();
-
-        // Only send updates if enough time has passed and state has changed
-        // if (this.socket && time > this.lastUpdateTime + this.updateInterval) {
-        //     const currentState = {
-        //         x: Math.round(this.player.x),
-        //         y: Math.round(this.player.y),
-        //         flipX: this.player.flipX,
-        //         animation: currentAnimation
-        //     };
-
-        //     // Check if state has actually changed
-        //     if (currentState.x !== this.lastPlayerState.x ||
-        //         currentState.y !== this.lastPlayerState.y ||
-        //         currentState.flipX !== this.lastPlayerState.flipX ||
-        //         currentState.animation !== this.lastPlayerState.animation) {
-                
-        //         this.socket.emit('playerMovement', currentState);
-        //         this.lastPlayerState = currentState;
-        //         this.lastUpdateTime = time;
-        //     }
-        // }
-
-        // Update position text
-        // const positionText = this.children.getByName('positionText');
-        // if (positionText) {
-            // positionText.setText(`Позиція: X: ${Math.floor(this.player.x)}, Y: ${Math.floor(this.player.y)}`);
-        // }
+        if (USE_MULTIPLAYER && this.networkManager?.isConnected && time > this.lastUpdateTime + MOVEMENT_UPDATE_INTERVAL_MS) {
+            const animation = this.player.body.velocity.y !== 0 ? 'jump' : (this.player.body.velocity.x !== 0 ? 'walk' : 'idle');
+            const state = {
+                x: Math.round(this.player.x),
+                y: Math.round(this.player.y),
+                flipX: this.player.flipX,
+                animation
+            };
+            if (state.x !== this.lastPlayerState.x || state.y !== this.lastPlayerState.y ||
+                state.flipX !== this.lastPlayerState.flipX || state.animation !== this.lastPlayerState.animation) {
+                this.networkManager.emit(SocketEvents.PLAYER_MOVEMENT, state);
+                this.lastPlayerState = state;
+                this.lastUpdateTime = time;
+            }
+        }
+        // Smooth interpolation for remote players (avoids 50ms position snaps)
+        if (USE_MULTIPLAYER && this.otherPlayers) {
+            Object.values(this.otherPlayers).forEach((sprite) => {
+                if (sprite.targetX != null && sprite.targetY != null) {
+                    sprite.x = Phaser.Math.Linear(sprite.x, sprite.targetX, REMOTE_PLAYER_LERP);
+                    sprite.y = Phaser.Math.Linear(sprite.y, sprite.targetY, REMOTE_PLAYER_LERP);
+                }
+            });
+        }
     }       
 
     // shutdown() {
