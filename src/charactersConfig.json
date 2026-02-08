@@ -1,0 +1,37 @@
+{
+  "man": {
+    "id": "man",
+    "name": "Man",
+    "spriteKey": "man_spritesheet",
+    "animations": {"walk": {"start": 0, "end": 3}, "jump": {"start": 4, "end": 4}, "idle": {"start": 0, "end": 0}},
+    "physics": {"speed": 200, "jumpVelocity": -500},
+    "startingPosition": {"x": 100, "y": 400},
+    "spritesheetPath": "./assests/test_man_sprites/man.png",
+    "spritesheetConfig": {"frameWidth": 120, "frameHeight": 200},
+    "scale": 0.6
+  },
+  "kiwi": {
+    "id": "kiwi",
+    "name": "Kiwi",
+    "spriteKey": "kiwi_spritesheet",
+    "animations": {"walk": {"start": 0, "end": 0}, "jump": {"start": 0, "end": 0}, "idle": {"start": 0, "end": 0}},
+    "physics": {"speed": 600, "jumpVelocity": -600},
+    "startingPosition": {"x": 200, "y": 400},
+    "spritesheetPath": "./assests/kiwi_sprites/chill.png",
+    "spritesheetConfig": {"frameWidth": 1024, "frameHeight": 1024},
+    "scale": 0.1,
+    "spriteFacesRight": true
+  },
+  "sofi": {
+    "id": "sofi",
+    "name": "Sofi",
+    "spriteKey": "sofi_spritesheet",
+    "animations": {"walk": {"start": 0, "end": 0}, "jump": {"start": 0, "end": 0}, "idle": {"start": 0, "end": 0}},
+    "physics": {"speed": 150, "jumpVelocity": -600},
+    "startingPosition": {"x": 300, "y": 400},
+    "spritesheetPath": "./assests/sofi_sprites/smiley.png",
+    "spritesheetConfig": {"frameWidth": 1000, "frameHeight": 1000},
+    "scale": 0.1,
+    "spriteFacesRight": true
+  }
+}
