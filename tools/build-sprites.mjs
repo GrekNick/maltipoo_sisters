@@ -1,0 +1,228 @@
+#!/usr/bin/env node
+/**
+ * Builds the character spritesheets the game loads from the raw art in art/raw/.
+ *
+ *   npm run build:sprites
+ *
+ * The raw images are ~1024px "pixel-art style" drawings, but each pose was drawn at a different
+ * scale (Kiwi's jump pose is ~26% bigger than her idle pose), so swapping textures made the dog
+ * visibly grow and shrink. For every frame this script:
+ *
+ *   1. finds the dog (pixels with alpha >= ALPHA_CUTOFF) and drops the faint background haze
+ *   2. measures the size of one drawn "pixel" (the block grid) via autocorrelation of edges
+ *   3. rescales so that every frame uses the same ART_PIXEL size
+ *   4. places all frames in equal-size cells, centered, with the feet on the bottom edge
+ *
+ * Output (commit it — the game and CI don't run this script):
+ *   assets/characters/<character>.png   one horizontal strip per character, frame order = STATES
+ *   assets/characters/sprites.json      frame size + per-frame opaque bounds (used for hitboxes)
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { PNG } from 'pngjs';
+
+const RAW_DIR = 'art/raw';
+const OUT_DIR = 'assets/characters';
+
+const ART_PIXEL = 4;       // output texture px per drawn "pixel"; the game shows them at 0.5 scale
+const ALPHA_CUTOFF = 128;  // alpha at or above this is part of the dog, below is haze
+const PADDING = 4;         // empty px around the widest/tallest frame (not below the feet)
+
+const STATES = ['idle', 'move', 'jump'];
+
+const SOURCES = {
+    kiwi: {
+        idle: 'kiwi_sprites/chill.png',
+        move: 'kiwi_sprites/chill_move.png',
+        jump: 'kiwi_sprites/chill_jump.png',
+    },
+    sofi: {
+        idle: 'sofi_sprites/smiley.png',
+        move: 'sofi_sprites/smiley_move.png',
+        jump: 'sofi_sprites/smiley_jump.png',
+    },
+};
+
+function readPng(file) {
+    return PNG.sync.read(fs.readFileSync(file));
+}
+
+function blank(width, height) {
+    return new PNG({ width, height }); // zero-filled = fully transparent
+}
+
+function alphaAt(img, x, y) {
+    return img.data[(y * img.width + x) * 4 + 3];
+}
+
+// Hard alpha cutoff: the AI art has a translucent halo that would show as a faint box.
+function dropHaze(img) {
+    for (let i = 3; i < img.data.length; i += 4) {
+        img.data[i] = img.data[i] >= ALPHA_CUTOFF ? 255 : 0;
+    }
+}
+
+function opaqueBounds(img) {
+    let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
+    for (let y = 0; y < img.height; y++) {
+        for (let x = 0; x < img.width; x++) {
+            if (alphaAt(img, x, y) === 0) continue;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+        }
+    }
+    if (maxX < 0) throw new Error('image is fully transparent');
+    return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+/**
+ * Size (in source px) of one drawn "pixel". Edges between blocks repeat with that period, so the
+ * autocorrelation of the edge-strength profile peaks at multiples of it. The first few harmonics
+ * are combined for sub-pixel precision; higher ones drift on imperfect AI grids.
+ */
+function measureArtPixel(img) {
+    const { width: W, height: H, data } = img;
+    const lum = (x, y) => {
+        const i = (y * W + x) * 4;
+        return data[i + 3] === 0 ? -1 : 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
+    };
+    const edgesX = new Float64Array(W);
+    const edgesY = new Float64Array(H);
+    for (let y = 1; y < H; y++) {
+        for (let x = 1; x < W; x++) {
+            const c = lum(x, y);
+            if (c < 0) continue;
+            const left = lum(x - 1, y);
+            const up = lum(x, y - 1);
+            if (left >= 0) edgesX[x] += Math.abs(c - left);
+            if (up >= 0) edgesY[y] += Math.abs(c - up);
+        }
+    }
+    const MAX_LAG = 120;
+    const autocorrelation = (p) => {
+        const mean = p.reduce((s, v) => s + v, 0) / p.length;
+        const r = new Float64Array(MAX_LAG + 2);
+        for (let lag = 1; lag <= MAX_LAG + 1; lag++) {
+            let s = 0;
+            for (let i = 0; i + lag < p.length; i++) s += (p[i] - mean) * (p[i + lag] - mean);
+            r[lag] = s;
+        }
+        return r;
+    };
+    const rx = autocorrelation(edgesX);
+    const ry = autocorrelation(edgesY);
+    const r = rx.map((v, i) => v + ry[i]);
+
+    let coarse = 8;
+    for (let lag = 8; lag <= 40; lag++) if (r[lag] > r[coarse]) coarse = lag;
+
+    let num = 0, den = 0;
+    for (let k = 1; k <= 4 && k * coarse < MAX_LAG; k++) {
+        const center = k * coarse;
+        let best = center;
+        for (let lag = center - k; lag <= center + k; lag++) if (r[lag] > r[best]) best = lag;
+        // parabolic interpolation around the discrete peak
+        const [y0, y1, y2] = [r[best - 1], r[best], r[best + 1]];
+        const denom = y0 - 2 * y1 + y2;
+        const peak = best + (denom === 0 ? 0 : (y0 - y2) / (2 * denom));
+        num += peak * k;
+        den += k * k;
+    }
+    return num / den;
+}
+
+function crop(img, { x, y, width, height }) {
+    const out = blank(width, height);
+    PNG.bitblt(img, out, x, y, width, height, 0, 0);
+    return out;
+}
+
+// Area-average (box filter) resize with premultiplied alpha: no aliasing on big downscales and no
+// dark/white fringes from the colour of transparent pixels.
+function resizeArea(img, scale) {
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const sx = img.width / w;
+    const sy = img.height / h;
+    const out = blank(w, h);
+    for (let oy = 0; oy < h; oy++) {
+        const y0 = oy * sy, y1 = y0 + sy;
+        for (let ox = 0; ox < w; ox++) {
+            const x0 = ox * sx, x1 = x0 + sx;
+            let r = 0, g = 0, b = 0, a = 0, total = 0;
+            for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
+                const wy = Math.min(y + 1, y1) - Math.max(y, y0);
+                for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
+                    const weight = (Math.min(x + 1, x1) - Math.max(x, x0)) * wy;
+                    const i = (y * img.width + x) * 4;
+                    const alpha = img.data[i + 3] * weight;
+                    r += img.data[i] * alpha;
+                    g += img.data[i + 1] * alpha;
+                    b += img.data[i + 2] * alpha;
+                    a += alpha;
+                    total += weight;
+                }
+            }
+            const o = (oy * w + ox) * 4;
+            if (a > 0) {
+                out.data[o] = Math.round(r / a);
+                out.data[o + 1] = Math.round(g / a);
+                out.data[o + 2] = Math.round(b / a);
+            }
+            out.data[o + 3] = Math.round(a / total);
+        }
+    }
+    return out;
+}
+
+function buildFrame(file) {
+    const img = readPng(file);
+    dropHaze(img);
+    const sourceArtPixel = measureArtPixel(img);
+    const dog = crop(img, opaqueBounds(img));
+    return { image: resizeArea(dog, ART_PIXEL / sourceArtPixel), sourceArtPixel };
+}
+
+function main() {
+    const frames = {};
+    for (const [character, states] of Object.entries(SOURCES)) {
+        frames[character] = {};
+        for (const state of STATES) {
+            frames[character][state] = buildFrame(path.join(RAW_DIR, states[state]));
+        }
+    }
+
+    // One cell size for every frame of every character keeps hitboxes and placement uniform.
+    const all = Object.values(frames).flatMap(Object.values);
+    const frameWidth = Math.max(...all.map(f => f.image.width)) + 2 * PADDING;
+    const frameHeight = Math.max(...all.map(f => f.image.height)) + PADDING;
+
+    const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, characters: {} };
+    fs.mkdirSync(OUT_DIR, { recursive: true });
+
+    for (const [character, byState] of Object.entries(frames)) {
+        const sheet = blank(frameWidth * STATES.length, frameHeight);
+        meta.characters[character] = {};
+        STATES.forEach((state, index) => {
+            const { image, sourceArtPixel } = byState[state];
+            const x = Math.round((frameWidth - image.width) / 2);
+            const y = frameHeight - image.height; // feet on the bottom edge
+            PNG.bitblt(image, sheet, 0, 0, image.width, image.height, index * frameWidth + x, y);
+            meta.characters[character][state] = {
+                frame: index,
+                bounds: { x, y, width: image.width, height: image.height },
+                sourceArtPixel: Number(sourceArtPixel.toFixed(2)),
+            };
+            console.log(`${character}.${state}: drawn pixel ${sourceArtPixel.toFixed(2)}px -> ` +
+                `${image.width}x${image.height}`);
+        });
+        fs.writeFileSync(path.join(OUT_DIR, `${character}.png`), PNG.sync.write(sheet));
+    }
+
+    fs.writeFileSync(path.join(OUT_DIR, 'sprites.json'), JSON.stringify(meta, null, 2) + '\n');
+    console.log(`frame ${frameWidth}x${frameHeight} -> ${OUT_DIR}/`);
+}
+
+main();

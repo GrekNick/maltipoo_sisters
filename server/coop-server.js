@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('newPlayer', {
         id: socket.id,
         x: 100,
-        y: 400,
+        y: 552,
         character: assignedCharacter,
         flipX: false,
         animation: 'idle'
@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
     players[socket.id] = {
         id: socket.id,
         x: 100,
-        y: 400,
+        y: 552,
         character: assignedCharacter,
         flipX: false,
         animation: 'idle'

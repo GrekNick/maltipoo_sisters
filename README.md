@@ -44,7 +44,12 @@ http://localhost:5173
 - **Move Left:** A or ← (Left Arrow)
 - **Move Right:** D or → (Right Arrow)
 - **Jump:** W or ↑ (Up Arrow) or Space
+- **Restart:** R
+- **Show hitboxes:** H
 - **Switch Character:** Use the dropdown menu in the top-right corner
+
+**Goal:** run through the level, jump over the pits, and reach the dog house. Your time, falls and best time
+(saved in this browser) are shown at the end.
 
 ### Online Co-op (parked)
 
@@ -111,6 +116,32 @@ To preview the production build:
 npm run preview
 ```
 
+## Tests
+
+```bash
+npm test            # run once (also runs in CI on every pull request and before deploy)
+npm run test:watch  # re-run on file changes
+```
+
+The tests cover the parts that are plain data and math, which is where most mistakes happen:
+
+- `tests/reachability.test.js` — jump height and distance follow from gravity, jump speed and run speed
+- `tests/level1.test.js` — the level is sane and **finishable**: everything is inside the world, nothing
+  overlaps, the dog fits under platforms, and every platform plus the dog house can be reached from the spawn
+- `tests/characters.test.js` — sprite frames have the feet on the bottom edge, hitboxes fit, and the
+  spritesheets match `sprites.json`
+
+## Character Sprites
+
+The dogs' raw art lives in `art/raw/`. The game uses spritesheets generated from it:
+
+```bash
+npm run build:sprites
+```
+
+This rescales every pose to the same size, aligns the feet, and writes `assets/characters/` (commit the
+result). See the header of `tools/build-sprites.mjs` for details.
+
 ## Game Controls
 
 | Action     | Keys           |
@@ -118,6 +149,8 @@ npm run preview
 | Move Left  | A or ←         |
 | Move Right | D or →         |
 | Jump       | W, ↑, or Space |
+| Restart    | R              |
+| Hitboxes   | H              |
 
 ## Project Structure
 
@@ -125,11 +158,18 @@ npm run preview
 maltipoo_sisters/
 ├── src/
 │   ├── main.js          # Main game logic and Phaser scenes
-│   ├── characters.js    # Character textures and per-character settings
+│   ├── characters.js    # Character spritesheets, animations and hitboxes
+│   ├── physics.js       # Gravity, run speed, jump speed
+│   ├── levels/          # Level data + reachability checks (until levels move to Tiled)
 │   └── coop/            # Online co-op client (parked, behind VITE_COOP)
-├── assests/
-│   ├── sofi_sprites/    # Sofi character sprites
-│   └── kiwi_sprites/    # Kiwi character sprites
+├── assets/
+│   └── characters/      # Generated spritesheets + sprites.json (from `npm run build:sprites`)
+├── art/raw/             # Original character art (input for build:sprites)
+├── tools/
+│   └── build-sprites.mjs
+├── tests/               # Vitest unit tests
+├── docs/
+│   └── decisions.md     # Decision log (e.g. Tiled for levels)
 ├── server/
 │   └── coop-server.js   # Online co-op server (Socket.io)
 ├── index.html           # Game HTML entry point
@@ -142,6 +182,7 @@ maltipoo_sisters/
 
 - **Phaser 3** - Game framework
 - **Vite** - Build tool and dev server
+- **Vitest** - Unit tests
 - **Socket.io** - Real-time communication for the co-op prototype
 - **Express** - Web server for the co-op prototype
 
