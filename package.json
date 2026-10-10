@@ -10,7 +10,9 @@
     "dev:coop": "vite --mode coop",
     "build:coop": "vite build --mode coop",
     "coop:server": "node server/coop-server.js",
-    "build:sprites": "node tools/build-sprites.mjs"
+    "build:sprites": "node tools/build-sprites.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "pngjs": "^7.0.0",
-    "vite": "^5.4.0"
+    "vite": "^5.4.0",
+    "vitest": "^2.1.9"
   }
 }
