@@ -66,7 +66,7 @@ being built. With the flag off, none of the co-op code (or socket.io) ends up in
 
 All co-op code is isolated in:
 
-- `src/coop/CoopSession.js` — client side, loaded only when `VITE_COOP=true`
+- `src/coop/CoopSession.ts` — client side, loaded only when `VITE_COOP=true`
 - `server/coop-server.js` — Socket.IO relay server
 - `.env.coop` — enables the flag for `--mode coop`
 
@@ -165,7 +165,7 @@ result). See the header of `tools/build-sprites.mjs` for details.
 ```
 maltipoo_sisters/
 ├── src/
-│   ├── main.js          # Main game logic and Phaser scenes
+│   ├── main.ts          # Main game logic and Phaser scenes
 │   ├── characters.ts    # Character spritesheets, animations and hitboxes
 │   ├── physics.ts       # Gravity, run speed, jump speed
 │   ├── levels/          # Level data + reachability checks (until levels move to Tiled)
