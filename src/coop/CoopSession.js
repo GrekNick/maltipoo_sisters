@@ -82,6 +82,12 @@ export class CoopSession {
         this.otherPlayers[info.id] = sprite;
     }
 
+    // The scene restarts (R / finishing the level) create a new session, so drop the old socket.
+    destroy() {
+        this.socket.disconnect();
+        this.otherPlayers = {};
+    }
+
     requestCharacterChange(character) {
         this.scene.switchCharacter(character);
         this.socket.emit('characterChange', { character });
