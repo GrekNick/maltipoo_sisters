@@ -4,8 +4,9 @@ Guidance for AI agents (and humans) working on this repo. Keep it current: if yo
 makes a line here wrong, fix the line in the same PR.
 
 ## What this is
-**Maltipoo Sisters**: a family-friendly 2D platformer. Two dog sisters, Kiwi and Sofi, chase a friendly Wawel
-dragon kid across Kraków. It's a browser game deployed to GitHub Pages.
+**Maltipoo Sisters**: a family-friendly 2D platformer. Two dog sisters, Kiwi and Sofi, travel from the
+Wieliczka Salt Mine across Kraków back to Wawel to find their friend Smok Junior (a young dragon; no
+villains). It's a browser game deployed to GitHub Pages.
 
 - Plan and milestones: [docs/roadmap.md](docs/roadmap.md). Check which milestone/chunk the task belongs to.
 - Story and level sequence: [docs/story-and-levels.md](docs/story-and-levels.md)
@@ -92,5 +93,6 @@ Unit tests don't cover rendering, so also play-test:
 - The raw AI art was drawn at different scales per pose. Always go through `npm run build:sprites`, never
   load `art/raw/` directly.
 - `localStorage` may throw (private mode, previews); wrap access in try/catch and degrade gracefully.
-- The UI text is currently mixed Ukrainian and English. i18n (uk/en/pl) is planned in M3; don't "fix"
-  single strings ad hoc.
+- The UI text is currently mixed Ukrainian and English. i18n is planned in M3 (English is the default and
+  fallback; Ukrainian and Polish selectable in Settings). Don't "fix" single strings ad hoc. Once it lands,
+  every player-facing string must exist in all three locale files.

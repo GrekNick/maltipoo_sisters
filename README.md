@@ -12,7 +12,7 @@ A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built wi
 ## Project docs
 
 - [Roadmap](docs/roadmap.md): vision, design pillars, milestones and the next chunks of work
-- [Story and levels](docs/story-and-levels.md): the Kraków world, the Wawel dragon kid, the level sequence
+- [Story and levels](docs/story-and-levels.md): Wieliczka → Wawel, friend Smok Junior, the level sequence
 - [Decisions](docs/decisions.md): why things are the way they are
 - [AGENTS.md](AGENTS.md): conventions and pitfalls for contributors and AI agents
 

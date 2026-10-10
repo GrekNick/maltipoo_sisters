@@ -25,13 +25,28 @@ Swapping is instant and allowed anytime. Levels include moments that need each s
 
 ---
 
-## 2026-10-10 — Part 1 is set in Kraków, with a friendly Wawel dragon kid
+## 2026-10-10 — UI languages: English (default), Ukrainian, Polish
 
-**Status:** accepted; details in [story-and-levels.md](story-and-levels.md).
+**Status:** accepted, milestone M3 in [roadmap.md](roadmap.md).
 
-One world, 5 locations (Planty → Rynek → Kazimierz → Smocza Jama → Wawel), one level each to start,
-possibly 2–3 levels per location later. A little dragon takes the sisters' toy and hides in Wawel Castle;
-it ends in friendship, not a fight.
+All player-facing text comes from locale files (`en`, `uk`, `pl`), switchable in Settings. English is the
+default and the fallback for missing strings. Story panels lean on pictures to keep the text small. Until M3,
+don't translate individual strings ad hoc.
+
+---
+
+## 2026-10-10 — Part 1: from the Wieliczka Salt Mine back to Wawel, with friend Smok Junior
+
+**Status:** accepted (revised the same day); details in [story-and-levels.md](story-and-levels.md).
+
+There are no villains. After finding a red stone in the Wieliczka Salt Mine, Smok Junior (a young Wawel dragon,
+taught that "treasures belong in the castle") takes it in his backpack, and the friends get separated on
+the way out. Kiwi and Sofi travel back to Wawel to find him. 5 locations along a real route: Wieliczka → Podgórze →
+Kazimierz → Rynek → Smocza Jama / Wawel, one level each to start, possibly 2–3 per location later.
+Collectibles are dog treats (smaczki); every level ends at a doggy pad by an obwarzanek stand.
+
+*Earlier draft (replaced):* a dragon kid steals the sisters' toy and they chase him. It was dropped because
+friendship works better than a chase for a kids' game.
 
 ---
 

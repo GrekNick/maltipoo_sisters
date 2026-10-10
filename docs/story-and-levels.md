@@ -8,85 +8,98 @@ changes in [decisions.md](decisions.md).
 **Characters**
 - **Kiwi**: the red-brown, chill sister. Strong legs: **big jump**.
 - **Sofi**: the cream, smiley sister. Small and bendy: **squeezes** through low gaps.
-- **Smoczek** *(proposal for the name)*: a little Wawel dragon, a descendant of the legendary
-  [Smok Wawelski](https://en.wikipedia.org/wiki/Wawel_Dragon). He used to be the sisters' friend. He's not evil, just
-  cheeky and a bit lonely.
+- **Smok Junior**: a little dragon, the son of the legendary
+  [Wawel Dragon](https://en.wikipedia.org/wiki/Wawel_Dragon) family, and the sisters' good friend. He always wears
+  his backpack. His parents taught him one rule: *"Treasures belong in the castle."*
+
+There are **no villains**. Nobody steals anything; the friends just lose each other. The sisters' goal is
+simply to **find Smok Junior**.
 
 **Plot (kid-sized, told in a few comic panels)**
-1. *Intro:* the sisters are playing with their favourite toy *(proposal: a red squeaky ball)* in the Planty park.
-   Smoczek swoops in, grabs it, giggles, and flies off toward the Old Town.
-2. *Middle:* in each location the sisters almost catch him. He drops a clue (a shiny dragon scale) and flies
-   further, until he hides in his den under Wawel Hill and then in the castle itself.
-3. *Ending:* the sisters find Smoczek on the castle tower. He admits he took the toy because nobody plays
-   with him anymore. They make up, he gives the toy back, and all three play together on Wawel Hill, with
-   fireworks over the Vistula.
+1. *Intro: the Wieliczka Salt Mine.* The three friends visit the famous salt mine. Deep in a salt chamber
+   they find a **glowing red stone**. Smok Junior remembers his parents' rule, puts the stone in his backpack
+   to take it to the castle, and in the crowd on the way out of the mine the friends get **separated**.
+2. *The journey back.* Kiwi and Sofi set off for Wawel, where Smok Junior surely went. At the end of
+   each level they catch a glimpse of him ahead (a wave from a rooftop, a tail disappearing around a corner),
+   or someone tells them which way he went. He's looking for them too.
+3. *Ending: Wawel.* The sisters climb up through the Dragon's Den into the castle and find Smok Junior.
+   Happy reunion! He shows them the family treasury, where the red stone gets its place of honour. The
+   friends celebrate with obwarzanki on Wawel Hill, with fireworks over the Vistula.
 
-Tone: friendly and funny; no fighting and no defeat. The dragon is a target to chase, not an enemy to hurt.
+Tone: warm, funny, about friendship and finding each other. Nothing to defeat.
 
 ## Recurring elements
 | Element | Purpose |
 |---|---|
-| **Obwarzanki** (Kraków pretzel rings) | Collectibles, about 10 per level; the map shows how many were found |
-| **Dragon scale** | One per level at the end, as a story beat. It replaces the dog house as the goal *(the dog house stays as the final home in the ending)* |
-| **Checkpoints** | A friendly local object per location (bench, flower stall, tram stop…) |
+| **Smaczki** (bone-shaped dog treats) | Collectibles, scattered through each level. Later levels hide more of them and in trickier spots. The map shows how many were found. *(proposal: treats unlock cosmetic bandanas and collars in a "dog wardrobe")* |
+| **Level finish: doggy pad by an obwarzanek stand** | Every level ends at a comfy dog bed next to an obwarzanek (Kraków pretzel) stand: a rest stop before the next location. This replaces today's dog house. |
+| **Smok Junior sightings** | A short scripted moment near each finish that points the way to the next location |
+| **Checkpoints** | A friendly local object per location (mine cart, bench, tram stop, flower stall…) |
 | **Sister signs** | A small paw sign with Kiwi's or Sofi's face hints which sister a spot needs |
 
 ## Level sequence
-
-Each location starts as **one level** (2–4 min). Later, any location can grow into 2–3 levels.
+The route runs from the Wieliczka Salt Mine back into Kraków: through Podgórze, across the Vistula to
+Kazimierz, up to the Old Town, then along the Royal Road to Wawel.
+Each location starts as **one level** (2–4 min) and can later grow into 2–3 levels.
 The skill curve: learn one thing per level, then combine.
 
-### 1. Planty Park — "Hey, that's our ball!"
-- **Setting:** the green ring around the Old Town: trees, benches, lamp posts, a duck pond, autumn leaves.
-- **Teaches:** run and jump → **swap** → Kiwi's big jump (a tree branch) → Sofi's squeeze (under a hedge or bench).
-- **Hazards:** none dangerous; small pits only (the pond splash just sends you back to the checkpoint).
-- **Story:** intro panels, then Smoczek flies off toward the Main Square.
-- **Built from:** today's level 1 (rebuilt in Tiled during M2).
+### 1. Wieliczka Salt Mine — "The red stone"
+- **Setting:** wooden staircases, salt-carved chambers and sculptures, the salt chapel, underground brine
+  lakes, mine carts.
+- **Teaches:** run and jump → **swap** → Kiwi's big jump (up a wooden scaffold) → Sofi's squeeze (through a
+  narrow side tunnel).
+- **Story:** intro panels: finding the stone, then getting separated. The level ends at the mine exit.
+- **Hazards:** none dangerous; brine puddles send you back to the checkpoint.
+- **Built from:** today's level 1 (rebuilt in Tiled during M2, re-themed underground).
 
-### 2. Main Market Square (Rynek Główny) — "Up on the rooftops"
-- **Setting:** the Cloth Hall (Sukiennice) stalls, flower sellers, pigeons, St. Mary's Basilica.
-- **New idea:** **bouncy market awnings** and climbing up toward the towers.
-- **Set piece:** *(proposal)* the **hejnał** trumpet call: when it plays, the pigeons fly up and briefly form
-  a bridge or open a path.
-- **Hazards:** pigeon flocks that gently bump you back.
-- **Story:** Smoczek is spotted on St. Mary's tower and drops the first scale.
+### 2. Podgórze — "Over the river"
+- **Setting:** Krakus Mound with a view of the city, old Podgórze streets, the Bernatka footbridge with its
+  hanging acrobat sculptures.
+- **New idea:** **swinging and balancing platforms** (the acrobat sculptures) and the first big outdoor level.
+- **Story:** from the mound the sisters spot a little dragon shape heading across the river.
 
 ### 3. Kazimierz — "Courtyards and trams"
 - **Setting:** cobbled streets, old courtyards, café tables, cellar windows, a passing tram.
 - **New idea:** **moving platforms** (the tram roof, laundry lines on pulleys) and **combining skills**:
   Kiwi jumps up to a gallery, Sofi squeezes through a cellar window to open a gate.
-- **Hazards:** a rolling barrel *(proposal)*.
-- **Story:** Smoczek's trail leads toward the river.
+- **Story:** a café owner saw "a little dragon with a backpack" heading to the Main Square.
 
-### 4. Vistula Boulevards → Dragon's Den (Smocza Jama) — "Into the cave"
-- **Setting:** the riverside with boats and the dragon statue that breathes fire; then the cave under Wawel Hill.
-- **New idea:** a **darker cave** with glowing crystals and water drips; *(proposal)* the statue's fire puffs
-  are timed obstacles (harmless; they just push you back).
-- **Hazards:** water (sends you back to the checkpoint), timed fire puffs.
-- **Story:** the sisters find Smoczek's den full of collected toys. He escapes up into the castle.
+### 4. Main Market Square (Rynek Główny) — "Up on the rooftops"
+- **Setting:** reached through the Planty park. The Cloth Hall (Sukiennice) stalls, flower sellers,
+  pigeons, St. Mary's Basilica.
+- **New idea:** **bouncy market awnings** and climbing toward the towers.
+- **Set piece:** *(proposal)* the **hejnał** trumpet call: when it plays, the pigeons fly up and briefly open
+  a path.
+- **Story:** from up high the sisters see Smok Junior flying down the Royal Road toward Wawel.
 
-### 5. Wawel Castle — "Friends again"
-- **Setting:** Wawel Hill walls, the Renaissance arcaded courtyard, the cathedral, the Sigismund bell tower.
-- **New idea:** the **finale**: a friendly chase ("tag") up the tower using everything learned.
-  *(Proposal: ringing the Sigismund bell is the final trigger.)*
-- **Story:** ending panels and credits.
+### 5. Smocza Jama → Wawel Castle — "Together again"
+- **Setting:** the riverside dragon statue that breathes fire, then up through the Dragon's Den cave into
+  the castle: walls, the arcaded courtyard, the cathedral bell tower.
+- **New idea:** everything combined, plus *(proposal)* timed fire puffs from the statue (harmless; they push
+  you back).
+- **Story:** the reunion, the family treasury, the ending panels and credits.
 
 ## Skill matrix
 Which locations use what; useful when building levels so every level has something for both sisters.
 
-| | Planty | Rynek | Kazimierz | Smocza Jama | Wawel |
+| | Wieliczka | Podgórze | Kazimierz | Rynek | Smocza Jama / Wawel |
 |---|---|---|---|---|---|
 | Run and jump | teach | ✓ | ✓ | ✓ | ✓ |
 | Swap | teach | ✓ | ✓ | ✓ | ✓ |
 | Kiwi big jump | teach | ✓ | combine | ✓ | combine |
 | Sofi squeeze | teach | ✓ | combine | ✓ | combine |
-| Bouncy surfaces | | teach | | | ✓ |
-| Moving platforms | | | teach | ✓ | ✓ |
-| Timed obstacles | | pigeons | barrel | fire puffs | ✓ |
+| Swinging / balancing | | teach | | | ✓ |
+| Moving platforms | mine carts? | | teach | | ✓ |
+| Bouncy surfaces | | | | teach | ✓ |
+| Timed obstacles | | | | pigeons | fire puffs |
+
+## Languages
+In-game text is available in **English (default)**, **Ukrainian** and **Polish**, switchable in Settings
+(roadmap M3). Story panels rely on pictures with short lines of text so translation stays small.
+Character names stay the same in every language: Kiwi, Sofi, Smok Junior.
 
 ## Open questions
-- The toy (red ball? a plush? a bone?) and the dragon's name.
-- Do the second skills come later (Kiwi pushes crates, Sofi digs or sniffs out hidden treats)? Keep them for
-  "more levels per location".
+- What does Smok Junior look like (colour, backpack style)? Do his parents appear in the ending?
+- Second skills for later levels (Kiwi pushes crates, Sofi digs or sniffs out hidden treats)?
 - Story delivery: comic panels between levels, speech bubbles in-level, or both?
-- UI languages: Ukrainian, English and Polish. Which one is the default?
+- Is the wardrobe a good reward for treats, or should treats unlock something else (bonus levels, map stickers)?

@@ -6,7 +6,8 @@ The plan from today's prototype to a first release. Story and level details live
 ## Vision
 
 **Maltipoo Sisters** is a gentle 2D platformer for families and kids. Two maltipoo sisters, **Kiwi** and
-**Sofi**, chase a mischievous little **Wawel dragon** across **Kraków** to get back their favourite toy.
+**Sofi**, lose their friend **Smok Junior** (a little Wawel dragon) after a trip to the Wieliczka Salt Mine,
+and travel across **Kraków** back to Wawel to find him.
 The player swaps between the sisters, and each has her own skill. Levels need both.
 
 ### Design pillars
@@ -16,8 +17,8 @@ Use these to settle arguments. If a feature fights a pillar, cut it or change it
    Text is short or replaced by icons. Levels take 2–4 minutes.
 2. **Two sisters, two skills**: every level has moments that need Kiwi and moments that need Sofi.
    Swapping is instant and always allowed.
-3. **Kraków you can recognise**: each location has a landmark, a local treat to collect (obwarzanek) and a
-   little bit of its legend.
+3. **Kraków you can recognise**: each location has a landmark and a little bit of its legend. Every level
+   ends at a doggy pad by an obwarzanek stand. No villains: the story is about friends finding each other.
 4. **Small and finished beats big and half-done**: ship one world of 5 locations before dreaming of more.
 
 ## Where we are (done)
@@ -58,11 +59,11 @@ The tool we chose in [decisions.md](decisions.md).
 | Chunk | Done when |
 |---|---|
 | 3.1 **Title screen**: logo, Play / Continue, Settings, Credits; idle dogs animated | The game opens on the title screen; Enter, tap or gamepad starts it |
-| 3.2 **Settings**: music and sound volume, language (Ukrainian / English / Polish), "show hitboxes" moved here from the H key | Settings survive a page reload |
-| 3.3 **Level select = a map of Kraków**: locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
+| 3.2 **Settings**: music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
+| 3.3 **Level select = a map of the route** (Wieliczka → Wawel): locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
 | 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map | Esc or a tap on the pause icon pauses the game |
 | 3.5 Save progress (localStorage, versioned) | A refresh keeps unlocked levels and best times |
-| 3.6 i18n: all UI text comes from `locales/{uk,en,pl}.json` | Switching language changes every on-screen string |
+| 3.6 i18n: all UI text comes from `locales/{en,uk,pl}.json`; English is the default and the fallback for missing keys; the first launch picks the browser language if it's supported | Switching language changes every on-screen string; a test fails if a key is missing in any language |
 
 ### M4 — The sisters mechanic
 | Chunk | Done when |
@@ -86,16 +87,18 @@ One PR per location; see [story-and-levels.md](story-and-levels.md).
 
 | Chunk | Done when |
 |---|---|
-| 6.1 Story intro and ending (simple comic panels or speech bubbles; skippable) | The story makes sense without reading much |
-| 6.2 Dragon kid NPC: appears, taunts, flies away (scripted, not an enemy) | Shows up in every location |
-| 6.3–6.7 Locations 1–5 | Each one passes the tests and has had a playtest with a kid |
-| 6.8 Collectibles: obwarzanki per level, shown on the map | The map shows how many were found |
+| 6.1 Story intro (Wieliczka: the red stone, getting separated) and ending (the reunion at Wawel); comic panels, skippable | The story makes sense without reading much |
+| 6.2 Smok Junior sightings: a short scripted moment near each finish pointing to the next location (not an enemy) | Shows up in every location |
+| 6.3 Level finish: a doggy pad by an obwarzanek stand (replaces the dog house) | Every level ends there |
+| 6.4–6.8 Locations 1–5: Wieliczka, Podgórze, Kazimierz, Rynek, Smocza Jama → Wawel | Each one passes the tests and has had a playtest with a kid |
+| 6.9 Collectibles: **smaczki** (bone treats), more of them and better hidden in later levels; counts shown on the map | The map shows how many were found |
+| 6.10 *(proposal)* Dog wardrobe: treats unlock bandanas and collars | Cosmetics show on both sisters |
 
 ### M7 — Art pass
 | Chunk | Done when |
 |---|---|
 | 7.1 Real animation frames: walk cycle (4–6 frames), jump up/down, idle blink, swap pose. Same pipeline (`build:sprites`) | No more single-frame animations |
-| 7.2 Dragon kid sprite set | |
+| 7.2 Smok Junior sprite set (with backpack), obwarzanek stand, doggy pad, treat icons | |
 | 7.3 Tileset per location (or one shared tileset with themed decor) | Kenney placeholders replaced |
 | 7.4 Title logo, map illustration, UI icons | |
 
