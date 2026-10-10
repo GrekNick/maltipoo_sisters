@@ -23,16 +23,14 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        // Add debug text first so it's always visible
-        this.debugText = this.add.text(16, 50, 'Loading...', { fontSize: '18px', fill: '#fff' });
-
-        // Add background
+        // Draw order follows creation order: background first, HUD last so it stays on top
         this.add.rectangle(400, 300, 800, 600, 0x87ceeb);
 
         this.createPlatforms();
         this.createAnimations();
         this.createPlayer();
         this.createInput();
+        this.createHud();
 
         // Update the UI select dropdown to match the current character
         this.updateCharacterSelect();
@@ -45,16 +43,19 @@ class MainScene extends Phaser.Scene {
     }
 
     createPlatforms() {
-        // Create platform textures
-        this.add.graphics()
+        // Create platform textures (make, not add: the Graphics are only used to bake textures
+        // and must not stay on screen)
+        this.make.graphics({}, false)
             .fillStyle(0x24cc71)
             .fillRect(0, 0, 400, 32)
-            .generateTexture('ground', 400, 32);
+            .generateTexture('ground', 400, 32)
+            .destroy();
 
-        this.add.graphics()
+        this.make.graphics({}, false)
             .fillStyle(0x27ae60)
             .fillRect(0, 0, 200, 32)
-            .generateTexture('platform', 200, 32);
+            .generateTexture('platform', 200, 32)
+            .destroy();
 
         // Create platforms
         this.platforms = this.physics.add.staticGroup();
@@ -83,9 +84,7 @@ class MainScene extends Phaser.Scene {
         this.applyHitbox();
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
-        this.player.body.setGravityY(300);
         this.physics.add.collider(this.player, this.platforms);
-        this.debugText.setText('Character: ' + this.currentCharacter);
     }
 
     createInput() {
@@ -98,10 +97,12 @@ class MainScene extends Phaser.Scene {
         });
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.input.keyboard.on('keydown-H', () => this.toggleHitboxes());
+    }
 
-        // Debug / info text
+    createHud() {
         this.add.text(16, 16, 'Use arrow keys or WASD to move, H for hitboxes', { fontSize: '18px', fill: '#fff' });
-        this.add.text(16, 50, 'Position: X: 0, Y: 0', { fontSize: '16px', fill: '#ffffff' }).setName('positionText');
+        this.debugText = this.add.text(16, 44, 'Character: ' + this.currentCharacter, { fontSize: '16px', fill: '#fff' });
+        this.positionText = this.add.text(16, 66, '', { fontSize: '16px', fill: '#fff' });
     }
 
     updateCharacterSelect() {
@@ -175,11 +176,7 @@ class MainScene extends Phaser.Scene {
 
         this.coop?.update(time);
 
-        // Update position text
-        const positionText = this.children.getByName('positionText');
-        if (positionText) {
-            positionText.setText(`Позиція: X: ${Math.floor(this.player.x)}, Y: ${Math.floor(this.player.y)}`);
-        }
+        this.positionText.setText(`Позиція: X: ${Math.floor(this.player.x)}, Y: ${Math.floor(this.player.y)}`);
     }
 }
 
@@ -192,7 +189,8 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 400 },
+            // Was world 400 + player body 300; merged so there is one number to tune
+            gravity: { y: 700 },
             debug: false
         }
     },
