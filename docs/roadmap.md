@@ -39,8 +39,8 @@ Cheapest now, while the game is ~500 lines.
 
 | Chunk | Done when |
 |---|---|
-| 1.1 TypeScript setup: `tsconfig`, typecheck script and CI step; convert the pure modules first (`physics`, `levels/*`, `characters`) | `npm run typecheck` passes in CI; tests still pass |
-| 1.2 Phaser 3.90 → 4 upgrade; convert `main.js` to TS | Level 1 plays the same; no console errors |
+| ✅ 1.1 TypeScript setup: `tsconfig`, typecheck script and CI step; convert the pure modules first (`physics`, `levels/*`, `characters`) | `npm run typecheck` passes in CI; tests still pass |
+| ✅ 1.2 Phaser 3.90 → 4 upgrade; convert `main.js` to TS | Level 1 plays the same; no console errors |
 | 1.3 Split scenes: `Boot` → `Preload` (loading bar) → `Game` (takes a level key) → `UI` (HUD overlay) | `GameScene` contains no HUD code; restart still works |
 | 1.4 Responsive canvas (`Scale.FIT`) | The game fills a phone or tablet screen without distortion |
 

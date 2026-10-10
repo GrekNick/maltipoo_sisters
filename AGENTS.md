@@ -20,9 +20,9 @@ The owner is an experienced developer who is new to game development. When you i
 concept (tilemaps, coyote time, parallax…), explain it briefly in the PR or reply, mapped to general dev terms.
 
 ## Stack and commands
-Phaser 4 (WebGL, Arcade Physics) · Vite 5 · Vitest 2 · **TypeScript 5.9** (strict, type-check only: Vite/Vitest strip
-types, `tsc` never emits). Node 20 in CI. Pure modules and tests are TypeScript; `main.js` and `src/coop/` are
-converted in M1.2 together with the Phaser 4 upgrade. Update this section when that lands.
+Phaser 4 (WebGL, Arcade Physics) · Vite 5 · Vitest 2 · **TypeScript 5.9** everywhere in `src/` and `tests/`
+(strict + `noUncheckedIndexedAccess`; type-check only: Vite/Vitest strip types, `tsc` never emits). Node 20 in CI.
+Only `tools/*.mjs` (Node scripts) and `server/` (CommonJS) are still JavaScript.
 
 ```bash
 npm run dev            # dev server: http://localhost:5173/maltipoo_sisters/  (note the base path)
@@ -35,12 +35,12 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.js            MainScene (one scene for now) + game config + DOM character select
+src/main.ts            MainScene (one scene for now) + game config + DOM character select
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
 src/physics.ts         gravity / run speed / jump velocity, shared by game and tests
 src/levels/level1.ts   level data (stopgap until Tiled, milestone M2); types in src/levels/types.ts
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)
-src/coop/              parked online co-op client, only bundled when VITE_COOP=true
+src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
 server/coop-server.js  Socket.IO relay for co-op
 assets/characters/     GENERATED spritesheets + sprites.json; don't edit by hand
 art/raw/               original art, the input to tools/build-sprites.mjs
@@ -58,8 +58,9 @@ docs/                  roadmap, story, decisions
   `this.solids` for physics. This mirrors how Tiled maps will work (tile layer + collision property).
 - **Movement numbers live in `src/physics.ts` only**: the level tests compute reachability from them, so
   changing jump or run values automatically re-validates every level.
-- **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client`. The scene talks
-  to co-op only via `this.coop?.update()` and `requestCharacterChange()`.
+- **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
+  `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
+  via `this.coop?.update()` and `requestCharacterChange()`.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions
@@ -76,7 +77,7 @@ docs/                  roadmap, story, decisions
 
 ## Verifying changes in the browser
 Unit tests don't cover rendering, so also play-test:
-- In dev builds `window.game` is exposed. Get the scene with `game.scene.keys.MainScene`.
+- In dev builds `window.game` is exposed. Get the scene with `game.scene.getScene('MainScene')`.
 - A hidden or background tab **pauses the game loop**. To drive it deterministically, step it manually:
   `game.step(t += 16.67, 16.67)` in a loop, and set inputs directly (`scene.wasd.D.isDown = true`,
   `scene.spaceKey.isDown = true`).
@@ -97,6 +98,9 @@ Unit tests don't cover rendering, so also play-test:
 - The raw AI art was drawn at different scales per pose. Always go through `npm run build:sprites`, never
   load `art/raw/` directly.
 - Import project modules **without** a file extension (`'./physics'`); Vite and `tsc` resolve `.ts`.
+- Validate untrusted strings (DOM values, network messages) with `isCharacterKey()` before using them as keys.
+- After upgrading a dependency, restart the dev server with a clean `node_modules/.vite`; Vite can keep serving
+  the old pre-bundled version (we were briefly "testing Phaser 4" while running 3.90).
 - `localStorage` may throw (private mode, previews); wrap access in try/catch and degrade gracefully.
 - The UI text is currently mixed Ukrainian and English. i18n is planned in M3 (English is the default and
   fallback; Ukrainian and Polish selectable in Settings). Don't "fix" single strings ad hoc. Once it lands,

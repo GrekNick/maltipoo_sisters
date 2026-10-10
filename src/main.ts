@@ -1,22 +1,54 @@
 import Phaser from 'phaser';
-import { CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, FRAME_SIZE, SPRITE_SCALE } from './characters';
+import {
+    CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, FRAME_SIZE, SPRITE_SCALE, isCharacterKey,
+    type AnimationState, type CharacterKey,
+} from './characters';
 import { PHYSICS } from './physics';
 import { level1 } from './levels/level1';
+import type { Level } from './levels/types';
+import type { CoopHost, CoopSession } from './coop/CoopSession';
 
 // Online co-op is parked behind a build flag (`npm run dev:coop`, see README).
 // When the flag is off the co-op module and socket.io are not bundled at all.
 const COOP_ENABLED = import.meta.env.VITE_COOP === 'true';
 
-const VIEW = { width: 800, height: 600 };
+const VIEW = { width: 800, height: 600 } as const;
 const TILE = 32;
 
-class MainScene extends Phaser.Scene {
+interface BestTime {
+    seconds: number;
+    isNew: boolean;
+}
+
+declare global {
+    interface Window {
+        /** Exposed in dev builds for console debugging (see AGENTS.md) */
+        game?: Phaser.Game;
+    }
+}
+
+export class MainScene extends Phaser.Scene implements CoopHost {
+    readonly level: Level = level1;
+    currentCharacter: CharacterKey = Phaser.Utils.Array.GetRandom(CHARACTER_KEYS);
+    currentAnimation: AnimationState = 'idle';
+    coop: CoopSession | null = null;
+    finished = false;
+    falls = 0;
+
+    // Created in create(); `!` tells TypeScript they're always set before use
+    player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    private solids!: Phaser.Physics.Arcade.StaticGroup;
+    private goalZone!: Phaser.GameObjects.Zone;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
+    private spaceKey!: Phaser.Input.Keyboard.Key;
+    private statusText!: Phaser.GameObjects.Text;
+    private positionText!: Phaser.GameObjects.Text;
+    private checkpoint = { x: 0, y: 0 };
+    private startTime = 0;
+
     constructor() {
         super({ key: 'MainScene' });
-        this.level = level1;
-        this.currentCharacter = Phaser.Utils.Array.GetRandom(CHARACTER_KEYS);
-        this.currentAnimation = 'idle';
-        this.coop = null;
     }
 
     preload() {
@@ -63,7 +95,8 @@ class MainScene extends Phaser.Scene {
 
         g.fillStyle(0x8b5a2b).fillRect(0, 0, TILE, TILE);
         g.fillStyle(0x6f4520);
-        [[4, 6], [18, 3], [26, 14], [9, 20], [21, 25], [3, 28], [14, 12]].forEach(([x, y]) => g.fillRect(x, y, 3, 3));
+        const specks: Array<[number, number]> = [[4, 6], [18, 3], [26, 14], [9, 20], [21, 25], [3, 28], [14, 12]];
+        specks.forEach(([x, y]) => g.fillRect(x, y, 3, 3));
         g.generateTexture('dirt', TILE, TILE);
 
         // Same dirt with a grass strip on top
@@ -134,7 +167,7 @@ class MainScene extends Phaser.Scene {
 
     // Looks and collision are separate on purpose, like a Tiled map will be: tiles for the
     // visuals, one invisible zone per block for physics.
-    addBlock(x, y, width, height) {
+    addBlock(x: number, y: number, width: number, height: number) {
         this.add.tileSprite(x, y, width, TILE, 'grass').setOrigin(0, 0);
         if (height > TILE) {
             this.add.tileSprite(x, y + TILE, width, height - TILE, 'dirt').setOrigin(0, 0);
@@ -175,21 +208,25 @@ class MainScene extends Phaser.Scene {
     }
 
     createInput() {
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.wasd = this.input.keyboard.addKeys({
+        const keyboard = this.input.keyboard;
+        if (!keyboard) throw new Error('Keyboard input is disabled in the game config');
+        this.cursors = keyboard.createCursorKeys();
+        this.wasd = keyboard.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
             S: Phaser.Input.Keyboard.KeyCodes.S,
             D: Phaser.Input.Keyboard.KeyCodes.D
-        });
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.input.keyboard.on('keydown-H', () => this.toggleHitboxes());
-        this.input.keyboard.on('keydown-R', () => this.scene.restart());
+        }) as MainScene['wasd'];
+        this.spaceKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        keyboard.on('keydown-H', () => this.toggleHitboxes());
+        keyboard.on('keydown-R', () => this.scene.restart());
     }
 
     createHud() {
         // scrollFactor 0 = pinned to the screen instead of the world
-        const style = { fontSize: '16px', fill: '#fff', stroke: '#2c3e50', strokeThickness: 3 };
+        const style: Phaser.Types.GameObjects.Text.TextStyle = {
+            fontSize: '16px', color: '#fff', stroke: '#2c3e50', strokeThickness: 3,
+        };
         this.add.text(16, 16, 'Move: ←/→ or A/D   Jump: ↑/W/Space   R: restart   H: hitboxes', style)
             .setScrollFactor(0);
         this.statusText = this.add.text(16, 40, '', style).setScrollFactor(0);
@@ -202,13 +239,13 @@ class MainScene extends Phaser.Scene {
 
     updateCharacterSelect() {
         const select = document.getElementById('character-select');
-        if (select) {
+        if (select instanceof HTMLSelectElement) {
             select.value = this.currentCharacter;
         }
     }
 
-    switchCharacter(character) {
-        if (!this.player || !CHARACTERS[character]) return;
+    switchCharacter(character: CharacterKey) {
+        if (!this.player) return;
         this.currentCharacter = character;
         this.player.anims.play(`${character}_${this.currentAnimation}`);
         this.applyHitbox();
@@ -228,15 +265,16 @@ class MainScene extends Phaser.Scene {
             return;
         }
         world.drawDebug = !world.drawDebug;
-        world.debugGraphic.clear();
+        world.debugGraphic?.clear();
     }
 
     // Respawn point = start of the last ground segment the dog stood on
-    updateCheckpoint(onGround) {
+    updateCheckpoint(onGround: boolean) {
         const { ground, groundY } = this.level;
         if (!onGround || Math.abs(this.player.y - groundY) > 1) return;
         const index = ground.findIndex(([from, to]) => this.player.x >= from && this.player.x <= to);
-        if (index > 0) this.checkpoint = { x: ground[index][0] + 48, y: groundY };
+        const segment = ground[index];
+        if (index > 0 && segment) this.checkpoint = { x: segment[0] + 48, y: groundY };
     }
 
     respawn() {
@@ -270,7 +308,7 @@ class MainScene extends Phaser.Scene {
 
     // Best time per level, kept in this browser only. Storage can be unavailable (private mode),
     // so failures just mean no best time.
-    saveBestTime(seconds) {
+    saveBestTime(seconds: number): BestTime | null {
         const key = `maltipoo.best.${this.level.id}`;
         try {
             const previous = Number(localStorage.getItem(key)) || Infinity;
@@ -284,15 +322,15 @@ class MainScene extends Phaser.Scene {
         }
     }
 
-    showFinishPanel(seconds, best) {
+    showFinishPanel(seconds: number, best: BestTime | null) {
         const x = VIEW.width / 2;
         const y = 210;
-        const add = (object) => object.setScrollFactor(0);
-        const text = (dy, content, size, color = '#ffffff') => add(this.add.text(x, y + dy, content, {
-            fontSize: `${size}px`, fill: color, stroke: '#2c3e50', strokeThickness: 4,
-        }).setOrigin(0.5));
+        const text = (dy: number, content: string, size: number, color = '#ffffff') =>
+            this.add.text(x, y + dy, content, {
+                fontSize: `${size}px`, color, stroke: '#2c3e50', strokeThickness: 4,
+            }).setOrigin(0.5).setScrollFactor(0);
 
-        add(this.add.rectangle(x, y, 440, 190, 0x2c3e50, 0.85).setStrokeStyle(3, 0xffffff));
+        this.add.rectangle(x, y, 440, 190, 0x2c3e50, 0.85).setStrokeStyle(3, 0xffffff).setScrollFactor(0);
         text(-55, 'Home sweet home!', 34);
         text(-8, `Time: ${seconds.toFixed(1)}s    Falls: ${this.falls}`, 20);
         if (best) {
@@ -302,16 +340,16 @@ class MainScene extends Phaser.Scene {
         text(62, 'Press R to play again', 18, '#ffe082');
     }
 
-    update(time) {
-        if (!this.cursors || !this.wasd || !this.player || this.finished) return;
+    override update() {
+        if (this.finished) return;
 
         // Handle movement
-        const moveLeft = this.cursors.left?.isDown || this.wasd.A?.isDown;
-        const moveRight = this.cursors.right?.isDown || this.wasd.D?.isDown;
+        const moveLeft = this.cursors.left.isDown || this.wasd.A.isDown;
+        const moveRight = this.cursors.right.isDown || this.wasd.D.isDown;
         const onGround = this.player.body.touching.down;
-        const canJump = onGround && (this.cursors.up?.isDown || this.wasd.W?.isDown || this.spaceKey?.isDown);
+        const canJump = onGround && (this.cursors.up.isDown || this.wasd.W.isDown || this.spaceKey.isDown);
 
-        let animation = 'idle';
+        let animation: AnimationState = 'idle';
 
         // Movement logic
         if (moveLeft) {
@@ -344,7 +382,7 @@ class MainScene extends Phaser.Scene {
             this.respawn();
         }
 
-        this.coop?.update(time);
+        this.coop?.update();
 
         const name = CHARACTERS[this.currentCharacter].name;
         this.statusText.setText(`${name}   Time: ${this.elapsedSeconds().toFixed(1)}s   Falls: ${this.falls}`);
@@ -353,7 +391,7 @@ class MainScene extends Phaser.Scene {
 }
 
 // Game config
-const config = {
+const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     width: VIEW.width,
     height: VIEW.height,
@@ -362,7 +400,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: PHYSICS.gravity },
+            gravity: { x: 0, y: PHYSICS.gravity },
             debug: false
         }
     },
@@ -379,10 +417,10 @@ if (import.meta.env.DEV) window.game = game;
 window.addEventListener('DOMContentLoaded', () => {
     const select = document.getElementById('character-select');
     if (select) {
-        select.addEventListener('change', (e) => {
-            const character = e.target.value;
-            const scene = game.scene.keys['MainScene'];
-            if (!scene) return;
+        select.addEventListener('change', () => {
+            const character = (select as HTMLSelectElement).value;
+            const scene = game.scene.getScene<MainScene>('MainScene');
+            if (!scene || !isCharacterKey(character)) return;
             if (scene.coop) {
                 scene.coop.requestCharacterChange(character);
             } else {

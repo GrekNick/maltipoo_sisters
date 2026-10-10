@@ -16,10 +16,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
 
-    // Files still in JavaScript are allowed but not checked until they're converted (M1.2).
-    "allowJs": true,
-    "checkJs": false,
-
     "types": ["vite/client", "node"],
     "skipLibCheck": true
   },

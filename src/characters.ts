@@ -78,3 +78,8 @@ export const CHARACTERS: Record<CharacterKey, Character> = {
 };
 
 export const CHARACTER_KEYS = Object.keys(CHARACTERS) as CharacterKey[];
+
+/** Narrows untrusted strings (DOM select values, network messages) to a known character. */
+export function isCharacterKey(value: unknown): value is CharacterKey {
+    return typeof value === 'string' && Object.hasOwn(CHARACTERS, value);
+}
