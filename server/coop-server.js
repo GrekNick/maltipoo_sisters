@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
         y: 400,
         character: assignedCharacter,
         flipX: false,
-        animation: 'turn'
+        animation: 'idle'
     });
 
     // Add new player to the players object
@@ -58,7 +58,7 @@ io.on('connection', (socket) => {
         y: 400,
         character: assignedCharacter,
         flipX: false,
-        animation: 'turn'
+        animation: 'idle'
     };
 
     console.log(`Player ${socket.id} assigned character: ${assignedCharacter}`);

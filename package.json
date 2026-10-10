@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "node server.js"
+    "dev:coop": "vite --mode coop",
+    "build:coop": "vite build --mode coop",
+    "coop:server": "node server/coop-server.js"
   },
   "keywords": [],
   "author": "",
