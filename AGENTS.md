@@ -20,7 +20,7 @@ The owner is an experienced developer who is new to game development. When you i
 concept (tilemaps, coyote time, parallax…), explain it briefly in the PR or reply, mapped to general dev terms.
 
 ## Stack and commands
-Phaser 3.90 (Arcade Physics) · Vite 5 · Vitest 2 · **TypeScript 5.9** (strict, type-check only: Vite/Vitest strip
+Phaser 4 (WebGL, Arcade Physics) · Vite 5 · Vitest 2 · **TypeScript 5.9** (strict, type-check only: Vite/Vitest strip
 types, `tsc` never emits). Node 20 in CI. Pure modules and tests are TypeScript; `main.js` and `src/coop/` are
 converted in M1.2 together with the Phaser 4 upgrade. Update this section when that lands.
 

@@ -1,6 +1,6 @@
 # Maltipoo Sisters Game 🐕
 
-A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built with Phaser 3.
+A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built with Phaser 4 and TypeScript.
 
 ## Features
 
@@ -188,7 +188,8 @@ maltipoo_sisters/
 
 ## Technologies Used
 
-- **Phaser 3** - Game framework
+- **Phaser 4** - Game framework (WebGL renderer, Arcade Physics)
+- **TypeScript** - Strict type-checking (`npm run typecheck`)
 - **Vite** - Build tool and dev server
 - **Vitest** - Unit tests
 - **Socket.io** - Real-time communication for the co-op prototype
