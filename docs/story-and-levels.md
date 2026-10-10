@@ -17,14 +17,17 @@ simply to **find Smok Junior**.
 
 **Plot (kid-sized, told in a few comic panels)**
 1. *Intro: the Wieliczka Salt Mine.* The three friends visit the famous salt mine. Deep in a salt chamber
-   they find a **glowing red stone**. Smok Junior remembers his parents' rule, puts the stone in his backpack
-   to take it to the castle, and in the crowd on the way out of the mine the friends get **separated**.
+   they find a **glowing red stone**. It's so beautiful down here, so how will it shine in real sunlight?
+   Smok Junior puts it in his backpack so they can all **see it glow in the sun** once they're outside (and,
+   remembering his parents' rule, to bring it to the castle afterwards). But in the crowd on the way out of
+   the mine the friends get **separated**.
 2. *The journey back.* Kiwi and Sofi set off for Wawel, where Smok Junior surely went. At the end of
    each level they catch a glimpse of him ahead (a wave from a rooftop, a tail disappearing around a corner),
    or someone tells them which way he went. He's looking for them too.
 3. *Ending: Wawel.* The sisters climb up through the Dragon's Den into the castle and find Smok Junior.
-   Happy reunion! He shows them the family treasury, where the red stone gets its place of honour. The
-   friends celebrate with obwarzanki on Wawel Hill, with fireworks over the Vistula.
+   Happy reunion! On Wawel Hill, in the setting sun, he finally takes the stone out: it **sparkles red in the
+   real sunlight**, just like they hoped. Then it gets its place of honour in the family treasury, and the
+   friends celebrate with obwarzanki, with fireworks over the Vistula.
 
 Tone: warm, funny, about friendship and finding each other. Nothing to defeat.
 
