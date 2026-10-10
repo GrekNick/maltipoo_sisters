@@ -1,21 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { level1 } from '../src/levels/level1.js';
-import { PHYSICS } from '../src/physics.js';
-import { CHARACTERS, SPRITE_SCALE } from '../src/characters.js';
-import { surfacesOf, reachableSurfaceIds, goalSurface } from '../src/levels/reachability.js';
+import { level1 } from '../src/levels/level1';
+import { PHYSICS } from '../src/physics';
+import { CHARACTERS, SPRITE_SCALE } from '../src/characters';
+import { surfacesOf, reachableSurfaceIds, goalSurface } from '../src/levels/reachability';
+import type { Level } from '../src/levels/types';
 
 const PLATFORM_THICKNESS = 32;
 // Tallest physics body on screen (px), plus a little room so walking under doesn't snag
 const DOG_HEIGHT = Math.max(...Object.values(CHARACTERS).map(c => c.hitbox.height * SPRITE_SCALE));
 const HEADROOM = DOG_HEIGHT + 4;
 
-const overlapsX = (a, b) => a.left < b.right && b.left < a.right;
+type Span = { left: number; right: number };
+const overlapsX = (a: Span, b: Span) => a.left < b.right && b.left < a.right;
 
 describe('level1 layout', () => {
     const level = level1;
 
     it('spawn and goal stand on the ground inside the world', () => {
-        const onGround = (x) => level.ground.some(([from, to]) => x >= from && x <= to);
+        const onGround = (x: number) => level.ground.some(([from, to]) => x >= from && x <= to);
         expect(level.spawn.y).toBe(level.groundY);
         expect(onGround(level.spawn.x)).toBe(true);
         expect(onGround(level.goal.x)).toBe(true);
@@ -25,7 +27,7 @@ describe('level1 layout', () => {
     it('ground segments are ordered and do not overlap', () => {
         level.ground.forEach(([from, to], i) => {
             expect(to).toBeGreaterThan(from);
-            if (i > 0) expect(from).toBeGreaterThan(level.ground[i - 1][1]);
+            if (i > 0) expect(from).toBeGreaterThan(level.ground[i - 1]![1]);
         });
     });
 
@@ -58,11 +60,13 @@ describe('level1 layout', () => {
         const reachable = reachableSurfaceIds(level, PHYSICS);
         const unreachable = surfacesOf(level).filter(s => !reachable.has(s.id)).map(s => s.id);
         expect(unreachable).toEqual([]);
-        expect(reachable.has(goalSurface(level).id)).toBe(true);
+        const goal = goalSurface(level);
+        expect(goal).toBeDefined();
+        expect(reachable.has(goal!.id)).toBe(true);
     });
 
     it('the reachability check really catches an impossible level', () => {
-        const brokenLevel = { ...level, ground: [[0, 1000], [2000, 3200]], platforms: [] };
-        expect(reachableSurfaceIds(brokenLevel, PHYSICS).has(goalSurface(brokenLevel).id)).toBe(false);
+        const brokenLevel: Level = { ...level, ground: [[0, 1000], [2000, 3200]], platforms: [] };
+        expect(reachableSurfaceIds(brokenLevel, PHYSICS).has(goalSurface(brokenLevel)!.id)).toBe(false);
     });
 });

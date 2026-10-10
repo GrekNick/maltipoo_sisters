@@ -166,8 +166,8 @@ result). See the header of `tools/build-sprites.mjs` for details.
 maltipoo_sisters/
 ├── src/
 │   ├── main.js          # Main game logic and Phaser scenes
-│   ├── characters.js    # Character spritesheets, animations and hitboxes
-│   ├── physics.js       # Gravity, run speed, jump speed
+│   ├── characters.ts    # Character spritesheets, animations and hitboxes
+│   ├── physics.ts       # Gravity, run speed, jump speed
 │   ├── levels/          # Level data + reachability checks (until levels move to Tiled)
 │   └── coop/            # Online co-op client (parked, behind VITE_COOP)
 ├── assets/

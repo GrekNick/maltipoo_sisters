@@ -51,7 +51,7 @@ The tool we chose in [decisions.md](decisions.md).
 |---|---|
 | 2.1 Tiled project in `levels/` (`.tiled-project`, object types: `spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`) plus a Kenney CC0 placeholder tileset (32 px) | Opening the project in Tiled shows ready-to-use object types |
 | 2.2 Loader: `make.tilemap` + layers (`Background`, `Ground`, `Foreground`, `Objects`) → solids, spawn, goal, checkpoints | A test map loads with no coordinates in code |
-| 2.3 Rebuild level 1 in Tiled; delete `src/levels/level1.js` | Level 1 plays the same as today |
+| 2.3 Rebuild level 1 in Tiled; delete `src/levels/level1.ts` | Level 1 plays the same as today |
 | 2.4 Tests read Tiled JSON: reachability, headroom, a spawn and a goal exist, all object types are known | `npm test` validates every map in `levels/` |
 | 2.5 Level-making guide in `docs/level-design.md` (how to add a map, conventions, checklist) | You can build a new level without reading code |
 

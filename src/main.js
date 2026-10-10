@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, FRAME_SIZE, SPRITE_SCALE } from './characters.js';
-import { PHYSICS } from './physics.js';
-import { level1 } from './levels/level1.js';
+import { CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, FRAME_SIZE, SPRITE_SCALE } from './characters';
+import { PHYSICS } from './physics';
+import { level1 } from './levels/level1';
 
 // Online co-op is parked behind a build flag (`npm run dev:coop`, see README).
 // When the flag is off the co-op module and socket.io are not bundled at all.

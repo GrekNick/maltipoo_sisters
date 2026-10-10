@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { SPRITE_SCALE } from '../characters.js';
+import { SPRITE_SCALE } from '../characters';
 
 const SERVER_URL = import.meta.env.VITE_COOP_SERVER_URL || 'http://localhost:3000';
 

@@ -2,18 +2,23 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { PNG } from 'pngjs';
 import sprites from '../assets/characters/sprites.json';
-import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE } from '../src/characters.js';
+import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, ANIMATION_STATES } from '../src/characters';
+
+// src/characters.ts narrows the JSON's `states: string[]` to the AnimationState union; prove that's safe.
+it('sprites.json lists exactly the animation states the game knows', () => {
+    expect(sprites.states).toEqual(['idle', 'move', 'jump']);
+});
 
 describe.each(CHARACTER_KEYS)('%s sprites', (key) => {
     const { frames, hitbox } = CHARACTERS[key];
 
     it('has one distinct frame per animation state', () => {
-        const indices = sprites.states.map(state => frames[state]?.frame);
+        const indices = ANIMATION_STATES.map(state => frames[state]?.frame);
         expect(indices).toEqual(sprites.states.map((_, i) => i));
     });
 
     it('every frame fits in the cell and has its feet on the bottom edge', () => {
-        for (const state of sprites.states) {
+        for (const state of ANIMATION_STATES) {
             const { x, y, width, height } = frames[state].bounds;
             expect(x).toBeGreaterThanOrEqual(0);
             expect(x + width).toBeLessThanOrEqual(FRAME_SIZE.width);
