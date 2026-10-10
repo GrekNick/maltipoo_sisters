@@ -1,6 +1,7 @@
 // Stopgap hand-written level data; it will be replaced by a Tiled map (see docs/decisions.md).
 // Every coordinate is in world pixels. Surfaces are rectangles given by their top-left corner.
 export const level1 = {
+    id: 'level1',
     width: 3200,  // 4 screens wide
     height: 600,
     groundY: 552, // top of the ground; the ground fills down to the bottom of the world

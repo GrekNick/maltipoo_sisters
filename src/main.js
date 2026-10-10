@@ -14,7 +14,6 @@ class MainScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MainScene' });
         this.level = level1;
-        this.debugText = null;
         this.currentCharacter = Phaser.Utils.Array.GetRandom(CHARACTER_KEYS);
         this.currentAnimation = 'idle';
         this.coop = null;
@@ -30,11 +29,15 @@ class MainScene extends Phaser.Scene {
         // Draw order follows creation order: backdrop first, HUD last so it stays on top
         this.cameras.main.setBackgroundColor('#87ceeb');
         this.checkpoint = { ...this.level.spawn };
+        this.finished = false;
+        this.falls = 0;
+        this.startTime = this.time.now;
 
         this.createTextures();
         this.createBackdrop();
         this.createLevel();
         this.createAnimations();
+        this.createGoal(); // before the player so the dog is drawn in front of the house
         this.createPlayer();
         this.createCamera();
         this.createInput();
@@ -76,6 +79,17 @@ class MainScene extends Phaser.Scene {
         g.fillStyle(0xa5d6a7).fillEllipse(200, 120, 400, 240);
         g.generateTexture('hill', 400, 120);
 
+        // Dog house: roof, plank walls, arched door
+        g.clear();
+        g.fillStyle(0xd9a066).fillRect(14, 62, 132, 78);
+        g.fillStyle(0xb9854f);
+        for (let y = 76; y < 140; y += 14) g.fillRect(14, y, 132, 3);
+        g.fillStyle(0x3b2414).fillRect(55, 100, 50, 40).fillCircle(80, 100, 25);
+        g.fillStyle(0xc0392b).fillTriangle(0, 62, 80, 4, 160, 62);
+        g.fillStyle(0x922b21).fillRect(0, 58, 160, 8);
+        g.lineStyle(3, 0x5d3a1a).strokeRect(14, 62, 132, 78).strokeTriangle(0, 62, 80, 4, 160, 62);
+        g.generateTexture('doghouse', 160, 142);
+
         g.destroy();
     }
 
@@ -108,6 +122,14 @@ class MainScene extends Phaser.Scene {
 
         // The world is wider than the screen and has no floor, so the dog can fall into pits
         this.physics.world.setBounds(0, 0, width, height, true, true, true, false);
+    }
+
+    createGoal() {
+        const { goal, groundY } = this.level;
+        this.add.image(goal.x, groundY, 'doghouse').setOrigin(0.5, 1);
+        // Trigger area in front of the door; reaching it finishes the level
+        this.goalZone = this.add.zone(goal.x, groundY - 30, 40, 60);
+        this.physics.add.existing(this.goalZone, true);
     }
 
     // Looks and collision are separate on purpose, like a Tiled map will be: tiles for the
@@ -143,6 +165,7 @@ class MainScene extends Phaser.Scene {
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
         this.physics.add.collider(this.player, this.solids);
+        this.physics.add.overlap(this.player, this.goalZone, () => this.reachHome());
     }
 
     createCamera() {
@@ -169,8 +192,12 @@ class MainScene extends Phaser.Scene {
         const style = { fontSize: '16px', fill: '#fff', stroke: '#2c3e50', strokeThickness: 3 };
         this.add.text(16, 16, 'Move: ←/→ or A/D   Jump: ↑/W/Space   R: restart   H: hitboxes', style)
             .setScrollFactor(0);
-        this.debugText = this.add.text(16, 40, 'Character: ' + this.currentCharacter, style).setScrollFactor(0);
+        this.statusText = this.add.text(16, 40, '', style).setScrollFactor(0);
         this.positionText = this.add.text(16, 62, '', style).setScrollFactor(0);
+    }
+
+    elapsedSeconds() {
+        return (this.time.now - this.startTime) / 1000;
     }
 
     updateCharacterSelect() {
@@ -186,7 +213,6 @@ class MainScene extends Phaser.Scene {
         this.player.anims.play(`${character}_${this.currentAnimation}`);
         this.applyHitbox();
         this.updateCharacterSelect();
-        if (this.debugText) this.debugText.setText('Character: ' + character);
     }
 
     applyHitbox() {
@@ -218,10 +244,66 @@ class MainScene extends Phaser.Scene {
         // previous position deep in the pit and the collision solver pushes it through the ground.
         this.player.body.reset(this.checkpoint.x, this.checkpoint.y);
         this.player.setVelocity(0, 0);
+        this.falls++;
+    }
+
+    reachHome() {
+        if (this.finished) return;
+        this.finished = true;
+        const seconds = this.elapsedSeconds();
+
+        // Freeze the world and let the dog trot into the house
+        this.physics.pause();
+        this.player.anims.play(`${this.currentCharacter}_move`);
+        this.tweens.add({
+            targets: this.player,
+            x: this.level.goal.x,
+            alpha: 0,
+            scale: SPRITE_SCALE * 0.6,
+            duration: 700,
+            ease: 'Sine.easeIn',
+        });
+
+        const best = this.saveBestTime(seconds);
+        this.showFinishPanel(seconds, best);
+    }
+
+    // Best time per level, kept in this browser only. Storage can be unavailable (private mode),
+    // so failures just mean no best time.
+    saveBestTime(seconds) {
+        const key = `maltipoo.best.${this.level.id}`;
+        try {
+            const previous = Number(localStorage.getItem(key)) || Infinity;
+            if (seconds < previous) {
+                localStorage.setItem(key, String(seconds));
+                return { seconds, isNew: previous !== Infinity };
+            }
+            return { seconds: previous, isNew: false };
+        } catch {
+            return null;
+        }
+    }
+
+    showFinishPanel(seconds, best) {
+        const x = VIEW.width / 2;
+        const y = 210;
+        const add = (object) => object.setScrollFactor(0);
+        const text = (dy, content, size, color = '#ffffff') => add(this.add.text(x, y + dy, content, {
+            fontSize: `${size}px`, fill: color, stroke: '#2c3e50', strokeThickness: 4,
+        }).setOrigin(0.5));
+
+        add(this.add.rectangle(x, y, 440, 190, 0x2c3e50, 0.85).setStrokeStyle(3, 0xffffff));
+        text(-55, 'Home sweet home!', 34);
+        text(-8, `Time: ${seconds.toFixed(1)}s    Falls: ${this.falls}`, 20);
+        if (best) {
+            text(24, best.isNew ? 'New best time!' : `Best: ${best.seconds.toFixed(1)}s`, 18,
+                best.isNew ? '#ffe082' : '#cfd8dc');
+        }
+        text(62, 'Press R to play again', 18, '#ffe082');
     }
 
     update(time) {
-        if (!this.cursors || !this.wasd || !this.player) return;
+        if (!this.cursors || !this.wasd || !this.player || this.finished) return;
 
         // Handle movement
         const moveLeft = this.cursors.left?.isDown || this.wasd.A?.isDown;
@@ -264,6 +346,8 @@ class MainScene extends Phaser.Scene {
 
         this.coop?.update(time);
 
+        const name = CHARACTERS[this.currentCharacter].name;
+        this.statusText.setText(`${name}   Time: ${this.elapsedSeconds().toFixed(1)}s   Falls: ${this.falls}`);
         this.positionText.setText(`Позиція: X: ${Math.floor(this.player.x)}, Y: ${Math.floor(this.player.y)}`);
     }
 }
