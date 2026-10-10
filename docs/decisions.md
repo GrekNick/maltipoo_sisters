@@ -5,9 +5,50 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-10 — Audience: families and kids
+
+**Status:** accepted.
+
+No game over and no lives; a fall returns you to a nearby checkpoint. Levels are short (2–4 min), text is
+minimal, and touch and gamepad controls are first-class. Difficulty comes from finding the way, not
+from precision. This is pillar 1 in [roadmap.md](roadmap.md).
+
+---
+
+## 2026-10-10 — Core mechanic: one player swaps between the sisters, each with her own skill
+
+**Status:** accepted. The exact skills are a proposal: Kiwi has a **big jump**, Sofi can **squeeze** through low gaps.
+
+Swapping is instant and allowed anytime. Levels include moments that need each sister.
+*Alternatives considered:* picking one dog with different stats (the theme goes unused), local 2-player co-op
+(harder camera and level design; parked), and cosmetic-only differences.
+
+---
+
+## 2026-10-10 — Part 1 is set in Kraków, with a friendly Wawel dragon kid
+
+**Status:** accepted; details in [story-and-levels.md](story-and-levels.md).
+
+One world, 5 locations (Planty → Rynek → Kazimierz → Smocza Jama → Wawel), one level each to start,
+possibly 2–3 levels per location later. A little dragon takes the sisters' toy and hides in Wawel Castle;
+it ends in friendship, not a fight.
+
+---
+
+## 2026-10-10 — Migrate to Phaser 4 + TypeScript before building the Tiled pipeline
+
+**Status:** accepted, milestone M1 in [roadmap.md](roadmap.md).
+
+The code is ~500 lines, so migrating is cheapest now. Typed level data and Tiled objects catch mistakes
+early, and Phaser 4 is the current engine (Phaser 3.90 was announced as the final v3 release).
+Order: TypeScript setup on the pure modules → Phaser 4 → scene split.
+
+---
+
 ## 2026-10-10 — Levels will be authored in Tiled, loaded with Phaser's native tilemap support
 
-**Status:** accepted, to be implemented in 1–2 steps. Until then, levels live as plain data in `src/levels/`.
+**Status:** accepted, milestone M2 in [roadmap.md](roadmap.md) (right after the M1 tech foundation).
+Until then, levels live as plain data in `src/levels/`.
 
 **Decision**
 - Paint levels in [Tiled](https://www.mapeditor.org/) and export them as JSON.

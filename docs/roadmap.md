@@ -1,0 +1,114 @@
+# Roadmap
+
+The plan from today's prototype to a first release. Story and level details live in
+[story-and-levels.md](story-and-levels.md); the reasons behind choices live in [decisions.md](decisions.md).
+
+## Vision
+
+**Maltipoo Sisters** is a gentle 2D platformer for families and kids. Two maltipoo sisters, **Kiwi** and
+**Sofi**, chase a mischievous little **Wawel dragon** across **Kraków** to get back their favourite toy.
+The player swaps between the sisters, and each has her own skill. Levels need both.
+
+### Design pillars
+Use these to settle arguments. If a feature fights a pillar, cut it or change it.
+
+1. **Kind to kids**: no game over and no lives. Falling only sends you back to a nearby checkpoint.
+   Text is short or replaced by icons. Levels take 2–4 minutes.
+2. **Two sisters, two skills**: every level has moments that need Kiwi and moments that need Sofi.
+   Swapping is instant and always allowed.
+3. **Kraków you can recognise**: each location has a landmark, a local treat to collect (obwarzanek) and a
+   little bit of its legend.
+4. **Small and finished beats big and half-done**: ship one world of 5 locations before dreaming of more.
+
+## Where we are (done)
+
+| PR | What |
+|---|---|
+| #1–#6 | Prototype: Phaser 3 + Vite, two dogs, character select, online co-op experiment, GitHub Pages deploy |
+| #7 | Cleanup: co-op parked behind `VITE_COOP`, real hitboxes, rendering fixes |
+| #8 | Playable level 1: 4 screens wide, pits + checkpoints, dog house finish, best time, sprite pipeline, Vitest + CI |
+
+## Milestones
+
+Each milestone is a few PRs. Each PR is one branch with one commit per concern, and has a **"done when"**
+check you can verify by playing or running tests. Milestones are ordered; chunks inside a milestone mostly are too.
+
+### M1 — Tech foundation: Phaser 4 + TypeScript + scenes
+Cheapest now, while the game is ~500 lines.
+
+| Chunk | Done when |
+|---|---|
+| 1.1 TypeScript setup: `tsconfig`, typecheck script and CI step; convert the pure modules first (`physics`, `levels/*`, `characters`) | `npm run typecheck` passes in CI; tests still pass |
+| 1.2 Phaser 3.90 → 4 upgrade; convert `main.js` to TS | Level 1 plays the same; no console errors |
+| 1.3 Split scenes: `Boot` → `Preload` (loading bar) → `Game` (takes a level key) → `UI` (HUD overlay) | `GameScene` contains no HUD code; restart still works |
+| 1.4 Responsive canvas (`Scale.FIT`) | The game fills a phone or tablet screen without distortion |
+
+### M2 — Level planner: Tiled pipeline
+The tool we chose in [decisions.md](decisions.md).
+
+| Chunk | Done when |
+|---|---|
+| 2.1 Tiled project in `levels/` (`.tiled-project`, object types: `spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`) plus a Kenney CC0 placeholder tileset (32 px) | Opening the project in Tiled shows ready-to-use object types |
+| 2.2 Loader: `make.tilemap` + layers (`Background`, `Ground`, `Foreground`, `Objects`) → solids, spawn, goal, checkpoints | A test map loads with no coordinates in code |
+| 2.3 Rebuild level 1 in Tiled; delete `src/levels/level1.js` | Level 1 plays the same as today |
+| 2.4 Tests read Tiled JSON: reachability, headroom, a spawn and a goal exist, all object types are known | `npm test` validates every map in `levels/` |
+| 2.5 Level-making guide in `docs/level-design.md` (how to add a map, conventions, checklist) | You can build a new level without reading code |
+
+### M3 — Game shell: start screen, settings, progress
+| Chunk | Done when |
+|---|---|
+| 3.1 **Title screen**: logo, Play / Continue, Settings, Credits; idle dogs animated | The game opens on the title screen; Enter, tap or gamepad starts it |
+| 3.2 **Settings**: music and sound volume, language (Ukrainian / English / Polish), "show hitboxes" moved here from the H key | Settings survive a page reload |
+| 3.3 **Level select = a map of Kraków**: locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
+| 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map | Esc or a tap on the pause icon pauses the game |
+| 3.5 Save progress (localStorage, versioned) | A refresh keeps unlocked levels and best times |
+| 3.6 i18n: all UI text comes from `locales/{uk,en,pl}.json` | Switching language changes every on-screen string |
+
+### M4 — The sisters mechanic
+| Chunk | Done when |
+|---|---|
+| 4.1 **Swap** (Tab, Q or a button tap): instant switch in place, short sparkle effect | You can swap mid-jump with no physics glitches |
+| 4.2 **Kiwi: big jump** (higher jump) | A ledge in a test map is reachable only by Kiwi |
+| 4.3 **Sofi: squeeze** (fits through low tunnels) | A low tunnel in a test map is passable only by Sofi |
+| 4.4 **Sister gates** in Tiled (e.g. a sign showing which sister is needed) and the reachability test made aware of skills | Tests prove each level is finishable with swapping |
+| 4.5 The inactive sister follows as a companion (cosmetic, teleports when left behind) | Both dogs are always on screen together |
+
+### M5 — Game feel and kid-friendly controls
+| Chunk | Done when |
+|---|---|
+| 5.1 Jump feel: coyote time, jump buffering, variable jump height | Jumps feel forgiving; tested on the pure movement logic |
+| 5.2 Touch controls (on-screen buttons) and gamepad | Playable on a tablet and with a controller |
+| 5.3 Sound: jump, land, collect, swap, finish; a music loop per location | Volume settings apply |
+| 5.4 Juice: dust puffs, squash and stretch on landing, camera nudge, treat sparkle | Players notice it feels alive |
+
+### M6 — Content: Kraków world (5 locations)
+One PR per location; see [story-and-levels.md](story-and-levels.md).
+
+| Chunk | Done when |
+|---|---|
+| 6.1 Story intro and ending (simple comic panels or speech bubbles; skippable) | The story makes sense without reading much |
+| 6.2 Dragon kid NPC: appears, taunts, flies away (scripted, not an enemy) | Shows up in every location |
+| 6.3–6.7 Locations 1–5 | Each one passes the tests and has had a playtest with a kid |
+| 6.8 Collectibles: obwarzanki per level, shown on the map | The map shows how many were found |
+
+### M7 — Art pass
+| Chunk | Done when |
+|---|---|
+| 7.1 Real animation frames: walk cycle (4–6 frames), jump up/down, idle blink, swap pose. Same pipeline (`build:sprites`) | No more single-frame animations |
+| 7.2 Dragon kid sprite set | |
+| 7.3 Tileset per location (or one shared tileset with themed decor) | Kenney placeholders replaced |
+| 7.4 Title logo, map illustration, UI icons | |
+
+### M8 — Release 1.0
+Credits screen, performance pass on mobile, accessibility check (colours, text size), itch.io page and
+GitHub Pages, and a family playtest feedback round.
+
+### Later (parked)
+- More levels per location (each location becomes 2–3 levels).
+- Online co-op (code exists, behind `VITE_COOP`) or local 2-player co-op.
+- Part 2: another city or world.
+
+## Working agreement
+- One branch and one PR per chunk, one commit per concern. Squash nothing that should be revertable on its own.
+- Every PR states its **done when** and how it was tested (tests plus what was played).
+- Update this roadmap when a milestone finishes or the plan changes; record big choices in `decisions.md`.
