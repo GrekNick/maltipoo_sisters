@@ -13,6 +13,7 @@ A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built wi
 
 - [Roadmap](docs/roadmap.md): vision, design pillars, milestones and the next chunks of work
 - [Story and levels](docs/story-and-levels.md): Wieliczka → Wawel, friend Smok Junior, the level sequence
+- [Art direction](docs/art-direction.md): pixel-art style rules and character briefs (Smok Junior)
 - [Decisions](docs/decisions.md): why things are the way they are
 - [AGENTS.md](AGENTS.md): conventions and pitfalls for contributors and AI agents
 

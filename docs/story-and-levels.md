@@ -9,8 +9,9 @@ changes in [decisions.md](decisions.md).
 - **Kiwi**: the red-brown, chill sister. Strong legs: **big jump**.
 - **Sofi**: the cream, smiley sister. Small and bendy: **squeezes** through low gaps.
 - **Smok Junior**: a little dragon, the son of the legendary
-  [Wawel Dragon](https://en.wikipedia.org/wiki/Wawel_Dragon) family, and the sisters' good friend. He always wears
-  his backpack. His parents taught him one rule: *"Treasures belong in the castle."*
+  [Wawel Dragon](https://en.wikipedia.org/wiki/Wawel_Dragon) family, and the sisters' good friend. Black / charcoal
+  grey with a **bright yellow backpack** he always wears (art brief: [art-direction.md](art-direction.md)).
+  His parents taught him one rule: *"Treasures belong in the castle."*
 
 There are **no villains**. Nobody steals anything; the friends just lose each other. The sisters' goal is
 simply to **find Smok Junior**.
@@ -102,7 +103,7 @@ In-game text is available in **English (default)**, **Ukrainian** and **Polish**
 Character names stay the same in every language: Kiwi, Sofi, Smok Junior.
 
 ## Open questions
-- What does Smok Junior look like (colour, backpack style)? Do his parents appear in the ending?
+- Do Smok Junior's parents appear in the ending?
 - Second skills for later levels (Kiwi pushes crates, Sofi digs or sniffs out hidden treats)?
 - Story delivery: comic panels between levels, speech bubbles in-level, or both?
 - Is the wardrobe a good reward for treats, or should treats unlock something else (bonus levels, map stickers)?

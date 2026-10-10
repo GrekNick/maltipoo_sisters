@@ -10,6 +10,8 @@ villains). It's a browser game deployed to GitHub Pages.
 
 - Plan and milestones: [docs/roadmap.md](docs/roadmap.md). Check which milestone/chunk the task belongs to.
 - Story and level sequence: [docs/story-and-levels.md](docs/story-and-levels.md)
+- Art style rules and character briefs: [docs/art-direction.md](docs/art-direction.md). Follow these when adding art.
+  Never commit found reference images.
 - Why things are the way they are: [docs/decisions.md](docs/decisions.md). Read it before proposing
   architecture changes, and add an entry when you make a hard-to-reverse choice.
 - `microservices_game_architecture.md` is an early brainstorm and **not** the plan. Don't build toward it.
