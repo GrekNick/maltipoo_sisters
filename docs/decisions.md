@@ -5,9 +5,65 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-10 — Audience: families and kids
+
+**Status:** accepted.
+
+No game over and no lives; a fall returns you to a nearby checkpoint. Levels are short (2–4 min), text is
+minimal, and touch and gamepad controls are first-class. Difficulty comes from finding the way, not
+from precision. This is pillar 1 in [roadmap.md](roadmap.md).
+
+---
+
+## 2026-10-10 — Core mechanic: one player swaps between the sisters, each with her own skill
+
+**Status:** accepted. The exact skills are a proposal: Kiwi has a **big jump**, Sofi can **squeeze** through low gaps.
+
+Swapping is instant and allowed anytime. Levels include moments that need each sister.
+*Alternatives considered:* picking one dog with different stats (the theme goes unused), local 2-player co-op
+(harder camera and level design; parked), and cosmetic-only differences.
+
+---
+
+## 2026-10-10 — UI languages: English (default), Ukrainian, Polish
+
+**Status:** accepted, milestone M3 in [roadmap.md](roadmap.md).
+
+All player-facing text comes from locale files (`en`, `uk`, `pl`), switchable in Settings. English is the
+default and the fallback for missing strings. Story panels lean on pictures to keep the text small. Until M3,
+don't translate individual strings ad hoc.
+
+---
+
+## 2026-10-10 — Part 1: from the Wieliczka Salt Mine back to Wawel, with friend Smok Junior
+
+**Status:** accepted (revised the same day); details in [story-and-levels.md](story-and-levels.md).
+
+There are no villains. After finding a red stone in the Wieliczka Salt Mine, Smok Junior (a young Wawel dragon,
+taught that "treasures belong in the castle") takes it in his backpack, and the friends get separated on
+the way out. Kiwi and Sofi travel back to Wawel to find him. 5 locations along a real route: Wieliczka → Podgórze →
+Kazimierz → Rynek → Smocza Jama / Wawel, one level each to start, possibly 2–3 per location later.
+Collectibles are dog treats (smaczki); every level ends at a doggy pad by an obwarzanek stand.
+
+*Earlier draft (replaced):* a dragon kid steals the sisters' toy and they chase him. It was dropped because
+friendship works better than a chase for a kids' game.
+
+---
+
+## 2026-10-10 — Migrate to Phaser 4 + TypeScript before building the Tiled pipeline
+
+**Status:** accepted, milestone M1 in [roadmap.md](roadmap.md).
+
+The code is ~500 lines, so migrating is cheapest now. Typed level data and Tiled objects catch mistakes
+early, and Phaser 4 is the current engine (Phaser 3.90 was announced as the final v3 release).
+Order: TypeScript setup on the pure modules → Phaser 4 → scene split.
+
+---
+
 ## 2026-10-10 — Levels will be authored in Tiled, loaded with Phaser's native tilemap support
 
-**Status:** accepted, to be implemented in 1–2 steps. Until then, levels live as plain data in `src/levels/`.
+**Status:** accepted, milestone M2 in [roadmap.md](roadmap.md) (right after the M1 tech foundation).
+Until then, levels live as plain data in `src/levels/`.
 
 **Decision**
 - Paint levels in [Tiled](https://www.mapeditor.org/) and export them as JSON.

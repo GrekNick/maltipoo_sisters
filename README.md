@@ -9,6 +9,14 @@ A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built wi
 - 🏃‍♀️ Smooth animations and platformer mechanics
 - 🌐 Online co-op prototype (parked, opt-in — see [Online Co-op (parked)](#online-co-op-parked))
 
+## Project docs
+
+- [Roadmap](docs/roadmap.md): vision, design pillars, milestones and the next chunks of work
+- [Story and levels](docs/story-and-levels.md): Wieliczka → Wawel, friend Smok Junior, the level sequence
+- [Art direction](docs/art-direction.md): pixel-art style rules and character briefs (Smok Junior)
+- [Decisions](docs/decisions.md): why things are the way they are
+- [AGENTS.md](AGENTS.md): conventions and pitfalls for contributors and AI agents
+
 ## Prerequisites
 
 Before running the game, make sure you have [Node.js](https://nodejs.org/) installed on your system (version 14 or higher recommended).
