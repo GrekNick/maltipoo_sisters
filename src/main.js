@@ -80,7 +80,7 @@ class MainScene extends Phaser.Scene {
     createPlayer() {
         this.player = this.physics.add.sprite(100, 400, `${this.currentCharacter}_idle`);
         this.player.setScale(SPRITE_SCALE);
-        this.player.body.setSize(this.player.displayWidth, this.player.displayHeight + 568, true);
+        this.applyHitbox();
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
         this.player.body.setGravityY(300);
@@ -97,9 +97,10 @@ class MainScene extends Phaser.Scene {
             D: Phaser.Input.Keyboard.KeyCodes.D
         });
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.input.keyboard.on('keydown-H', () => this.toggleHitboxes());
 
         // Debug / info text
-        this.add.text(16, 16, 'Use arrow keys or WASD to move', { fontSize: '18px', fill: '#fff' });
+        this.add.text(16, 16, 'Use arrow keys or WASD to move, H for hitboxes', { fontSize: '18px', fill: '#fff' });
         this.add.text(16, 50, 'Position: X: 0, Y: 0', { fontSize: '16px', fill: '#ffffff' }).setName('positionText');
     }
 
@@ -114,10 +115,25 @@ class MainScene extends Phaser.Scene {
         if (!this.player || !CHARACTERS[character]) return;
         this.currentCharacter = character;
         this.player.anims.play(`${character}_${this.currentAnimation}`);
-        // Update body size to match new texture (after scale)
-        this.player.body.setSize(this.player.displayWidth, this.player.displayHeight + 568, true);
+        this.applyHitbox();
         this.updateCharacterSelect();
         if (this.debugText) this.debugText.setText('Character: ' + character);
+    }
+
+    applyHitbox() {
+        // Arcade body size/offset are in texture pixels; the sprite's scale is applied on top.
+        const { x, y, width, height } = CHARACTERS[this.currentCharacter].hitbox;
+        this.player.body.setSize(width, height, false).setOffset(x, y);
+    }
+
+    toggleHitboxes() {
+        const world = this.physics.world;
+        if (!world.debugGraphic) {
+            world.createDebugGraphic(); // also turns drawing on
+            return;
+        }
+        world.drawDebug = !world.drawDebug;
+        world.debugGraphic.clear();
     }
 
     update(time) {
@@ -185,6 +201,9 @@ const config = {
 
 // Start game
 const game = new Phaser.Game(config);
+
+// Handy for poking at the game from the browser console during development
+if (import.meta.env.DEV) window.game = game;
 
 // Hook up the character select DOM element if present
 window.addEventListener('DOMContentLoaded', () => {
