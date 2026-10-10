@@ -1,6 +1,8 @@
+import type { Level } from './types';
+
 // Stopgap hand-written level data; it will be replaced by a Tiled map (see docs/decisions.md).
 // Every coordinate is in world pixels. Surfaces are rectangles given by their top-left corner.
-export const level1 = {
+export const level1: Level = {
     id: 'level1',
     width: 3200,  // 4 screens wide
     height: 600,

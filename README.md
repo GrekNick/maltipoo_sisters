@@ -1,6 +1,6 @@
 # Maltipoo Sisters Game 🐕
 
-A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built with Phaser 3.
+A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built with Phaser 4 and TypeScript.
 
 ## Features
 
@@ -66,7 +66,7 @@ being built. With the flag off, none of the co-op code (or socket.io) ends up in
 
 All co-op code is isolated in:
 
-- `src/coop/CoopSession.js` — client side, loaded only when `VITE_COOP=true`
+- `src/coop/CoopSession.ts` — client side, loaded only when `VITE_COOP=true`
 - `server/coop-server.js` — Socket.IO relay server
 - `.env.coop` — enables the flag for `--mode coop`
 
@@ -165,9 +165,9 @@ result). See the header of `tools/build-sprites.mjs` for details.
 ```
 maltipoo_sisters/
 ├── src/
-│   ├── main.js          # Main game logic and Phaser scenes
-│   ├── characters.js    # Character spritesheets, animations and hitboxes
-│   ├── physics.js       # Gravity, run speed, jump speed
+│   ├── main.ts          # Main game logic and Phaser scenes
+│   ├── characters.ts    # Character spritesheets, animations and hitboxes
+│   ├── physics.ts       # Gravity, run speed, jump speed
 │   ├── levels/          # Level data + reachability checks (until levels move to Tiled)
 │   └── coop/            # Online co-op client (parked, behind VITE_COOP)
 ├── assets/
@@ -188,7 +188,8 @@ maltipoo_sisters/
 
 ## Technologies Used
 
-- **Phaser 3** - Game framework
+- **Phaser 4** - Game framework (WebGL renderer, Arcade Physics)
+- **TypeScript** - Strict type-checking (`npm run typecheck`)
 - **Vite** - Build tool and dev server
 - **Vitest** - Unit tests
 - **Socket.io** - Real-time communication for the co-op prototype

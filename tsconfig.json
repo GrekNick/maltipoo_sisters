@@ -1,0 +1,23 @@
+{
+  // Type-checking only: Vite (esbuild) and Vitest strip types themselves, so tsc never emits files.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    "types": ["vite/client", "node"],
+    "skipLibCheck": true
+  },
+  "include": ["src", "tests"]
+}
