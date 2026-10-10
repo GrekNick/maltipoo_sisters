@@ -1,0 +1,76 @@
+{
+  "frameWidth": 193,
+  "frameHeight": 187,
+  "artPixel": 4,
+  "states": [
+    "idle",
+    "move",
+    "jump"
+  ],
+  "characters": {
+    "kiwi": {
+      "idle": {
+        "frame": 0,
+        "bounds": {
+          "x": 15,
+          "y": 31,
+          "width": 164,
+          "height": 156
+        },
+        "sourceArtPixel": 19.21
+      },
+      "move": {
+        "frame": 1,
+        "bounds": {
+          "x": 4,
+          "y": 4,
+          "width": 185,
+          "height": 183
+        },
+        "sourceArtPixel": 18.46
+      },
+      "jump": {
+        "frame": 2,
+        "bounds": {
+          "x": 13,
+          "y": 30,
+          "width": 168,
+          "height": 157
+        },
+        "sourceArtPixel": 24.4
+      }
+    },
+    "sofi": {
+      "idle": {
+        "frame": 0,
+        "bounds": {
+          "x": 14,
+          "y": 31,
+          "width": 166,
+          "height": 156
+        },
+        "sourceArtPixel": 19.28
+      },
+      "move": {
+        "frame": 1,
+        "bounds": {
+          "x": 8,
+          "y": 23,
+          "width": 177,
+          "height": 164
+        },
+        "sourceArtPixel": 19.4
+      },
+      "jump": {
+        "frame": 2,
+        "bounds": {
+          "x": 7,
+          "y": 11,
+          "width": 180,
+          "height": 176
+        },
+        "sourceArtPixel": 17.16
+      }
+    }
+  }
+}

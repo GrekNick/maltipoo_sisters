@@ -74,8 +74,9 @@ export class CoopSession {
     }
 
     addOtherPlayer(info) {
-        const sprite = this.scene.add.sprite(info.x, info.y, `${info.character}_idle`);
+        const sprite = this.scene.add.sprite(info.x, info.y, info.character, 0);
         sprite.setScale(SPRITE_SCALE);
+        sprite.setOrigin(0.5, 1); // positions are feet, same as the local player
         sprite.setFlipX(info.flipX);
         sprite.character = info.character;
         this.otherPlayers[info.id] = sprite;

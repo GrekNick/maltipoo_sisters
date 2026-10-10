@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, SPRITE_SCALE } from './characters.js';
+import { CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, FRAME_SIZE, SPRITE_SCALE } from './characters.js';
 
 // Online co-op is parked behind a build flag (`npm run dev:coop`, see README).
 // When the flag is off the co-op module and socket.io are not bundled at all.
@@ -15,10 +15,8 @@ class MainScene extends Phaser.Scene {
     }
 
     preload() {
-        Object.entries(CHARACTERS).forEach(([character, { textures }]) => {
-            Object.entries(textures).forEach(([state, url]) => {
-                this.load.image(`${character}_${state}`, url);
-            });
+        Object.entries(CHARACTERS).forEach(([character, { sheet }]) => {
+            this.load.spritesheet(character, sheet, { frameWidth: FRAME_SIZE.width, frameHeight: FRAME_SIZE.height });
         });
     }
 
@@ -72,15 +70,17 @@ class MainScene extends Phaser.Scene {
             ANIMATION_STATES.forEach(state => {
                 const key = `${character}_${state}`;
                 if (!this.anims.exists(key)) {
-                    this.anims.create({ key, frames: [{ key }], frameRate: 10, repeat: -1 });
+                    const frame = CHARACTERS[character].frames[state].frame;
+                    this.anims.create({ key, frames: [{ key: character, frame }], frameRate: 10, repeat: -1 });
                 }
             });
         });
     }
 
     createPlayer() {
-        this.player = this.physics.add.sprite(100, 400, `${this.currentCharacter}_idle`);
+        this.player = this.physics.add.sprite(100, 400, this.currentCharacter, 0);
         this.player.setScale(SPRITE_SCALE);
+        this.player.setOrigin(0.5, 1); // position = feet, since frames have the feet on the bottom edge
         this.applyHitbox();
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
