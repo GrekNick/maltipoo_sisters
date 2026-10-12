@@ -29,7 +29,8 @@ npm run dev            # dev server: http://localhost:5173/maltipoo_sisters/  (n
 npm test               # Vitest, runs in CI on PRs and before every deploy
 npm run typecheck      # tsc --noEmit, also in CI
 npm run build          # production build into dist/ (gitignored)
-npm run build:sprites  # regenerate assets/characters/ from art/raw/ (commit the output)
+npm run build:sprites  # regenerate assets/characters/ and assets/ui/ from art/raw/ (commit the output)
+npm run art:kiwi       # regenerate Kiwi's pixel-art frames (art/raw/kiwi_pixel/) from her original image
 npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 
@@ -50,7 +51,9 @@ src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (use
 src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
 server/coop-server.js  Socket.IO relay for co-op
 assets/characters/     GENERATED spritesheets + sprites.json; don't edit by hand
-art/raw/               original art, the input to tools/build-sprites.mjs
+assets/ui/             GENERATED UI images at display size (title logo)
+art/raw/               original art, the input to tools/build-sprites.mjs (logo in art/raw/logo/)
+art/raw/kiwi_pixel/    Kiwi as true 52x52 pixel art (smile, trot, jump), made by tools/make-kiwi.mjs
 tests/                 Vitest suites (pure logic + data; no Phaser imports)
 docs/                  roadmap, story, decisions
 ```
@@ -116,7 +119,8 @@ Unit tests don't cover rendering, so also play-test:
 - Assets must be **imported** through Vite (`import url from '…png'`), not referenced by string paths. The
   site is served under `/maltipoo_sisters/` and string paths break in production.
 - The raw AI art was drawn at different scales per pose. Always go through `npm run build:sprites`, never
-  load `art/raw/` directly.
+  load `art/raw/` directly. If poses don't match in style, rebuild them from one design as true pixel art
+  (`tools/extract-pixel-grid.mjs`, see `tools/make-kiwi.mjs`) instead of rescaling.
 - Import project modules **without** a file extension (`'./physics'`); Vite and `tsc` resolve `.ts`.
 - Validate untrusted strings (DOM values, network messages) with `isCharacterKey()` before using them as keys.
 - After upgrading a dependency, restart the dev server with a clean `node_modules/.vite`; Vite can keep serving

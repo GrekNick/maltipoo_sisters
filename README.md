@@ -150,6 +150,9 @@ npm run build:sprites
 This rescales every pose to the same size, aligns the feet, and writes `assets/characters/` (commit the
 result). See the header of `tools/build-sprites.mjs` for details.
 
+Kiwi's frames are true pixel art generated from her original design (`npm run art:kiwi`, then
+`npm run build:sprites`). The same build also bakes the title logo into `assets/ui/`.
+
 ## Game Controls
 
 | Action     | Keys           |

@@ -1,4 +1,4 @@
-// The start screen: the sisters on a meadow, the title, and Start / Settings buttons.
+// The start screen: the logo, Start / Settings buttons, and the sisters on a meadow.
 import Phaser from 'phaser';
 import { Menu } from '../ui/Menu';
 import { addBackdrop, addGroundStrip } from './art';
@@ -17,12 +17,11 @@ export class TitleScene extends Phaser.Scene {
         addGroundStrip(this, 0, GROUND_Y, VIEW.width);
         this.addSisters();
 
-        this.add.text(VIEW.width / 2, 110, 'Maltipoo Sisters', {
-            fontSize: '64px', fontStyle: 'bold', color: '#ffe082', stroke: '#5d3a1a', strokeThickness: 10,
-        }).setOrigin(0.5);
-        this.add.text(VIEW.width / 2, 172, 'A Kraków adventure', { ...TEXT_STYLE, fontSize: '22px' }).setOrigin(0.5);
+        // The logo is baked at its display size (npm run build:sprites), so it's drawn unscaled and stays sharp
+        const logo = this.add.image(VIEW.width / 2, 8, 'logo').setOrigin(0.5, 0);
+        this.tweens.add({ targets: logo, y: 14, duration: 1800, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
 
-        new Menu(this, VIEW.width / 2, 260, [
+        new Menu(this, VIEW.width / 2, 370, [
             { label: 'Start', onSelect: () => this.scene.start(SceneKey.Game) },
             { label: 'Settings', onSelect: () => this.scene.start(SceneKey.Settings) },
         ]);
@@ -33,8 +32,8 @@ export class TitleScene extends Phaser.Scene {
 
     private addSisters() {
         // Kiwi trots in place, Sofi faces her and hops now and then
-        const kiwi = this.add.sprite(300, GROUND_Y, 'kiwi', 0).setOrigin(0.5, 1).play('kiwi_move');
-        const sofi = this.add.sprite(500, GROUND_Y, 'sofi', 0).setOrigin(0.5, 1).setFlipX(true).play('sofi_idle');
+        const kiwi = this.add.sprite(170, GROUND_Y, 'kiwi', 0).setOrigin(0.5, 1).play('kiwi_move');
+        const sofi = this.add.sprite(630, GROUND_Y, 'sofi', 0).setOrigin(0.5, 1).setFlipX(true).play('sofi_idle');
         // Pixel-sharp at any position, same as in the game
         kiwi.vertexRoundMode = 'fullAuto';
         sofi.vertexRoundMode = 'fullAuto';

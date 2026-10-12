@@ -15,6 +15,19 @@ Raw art goes into `art/raw/` and is turned into game spritesheets with `npm run 
 - One file per pose, with the same character size across poses (the dogs' raw poses drifted; the pipeline
   fixes some of that, but it's better to avoid it).
 
+## Kiwi and Sofi
+
+- **Kiwi** is true pixel art (52×52, `art/raw/kiwi_pixel/`), made from her original standing design by
+  `npm run art:kiwi`: the original serious mouth became an open smile with a small tongue, and the walk and jump
+  poses are the same drawing with lifted or tucked legs. Her separately generated move and jump images were
+  dropped because their colour, size and face didn't match.
+- **Sofi** still uses her AI poses, which already match each other. Real walk cycles for both come in M7.1.
+
+## Title logo
+
+`art/raw/logo/logo_roses.png` (Wawel in a rose wreath, both sisters, Smok Junior's tail at the cave). It is
+baked to its display height (320 px) by `npm run build:sprites` and drawn unscaled on the title screen.
+
 ## Smok Junior
 
 The sisters' friend: a young dragon from the Wawel dragon family. Curious, cheerful, a bit clumsy.

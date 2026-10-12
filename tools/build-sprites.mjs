@@ -17,6 +17,7 @@
  *   assets/characters/<character>.png   one horizontal strip per character, one cell per distinct source file
  *   assets/characters/sprites.json      frame size, per-frame opaque bounds (used for hitboxes) and the
  *                                       frame list of every animation state
+ *   assets/ui/<name>.png                UI images (title logo) at their display size
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,6 +41,13 @@ const STATES = ['idle', 'move', 'jump'];
 // - Kiwi is true pixel art made from her original design by tools/make-kiwi.mjs (smile, trot, tucked jump),
 //   so every pose is the same drawing. Her 4-frame trot bobs up on the passing frames.
 // - Sofi alternates her stride pose with her standing pose (stopgap until real walk frames, roadmap M7.1).
+// UI images (title logo, ...) are drawn unscaled in the game, like the characters, so they're shrunk to their
+// display height here with the same area filter. Width is padded to even so a centred image stays pixel-aligned.
+const UI_IMAGES = {
+    logo: { file: 'logo/logo_roses.png', height: 320 },
+};
+const UI_OUT_DIR = 'assets/ui';
+
 const KIWI = (name, options = {}) => ({ file: `kiwi_pixel/${name}.png`, artPixel: 1, ...options });
 const SOURCES = {
     kiwi: {
@@ -254,6 +262,17 @@ function main() {
 
     fs.writeFileSync(path.join(OUT_DIR, 'sprites.json'), JSON.stringify(meta, null, 2) + '\n');
     console.log(`frame ${frameWidth}x${frameHeight} -> ${OUT_DIR}/`);
+
+    fs.mkdirSync(UI_OUT_DIR, { recursive: true });
+    for (const [name, { file, height }] of Object.entries(UI_IMAGES)) {
+        const img = readPng(path.join(RAW_DIR, file));
+        const art = crop(img, opaqueBounds(img));
+        const resized = resizeArea(art, height / art.height);
+        const out = blank(resized.width + (resized.width % 2), resized.height + (resized.height % 2));
+        PNG.bitblt(resized, out, 0, 0, resized.width, resized.height, 0, 0);
+        fs.writeFileSync(path.join(UI_OUT_DIR, `${name}.png`), PNG.sync.write(out));
+        console.log(`ui ${name}: ${file} ${art.width}x${art.height} -> ${out.width}x${out.height}`);
+    }
 }
 
 main();

@@ -1,6 +1,7 @@
 // Loads everything once, shows a loading bar, then opens the title screen.
 import Phaser from 'phaser';
 import { CHARACTERS, FRAME_SIZE } from '../characters';
+import logoUrl from '../../assets/ui/logo.png';
 import { bakePlaceholderTextures, createCharacterAnimations } from './art';
 import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
@@ -21,6 +22,7 @@ export class PreloadScene extends Phaser.Scene {
         const bar = this.add.rectangle(x - BAR.width / 2, y, 0, BAR.height, 0xffe082).setOrigin(0, 0.5);
         this.load.on('progress', (progress: number) => bar.setSize(BAR.width * progress, BAR.height));
 
+        this.load.image('logo', logoUrl);
         Object.entries(CHARACTERS).forEach(([character, { sheet }]) => {
             this.load.spritesheet(character, sheet, { frameWidth: FRAME_SIZE.width, frameHeight: FRAME_SIZE.height });
         });
