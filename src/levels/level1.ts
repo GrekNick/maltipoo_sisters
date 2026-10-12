@@ -20,6 +20,8 @@ export const level1: Level = {
         // Screen 1: warm-up steps
         { x: 330, y: 440, width: 160 },
         { x: 560, y: 350, width: 160 },
+        // A low ledge: Sofi ducks under it (↓/S), Kiwi jumps on top (58px clearance)
+        { x: 760, y: 462, width: 120, low: true },
         // Screen 2: staircase after the first pit
         { x: 1240, y: 440, width: 128 },
         { x: 1420, y: 370, width: 128 },
