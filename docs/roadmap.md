@@ -77,7 +77,7 @@ The tool we chose in [decisions.md](decisions.md).
 ### M5 — Game feel and kid-friendly controls
 | Chunk | Done when |
 |---|---|
-| 5.1 Jump feel: coyote time, jump buffering, variable jump height | Jumps feel forgiving; tested on the pure movement logic |
+| ✅ 5.1 Jump feel: coyote time, jump buffering, variable jump height; plus a walk → run speed ramp and faster falling | Jumps feel forgiving; tested on the pure movement logic |
 | 5.2 Touch controls (on-screen buttons) and gamepad | Playable on a tablet and with a controller |
 | 5.3 Sound: jump, land, collect, swap, finish; a music loop per location | Volume settings apply |
 | 5.4 Juice: dust puffs, squash and stretch on landing, camera nudge, treat sparkle | Players notice it feels alive |

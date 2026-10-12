@@ -7,14 +7,21 @@ const surface = (left: number, right: number, top: number): Surface => ({ id: `$
 const distance = (rise: number) => jumpDistance(rise, PHYSICS) ?? Number.NaN;
 
 describe('jump physics', () => {
-    it('max jump height is v²/2g', () => {
-        // 530² / (2·700) ≈ 200.6px
-        expect(maxJumpHeight(PHYSICS)).toBeCloseTo(200.64, 1);
+    it('max jump height is v²/2g (rising gravity)', () => {
+        const { jumpVelocity: v, gravity: g } = PHYSICS;
+        expect(maxJumpHeight(PHYSICS)).toBeCloseTo((v * v) / (2 * g), 6);
+        expect(maxJumpHeight(PHYSICS)).toBeGreaterThan(180); // level 1's platform spacing assumes ~200px
     });
 
-    it('a jump that lands at the same height covers runSpeed · 2v/g', () => {
-        // 160 · 2·530/700 ≈ 242px
-        expect(jumpDistance(0, PHYSICS)).toBeCloseTo(242.3, 1);
+    it('a same-height jump = walk speed × (time up at gravity + time down at fallGravity)', () => {
+        const { jumpVelocity: v, gravity: g, fallGravity: gf, walkSpeed } = PHYSICS;
+        const apex = (v * v) / (2 * g);
+        expect(jumpDistance(0, PHYSICS)).toBeCloseTo(walkSpeed * (v / g + Math.sqrt((2 * apex) / gf)), 6);
+    });
+
+    it('falling faster than rising shortens the jump (less floaty)', () => {
+        const symmetric = { ...PHYSICS, fallGravity: PHYSICS.gravity };
+        expect(distance(0)).toBeLessThan(jumpDistance(0, symmetric) ?? 0);
     });
 
     it('landing lower covers more distance than landing higher', () => {

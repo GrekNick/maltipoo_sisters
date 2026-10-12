@@ -37,7 +37,8 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 src/main.ts            MainScene (one scene for now) + game config + DOM character select
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
-src/physics.ts         gravity / run speed / jump velocity, shared by game and tests
+src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
+src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 src/levels/level1.ts   level data (stopgap until Tiled, milestone M2); types in src/levels/types.ts
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)
 src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
@@ -59,8 +60,9 @@ docs/                  roadmap, story, decisions
   again; change the rule or the art.
 - **Visuals and collision are separate**: tile sprites for looks, invisible static `zone`s in
   `this.solids` for physics. This mirrors how Tiled maps will work (tile layer + collision property).
-- **Movement numbers live in `src/physics.ts` only**: the level tests compute reachability from them, so
-  changing jump or run values automatically re-validates every level.
+- **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
+  tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
+  start), so changing them automatically re-validates every level.
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.
@@ -82,8 +84,8 @@ docs/                  roadmap, story, decisions
 Unit tests don't cover rendering, so also play-test:
 - In dev builds `window.game` is exposed. Get the scene with `game.scene.getScene('MainScene')`.
 - A hidden or background tab **pauses the game loop**. To drive it deterministically, step it manually:
-  `game.step(t += 16.67, 16.67)` in a loop, and set inputs directly (`scene.wasd.D.isDown = true`,
-  `scene.spaceKey.isDown = true`).
+  `game.step(t += 16.67, 16.67)` in a loop. Drive input with real `KeyboardEvent`s on `window` (keydown/keyup with
+  `code` and `keyCode`): jumping reacts to a fresh press (`JustDown`), so setting `key.isDown` directly won't jump.
 - **Tweens use wall-clock time**, so they don't advance under instant manual stepping. Await small delays
   between steps when checking tweens.
 - The Arcade debug view toggles with **H** in game.

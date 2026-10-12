@@ -4,6 +4,7 @@ import {
     type AnimationState, type CharacterKey,
 } from './characters';
 import { PHYSICS } from './physics';
+import { RUN_START, JUMP_START, stepRun, stepJump, type Direction, type RunState, type JumpState } from './movement';
 import { level1 } from './levels/level1';
 import type { Level } from './levels/types';
 import type { CoopHost, CoopSession } from './coop/CoopSession';
@@ -46,6 +47,8 @@ export class MainScene extends Phaser.Scene implements CoopHost {
     private positionText!: Phaser.GameObjects.Text;
     private checkpoint = { x: 0, y: 0 };
     private startTime = 0;
+    private run: RunState = RUN_START;
+    private jump: JumpState = JUMP_START;
 
     constructor() {
         super({ key: 'MainScene' });
@@ -64,6 +67,9 @@ export class MainScene extends Phaser.Scene implements CoopHost {
         this.finished = false;
         this.falls = 0;
         this.startTime = this.time.now;
+        // Fields keep their values across scene.restart() (the constructor doesn't run again), so reset here
+        this.run = RUN_START;
+        this.jump = JUMP_START;
 
         this.createTextures();
         this.createBackdrop();
@@ -198,8 +204,8 @@ export class MainScene extends Phaser.Scene implements CoopHost {
         // running left. Safe because characters never rotate.
         this.player.vertexRoundMode = 'fullAuto';
         this.applyHitbox();
-        this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
+        this.player.body.setMaxVelocityY(PHYSICS.maxFallSpeed);
         this.physics.add.collider(this.player, this.solids);
         this.physics.add.overlap(this.player, this.goalZone, () => this.reachHome());
     }
@@ -285,6 +291,8 @@ export class MainScene extends Phaser.Scene implements CoopHost {
         // previous position deep in the pit and the collision solver pushes it through the ground.
         this.player.body.reset(this.checkpoint.x, this.checkpoint.y);
         this.player.setVelocity(0, 0);
+        this.run = RUN_START;
+        this.jump = JUMP_START;
         this.falls++;
     }
 
@@ -343,41 +351,41 @@ export class MainScene extends Phaser.Scene implements CoopHost {
         text(62, 'Press R to play again', 18, '#ffe082');
     }
 
-    override update() {
+    override update(_time: number, delta: number) {
         if (this.finished) return;
+        const dt = Math.min(delta, 50) / 1000; // clamp: a long hitch (tab switch) shouldn't launch the dog
+        const body = this.player.body;
+        const onGround = body.blocked.down || body.touching.down;
 
-        // Handle movement
-        const moveLeft = this.cursors.left.isDown || this.wasd.A.isDown;
-        const moveRight = this.cursors.right.isDown || this.wasd.D.isDown;
-        const onGround = this.player.body.touching.down;
-        const canJump = onGround && (this.cursors.up.isDown || this.wasd.W.isDown || this.spaceKey.isDown);
+        // Horizontal: walk speed that ramps up to run speed while a direction is held (src/movement.ts)
+        const left = this.cursors.left.isDown || this.wasd.A.isDown;
+        const right = this.cursors.right.isDown || this.wasd.D.isDown;
+        const direction: Direction = left === right ? 0 : left ? -1 : 1;
+        this.run = stepRun({ ...this.run, vx: body.velocity.x }, direction, onGround, dt, PHYSICS);
+        const pushingWall = (direction < 0 && body.blocked.left) || (direction > 0 && body.blocked.right);
+        if (pushingWall) this.run = { ...this.run, heldTime: 0 };
+        body.setVelocityX(this.run.vx);
+        if (direction !== 0) this.player.setFlipX(direction < 0);
 
-        let animation: AnimationState = 'idle';
+        // Vertical: jump buffer, coyote time, variable height, faster falling
+        const jumpKeys = [this.cursors.up, this.wasd.W, this.spaceKey];
+        const step = stepJump(this.jump, {
+            pressed: jumpKeys.some(key => Phaser.Input.Keyboard.JustDown(key)),
+            held: jumpKeys.some(key => key.isDown),
+            onGround,
+            vy: body.velocity.y,
+        }, dt, PHYSICS);
+        this.jump = step.state;
+        if (step.jump) body.setVelocityY(-PHYSICS.jumpVelocity);
+        if (step.cut) body.setVelocityY(body.velocity.y * PHYSICS.jumpCutMultiplier);
+        // World gravity is the rising gravity; add the difference while falling
+        body.setGravityY(body.velocity.y > 0 ? PHYSICS.fallGravity - PHYSICS.gravity : 0);
 
-        // Movement logic
-        if (moveLeft) {
-            this.player.setVelocityX(-PHYSICS.runSpeed);
-            this.player.setFlipX(true);
-            animation = 'move';
-        }
-        else if (moveRight) {
-            this.player.setVelocityX(PHYSICS.runSpeed);
-            this.player.setFlipX(false);
-            animation = 'move';
-        }
-        else {
-            this.player.setVelocityX(0);
-        }
-
-        // Jump logic
-        if (canJump) {
-            this.player.setVelocityY(-PHYSICS.jumpVelocity);
-        }
-        if (canJump || !onGround) {
-            animation = 'jump';
-        }
-
+        const animation: AnimationState = step.jump || !onGround ? 'jump'
+            : Math.abs(this.run.vx) > 10 ? 'move' : 'idle';
         this.player.anims.play(`${this.currentCharacter}_${animation}`, true);
+        // Legs move faster as the dog speeds up
+        this.player.anims.timeScale = animation === 'move' ? Math.abs(this.run.vx) / PHYSICS.walkSpeed : 1;
         this.currentAnimation = animation;
 
         this.updateCheckpoint(onGround);
