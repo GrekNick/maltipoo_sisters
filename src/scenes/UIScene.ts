@@ -12,9 +12,12 @@ export class UIScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.text(16, 16, 'Move: ←/→ or A/D   Jump: ↑/W/Space   R: restart   Esc: menu   H: hitboxes', TEXT_STYLE);
-        this.statusText = this.add.text(16, 40, '', TEXT_STYLE);
-        this.positionText = this.add.text(16, 62, '', TEXT_STYLE);
+        this.statusText = this.add.text(16, 16, '', TEXT_STYLE);
+        this.positionText = this.add.text(16, 38, '', TEXT_STYLE);
+        // Controls along the bottom edge, where they don't collide with the character dropdown (top right)
+        this.add.text(VIEW.width / 2, VIEW.height - 20,
+            'Move ←/→ or A/D · Jump ↑/W/Space · R restart · Esc menu · H hitboxes',
+            { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
 
         const game = this.scene.get(SceneKey.Game);
         game.events.on(GameEvent.Hud, this.updateHud, this);
