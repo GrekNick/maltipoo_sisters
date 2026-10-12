@@ -70,7 +70,7 @@ The tool we chose in [decisions.md](decisions.md).
 |---|---|
 | 4.1 **Swap** (Tab, Q or a button tap): instant switch in place, short sparkle effect | You can swap mid-jump with no physics glitches |
 | 4.2 **Kiwi: big jump** (higher jump) | A ledge in a test map is reachable only by Kiwi |
-| 4.3 **Sofi: squeeze** (fits through low tunnels) | A low tunnel in a test map is passable only by Sofi |
+| ✅ 4.3 **Sofi: duck** (↓/S: lies low, crawls, can't jump; stays down under low ceilings) | Level 1's low ledge: Sofi ducks under, Kiwi jumps over |
 | 4.4 **Sister gates** in Tiled (e.g. a sign showing which sister is needed) and the reachability test made aware of skills | Tests prove each level is finishable with swapping |
 | 4.5 The inactive sister follows as a companion (cosmetic, teleports when left behind) | Both dogs are always on screen together |
 

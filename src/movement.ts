@@ -27,7 +27,10 @@ function approach(value: number, target: number, maxStep: number): number {
     return Math.max(target, value - maxStep);
 }
 
-export function stepRun(state: RunState, input: Direction, onGround: boolean, dt: number, p: Physics): RunState {
+/** `speedLimit` caps the target speed (e.g. crawling); the ramp still builds up underneath. */
+export function stepRun(
+    state: RunState, input: Direction, onGround: boolean, dt: number, p: Physics, speedLimit = Infinity,
+): RunState {
     if (input === 0) {
         const braking = onGround ? p.groundDeceleration : p.airDeceleration;
         return { vx: approach(state.vx, 0, braking * dt), heldDirection: 0, heldTime: 0 };
@@ -38,7 +41,7 @@ export function stepRun(state: RunState, input: Direction, onGround: boolean, dt
     const turning = Math.sign(state.vx) === -input;
     const rate = turning && onGround ? Math.max(accelerating, p.groundDeceleration) : accelerating;
     return {
-        vx: approach(state.vx, input * targetSpeed(heldTime, p), rate * dt),
+        vx: approach(state.vx, input * Math.min(targetSpeed(heldTime, p), speedLimit), rate * dt),
         heldDirection: input,
         heldTime,
     };
@@ -87,4 +90,25 @@ export function stepJump(state: JumpState, input: JumpInput, dt: number, p: Phys
         return { state: { coyote, buffer, rising: false }, jump: false, cut: true };
     }
     return { state: { coyote, buffer, rising }, jump: false, cut: false };
+}
+
+// ---------- Ducking (Sofi's skill): lie low to fit under things ----------
+
+export interface CrouchInput {
+    /** Duck key (↓/S) is held */
+    readonly wantsCrouch: boolean;
+    /** This character has the skill */
+    readonly canCrouch: boolean;
+    readonly onGround: boolean;
+    /** Nothing above would block the standing body */
+    readonly hasHeadroom: boolean;
+}
+
+/**
+ * Whether the dog is ducked this frame. Ducking starts only on the ground; letting go stands her up, but not under
+ * a low ceiling: she stays down until there is room (so she can't get stuck inside a wall).
+ */
+export function nextCrouching(crouching: boolean, input: CrouchInput): boolean {
+    if (crouching) return input.wantsCrouch || !input.hasHeadroom;
+    return input.canCrouch && input.wantsCrouch && input.onGround;
 }

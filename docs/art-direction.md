@@ -21,7 +21,12 @@ Raw art goes into `art/raw/` and is turned into game spritesheets with `npm run 
   `npm run art:kiwi`: the original serious mouth became an open smile with a small tongue, and the walk and jump
   poses are the same drawing with lifted or tucked legs. Her separately generated move and jump images were
   dropped because their colour, size and face didn't match.
-- **Sofi** still uses her AI poses, which already match each other. Real walk cycles for both come in M7.1.
+- **Kiwi's leap** is Sofi's leap pose repainted in Kiwi's palette (brightness matched at outline, quartiles and
+  highlight; ears pushed darker), so both sisters jump the same way.
+- **Sofi** is true pixel art too (`npm run art:sofi`), from her own standing, walking and leaping images. Her
+  **duck** pose is composed from her standing pose: legs hidden under the body, body dropped onto the paws, head
+  dropped a little further with the chin low; **crawl** shuffles her front and back paws.
+- Real walk cycles for both come in M7.1.
 
 ## Title logo
 

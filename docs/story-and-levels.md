@@ -7,7 +7,7 @@ changes in [decisions.md](decisions.md).
 
 **Characters**
 - **Kiwi**: the red-brown, chill sister. Strong legs: **big jump**.
-- **Sofi**: the cream, smiley sister. Small and bendy: **squeezes** through low gaps.
+- **Sofi**: the cream, smiley sister. Small and bendy: **ducks** (lies low and crawls) through low gaps.
 - **Smok Junior**: a little dragon, the son of the legendary
   [Wawel Dragon](https://en.wikipedia.org/wiki/Wawel_Dragon) family, and the sisters' good friend. Black / charcoal
   grey with a **bright yellow backpack** he always wears (art brief: [art-direction.md](art-direction.md)).

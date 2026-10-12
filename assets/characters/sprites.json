@@ -7,6 +7,10 @@
     "move",
     "jump"
   ],
+  "optionalStates": [
+    "crouch",
+    "crawl"
+  ],
   "characters": {
     "kiwi": {
       "frames": [
@@ -84,18 +88,18 @@
     "sofi": {
       "frames": [
         {
-          "source": "sofi_sprites/smiley.png",
+          "source": "sofi_pixel/idle.png",
           "lift": 0,
           "bounds": {
-            "x": 8,
+            "x": 7,
             "y": 14,
-            "width": 83,
+            "width": 84,
             "height": 78
           },
-          "sourceArtPixel": 19.28
+          "sourceArtPixel": 1
         },
         {
-          "source": "sofi_sprites/smiley_move.png",
+          "source": "sofi_pixel/walk.png",
           "lift": 0,
           "bounds": {
             "x": 5,
@@ -103,10 +107,10 @@
             "width": 88,
             "height": 82
           },
-          "sourceArtPixel": 19.4
+          "sourceArtPixel": 1
         },
         {
-          "source": "sofi_sprites/smiley_jump.png",
+          "source": "sofi_pixel/jump.png",
           "lift": 0,
           "bounds": {
             "x": 4,
@@ -114,7 +118,40 @@
             "width": 90,
             "height": 88
           },
-          "sourceArtPixel": 17.16
+          "sourceArtPixel": 1
+        },
+        {
+          "source": "sofi_pixel/crouch.png",
+          "lift": 0,
+          "bounds": {
+            "x": 7,
+            "y": 32,
+            "width": 84,
+            "height": 60
+          },
+          "sourceArtPixel": 1
+        },
+        {
+          "source": "sofi_pixel/crawl_a.png",
+          "lift": 0,
+          "bounds": {
+            "x": 7,
+            "y": 32,
+            "width": 84,
+            "height": 60
+          },
+          "sourceArtPixel": 1
+        },
+        {
+          "source": "sofi_pixel/crawl_b.png",
+          "lift": 0,
+          "bounds": {
+            "x": 7,
+            "y": 32,
+            "width": 84,
+            "height": 60
+          },
+          "sourceArtPixel": 1
         }
       ],
       "animations": {
@@ -127,6 +164,13 @@
         ],
         "jump": [
           2
+        ],
+        "crouch": [
+          3
+        ],
+        "crawl": [
+          4,
+          5
         ]
       }
     }

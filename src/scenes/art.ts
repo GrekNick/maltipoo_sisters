@@ -1,7 +1,7 @@
 // Placeholder art drawn in code, shared by the title screen and the game. A Tiled tileset and real art replace
 // this later (docs/decisions.md, roadmap M2/M7).
 import Phaser from 'phaser';
-import { ANIMATION_FRAME_RATE, ANIMATION_STATES, CHARACTERS, CHARACTER_KEYS } from '../characters';
+import { ANIMATION_FRAME_RATE, CHARACTERS, CHARACTER_KEYS, type AnimationState } from '../characters';
 import { TILE, VIEW } from './shared';
 
 /** Bakes ground tiles, clouds, hills and the dog house into textures (once; textures outlive scenes). */
@@ -50,10 +50,13 @@ export function bakePlaceholderTextures(scene: Phaser.Scene): void {
  */
 export function createCharacterAnimations(scene: Phaser.Scene): void {
     CHARACTER_KEYS.forEach(character => {
-        ANIMATION_STATES.forEach(state => {
+        // Base states for everyone, plus crouch/crawl for characters that have them
+        const animations = CHARACTERS[character].sprites.animations;
+        (Object.keys(animations) as AnimationState[]).forEach(state => {
             const key = `${character}_${state}`;
-            if (scene.anims.exists(key)) return;
-            const frames = CHARACTERS[character].sprites.animations[state].map(frame => ({ key: character, frame }));
+            const frameList = animations[state];
+            if (scene.anims.exists(key) || !frameList) return;
+            const frames = frameList.map(frame => ({ key: character, frame }));
             scene.anims.create({ key, frames, frameRate: ANIMATION_FRAME_RATE[state], repeat: -1 });
         });
     });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PHYSICS } from '../src/physics';
-import { RUN_START, JUMP_START, stepRun, stepJump, targetSpeed, type RunState, type JumpState, type Direction } from '../src/movement';
+import { RUN_START, JUMP_START, stepRun, stepJump, targetSpeed, nextCrouching, type RunState, type JumpState, type Direction } from '../src/movement';
 
 const DT = 1 / 60;
 
@@ -36,6 +36,12 @@ describe('running', () => {
         const turned = stepRun(fast, -1, true, DT, PHYSICS);
         expect(turned.heldTime).toBe(0);
         expect(holdRun(1, -1, fast).vx).toBeCloseTo(-PHYSICS.walkSpeed - (PHYSICS.runSpeed - PHYSICS.walkSpeed) * (1 - DT / PHYSICS.rampTime), 0);
+    });
+
+    it('a speed limit (crawling) caps the speed', () => {
+        let state = RUN_START;
+        for (let t = 0; t < 2; t += DT) state = stepRun(state, 1, true, DT, PHYSICS, PHYSICS.crawlSpeed);
+        expect(state.vx).toBeCloseTo(PHYSICS.crawlSpeed, 6);
     });
 
     it('letting go brakes to a stop on the ground, and drifts longer in the air', () => {
@@ -89,5 +95,29 @@ describe('jumping', () => {
         const takeOff = stepJump(JUMP_START, { ...onGround, pressed: true, held: true }, DT, PHYSICS).state;
         expect(stepJump(takeOff, { pressed: false, held: true, onGround: false, vy: -500 }, DT, PHYSICS).cut).toBe(false);
         expect(stepJump(takeOff, { pressed: false, held: false, onGround: false, vy: 50 }, DT, PHYSICS).cut).toBe(false);
+    });
+});
+
+describe('ducking', () => {
+    const sofi = { wantsCrouch: true, canCrouch: true, onGround: true, hasHeadroom: true };
+
+    it('ducks on the ground when the key is held', () => {
+        expect(nextCrouching(false, sofi)).toBe(true);
+    });
+
+    it('only characters with the skill can duck', () => {
+        expect(nextCrouching(false, { ...sofi, canCrouch: false })).toBe(false);
+    });
+
+    it('does not start ducking in the air', () => {
+        expect(nextCrouching(false, { ...sofi, onGround: false })).toBe(false);
+    });
+
+    it('stands up when the key is released and there is room', () => {
+        expect(nextCrouching(true, { ...sofi, wantsCrouch: false })).toBe(false);
+    });
+
+    it('stays down under a low ceiling even after the key is released', () => {
+        expect(nextCrouching(true, { ...sofi, wantsCrouch: false, hasHeadroom: false })).toBe(true);
     });
 });

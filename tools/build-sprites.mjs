@@ -32,7 +32,9 @@ const ART_PIXEL = 2;
 const ALPHA_CUTOFF = 128;  // alpha at or above this is part of the dog, below is haze
 const PADDING = 4;         // empty px around the widest/tallest frame (not below the feet)
 
+// Every character has these states; the optional ones only characters with that skill (Sofi ducks and crawls)
 const STATES = ['idle', 'move', 'jump'];
+const OPTIONAL_STATES = ['crouch', 'crawl'];
 
 // Each animation state lists its frames in play order: a file name, or an object with options:
 //   lift      draw the image this many output px higher (an airborne moment; the physics body doesn't move)
@@ -40,7 +42,8 @@ const STATES = ['idle', 'move', 'jump'];
 // Identical entries are stored once.
 // - Kiwi is true pixel art made from her original design by tools/make-kiwi.mjs (smile, trot; her leap is
 //   Sofi's leap pose in Kiwi's colours). Her 4-frame trot bobs up on the passing frames.
-// - Sofi alternates her stride pose with her standing pose (stopgap until real walk frames, roadmap M7.1).
+// - Sofi is true pixel art from her own images by tools/make-sofi.mjs, plus a duck (crouch) and crawl made from
+//   her standing pose. She walks by alternating her stride and standing poses (until real walk frames, M7.1).
 // UI images (title logo, ...) are drawn unscaled in the game, like the characters, so they're shrunk to their
 // display height here with the same area filter. Width is padded to even so a centred image stays pixel-aligned.
 const UI_IMAGES = {
@@ -49,6 +52,7 @@ const UI_IMAGES = {
 const UI_OUT_DIR = 'assets/ui';
 
 const KIWI = (name, options = {}) => ({ file: `kiwi_pixel/${name}.png`, artPixel: 1, ...options });
+const SOFI = (name, options = {}) => ({ file: `sofi_pixel/${name}.png`, artPixel: 1, ...options });
 const SOURCES = {
     kiwi: {
         idle: [KIWI('idle')],
@@ -56,9 +60,11 @@ const SOURCES = {
         jump: [KIWI('jump')],
     },
     sofi: {
-        idle: ['sofi_sprites/smiley.png'],
-        move: ['sofi_sprites/smiley_move.png', 'sofi_sprites/smiley.png'],
-        jump: ['sofi_sprites/smiley_jump.png'],
+        idle: [SOFI('idle')],
+        move: [SOFI('walk'), SOFI('idle')],
+        jump: [SOFI('jump')],
+        crouch: [SOFI('crouch')],
+        crawl: [SOFI('crawl_a'), SOFI('crawl_b')],
     },
 };
 
@@ -211,7 +217,8 @@ function main() {
     // Build each distinct source file once per character
     const characters = {};
     for (const [character, states] of Object.entries(SOURCES)) {
-        const entries = [...new Map(STATES.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
+        const characterStates = [...STATES, ...OPTIONAL_STATES.filter(state => states[state])];
+        const entries = [...new Map(characterStates.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
         const built = new Map(); // build each raw file once, even if it's used with several lifts
         const artPixelOf = (file) => entries.find(e => e.file === file && e.artPixel)?.artPixel;
         characters[character] = {
@@ -220,7 +227,7 @@ function main() {
                 if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file), artPixelOf(file)));
                 return built.get(file);
             }),
-            animations: Object.fromEntries(STATES.map(state => [
+            animations: Object.fromEntries(characterStates.map(state => [
                 state,
                 states[state].map(e => entries.findIndex(x => entryKey(x) === entryKey(entry(e)))),
             ])),
@@ -236,7 +243,7 @@ function main() {
     const maxLift = Math.max(...Object.values(characters).flatMap(c => c.entries.map(e => e.lift)));
     const frameHeight = even(Math.max(...all.map(f => f.image.height)) + Math.max(PADDING, maxLift));
 
-    const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, characters: {} };
+    const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, optionalStates: OPTIONAL_STATES, characters: {} };
     fs.mkdirSync(OUT_DIR, { recursive: true });
 
     for (const [character, { entries, frames, animations }] of Object.entries(characters)) {

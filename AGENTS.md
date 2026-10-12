@@ -31,6 +31,7 @@ npm run typecheck      # tsc --noEmit, also in CI
 npm run build          # production build into dist/ (gitignored)
 npm run build:sprites  # regenerate assets/characters/ and assets/ui/ from art/raw/ (commit the output)
 npm run art:kiwi       # regenerate Kiwi's pixel-art frames (art/raw/kiwi_pixel/) from her original image
+npm run art:sofi       # regenerate Sofi's pixel-art frames incl. duck/crawl (art/raw/sofi_pixel/)
 npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 
@@ -53,7 +54,9 @@ server/coop-server.js  Socket.IO relay for co-op
 assets/characters/     GENERATED spritesheets + sprites.json; don't edit by hand
 assets/ui/             GENERATED UI images at display size (title logo)
 art/raw/               original art, the input to tools/build-sprites.mjs (logo in art/raw/logo/)
-art/raw/kiwi_pixel/    Kiwi as true 52x52 pixel art (smile, trot, jump), made by tools/make-kiwi.mjs
+art/raw/kiwi_pixel/    Kiwi as true 52x52 pixel art (smile, trot, leap), made by tools/make-kiwi.mjs
+art/raw/sofi_pixel/    Sofi as true pixel art + duck/crawl poses, made by tools/make-sofi.mjs
+tools/pixel-art.mjs    shared helpers: extract pixel grid, lift parts, recolour one pose into another palette
 tests/                 Vitest suites (pure logic + data; no Phaser imports)
 docs/                  roadmap, story, decisions
 ```
@@ -81,6 +84,10 @@ docs/                  roadmap, story, decisions
 - **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
   `scenes/shared.ts`) and `UIScene` draws them. Scene instances survive `restart()`/`start()` (the constructor runs
   once), so reset per-run state in `create()`.
+- **Sister skills are data + pure rules**: a character can duck if its sprites have a `crouch` animation (then it
+  gets a `crouchHitbox`, same width and feet line). The rules live in `movement.ts` (`nextCrouching`): duck only on
+  the ground, no jumping while ducked, crawl at `crawlSpeed`, and never stand up (or swap to a sister who can't
+  duck) without headroom, so nobody gets stuck in a ceiling.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions
