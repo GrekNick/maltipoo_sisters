@@ -38,8 +38,8 @@ const STATES = ['idle', 'move', 'jump'];
 //   lift      draw the image this many output px higher (an airborne moment; the physics body doesn't move)
 //   artPixel  size of one drawn pixel in the file; 1 = true pixel art (skips measuring), enlarged exactly
 // Identical entries are stored once.
-// - Kiwi is true pixel art made from her original design by tools/make-kiwi.mjs (smile, trot, tucked jump),
-//   so every pose is the same drawing. Her 4-frame trot bobs up on the passing frames.
+// - Kiwi is true pixel art made from her original design by tools/make-kiwi.mjs (smile, trot; her leap is
+//   Sofi's leap pose in Kiwi's colours). Her 4-frame trot bobs up on the passing frames.
 // - Sofi alternates her stride pose with her standing pose (stopgap until real walk frames, roadmap M7.1).
 // UI images (title logo, ...) are drawn unscaled in the game, like the characters, so they're shrunk to their
 // display height here with the same area filter. Width is padded to even so a centred image stays pixel-aligned.
@@ -53,8 +53,7 @@ const SOURCES = {
     kiwi: {
         idle: [KIWI('idle')],
         move: [KIWI('walk_a'), KIWI('idle', { lift: 2 }), KIWI('walk_b'), KIWI('idle', { lift: 2 })],
-        // Tucked legs end 3 drawn pixels higher; lift keeps the body where it is when standing
-        jump: [KIWI('jump', { lift: 6 })],
+        jump: [KIWI('jump')],
     },
     sofi: {
         idle: ['sofi_sprites/smiley.png'],

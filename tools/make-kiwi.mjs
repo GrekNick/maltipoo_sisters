@@ -6,7 +6,8 @@
  *
  * 1. art/raw/kiwi_sprites/chill.png (the original 1024px AI image) -> true pixel art, 1px per drawn pixel
  * 2. the serious mouth becomes a smile with a little tongue
- * 3. walk and jump poses are made by lifting legs (a trot lifts diagonal leg pairs in turn)
+ * 3. walk poses are made by lifting legs (a trot lifts diagonal leg pairs in turn)
+ * 4. the jump is Sofi's leap repainted in Kiwi's colours, with darker ears
  *
  * Output (commit it): art/raw/kiwi_pixel/{idle,walk_a,walk_b,jump}.png, 52x52 true pixel art. These are
  * normal PNGs: they can also be opened in a pixel editor (Aseprite, Piskel) for hand tweaks, as long as the
@@ -14,10 +15,13 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { PNG } from 'pngjs';
-import { extractPixelGrid } from './extract-pixel-grid.mjs';
+import { clone, liftPart, readPixelArt, recolorLike, setPixel, writePng } from './pixel-art.mjs';
 
 const SOURCE = 'art/raw/kiwi_sprites/chill.png';
+// Kiwi's leap is Sofi's leap pose repainted in Kiwi's colours (her own jump image didn't match her design)
+const JUMP_SOURCE = 'art/raw/sofi_sprites/smiley_jump.png';
+// Ear flaps in Sofi's leap (read off its 58x58 grid); Kiwi's ears are darker than her face
+const LEAP_EARS = [{ x0: 22, x1: 28, y0: 15, y1: 26 }, { x0: 45, x1: 49, y0: 13, y1: 25 }];
 const OUT_DIR = 'art/raw/kiwi_pixel';
 
 // Colours sampled from Kiwi's own palette, plus a tongue that matches Sofi's
@@ -29,14 +33,6 @@ const COLOR = {
     tongue: '#e8695b',
     tongueShade: '#c2453a',
 };
-
-function setPixel(img, x, y, hex) {
-    const i = (y * img.width + x) * 4;
-    img.data[i] = parseInt(hex.slice(1, 3), 16);
-    img.data[i + 1] = parseInt(hex.slice(3, 5), 16);
-    img.data[i + 2] = parseInt(hex.slice(5, 7), 16);
-    img.data[i + 3] = 255;
-}
 
 /** Replaces the serious mouth (a small inverted V under the nose) with an open U-shaped smile. */
 function addSmile(img) {
@@ -60,38 +56,13 @@ const LEGS = {
 };
 const LEG_BOTTOM = 45;
 
-function clone(img) {
-    const copy = new PNG({ width: img.width, height: img.height });
-    img.data.copy(copy.data);
-    return copy;
-}
-
-/** Moves a leg's pixels up by `n` (the foot leaves the ground); what's left below becomes transparent. */
-function liftLeg(img, source, parts, n) {
-    for (const { x0, x1, y0 } of parts) {
-        for (let x = x0; x <= x1; x++) {
-            for (let y = y0; y <= LEG_BOTTOM; y++) {
-                const i = (y * img.width + x) * 4;
-                const from = y + n;
-                const inLeg = parts.some(p => x >= p.x0 && x <= p.x1 && from >= p.y0 && from <= p.y1);
-                if (inLeg) {
-                    const j = (from * source.width + x) * 4;
-                    for (let k = 0; k < 4; k++) img.data[i + k] = source.data[j + k];
-                } else if (parts.some(p => x >= p.x0 && x <= p.x1 && y >= p.y0 && y <= p.y1)) {
-                    img.data[i + 3] = 0;
-                }
-            }
-        }
-    }
-}
-
 function pose(base, lifts) {
     const img = clone(base);
-    for (const [leg, n] of Object.entries(lifts)) liftLeg(img, base, LEGS[leg], n);
+    for (const [leg, n] of Object.entries(lifts)) liftPart(img, base, LEGS[leg], n, LEG_BOTTOM);
     return img;
 }
 
-const { image: idle, block } = extractPixelGrid(PNG.sync.read(fs.readFileSync(SOURCE)));
+const { image: idle, block } = readPixelArt(SOURCE);
 addSmile(idle);
 
 const frames = {
@@ -99,12 +70,11 @@ const frames = {
     // Trot: diagonal pairs lift in turn
     walk_a: pose(idle, { frontNear: 2, backFar: 2 }),
     walk_b: pose(idle, { frontFar: 2, backNear: 2 }),
-    // Legs tucked in the air
-    jump: pose(idle, { frontNear: 3, frontFar: 3, backNear: 2, backFar: 2 }),
+    jump: recolorLike(readPixelArt(JUMP_SOURCE).image, idle, { darken: LEAP_EARS }),
 };
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 for (const [name, img] of Object.entries(frames)) {
-    fs.writeFileSync(path.join(OUT_DIR, `${name}.png`), PNG.sync.write(img));
+    writePng(path.join(OUT_DIR, `${name}.png`), img);
 }
 console.log(`kiwi: ${SOURCE} (drawn pixel ${block.toFixed(2)}px) -> ${idle.width}x${idle.height} -> ${OUT_DIR}/{${Object.keys(frames).join(',')}}.png`);
