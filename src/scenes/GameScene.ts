@@ -117,7 +117,9 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     createCamera() {
         const camera = this.cameras.main;
         camera.setBounds(0, 0, this.level.width, this.level.height);
-        camera.startFollow(this.player, true, 0.1, 0.1); // lerp < 1 = smooth catch-up
+        // Locked to the dog (lerp 1): a smooth, lagging camera let the dog creep across the screen in uneven
+        // 1-2px steps while it sped up, which read as blur. Now the dog stays still on screen and the world scrolls.
+        camera.startFollow(this.player, true, 1, 1);
     }
 
     createInput() {

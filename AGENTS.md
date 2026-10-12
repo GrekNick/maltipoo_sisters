@@ -61,6 +61,9 @@ docs/                  roadmap, story, decisions
 - **Sprites are drawn at scale 1 and snap to whole pixels**: sheets are built at display size with even frame
   sizes, and characters use `vertexRoundMode = 'fullAuto'`. A scaled or flipped sprite at a fractional position
   gets resampled by the GPU and looks blurry while moving (tested in `characters.test.ts`).
+- **The camera is locked to the player horizontally** (follow lerp 1) and the canvas is shown with
+  `image-rendering: pixelated` (index.html). A lagging camera or browser smoothing on high-DPI screens made the
+  dogs look blurry while moving; measure before changing either (see "Verifying changes" below).
 - **Hitboxes come from data**: `hitboxFor()` in `characters.ts` derives the body from the idle frame bounds.
   Arcade `body.setSize/setOffset` take **texture pixels**, before scale. Never hand-tune hitbox numbers
   again; change the rule or the art.
@@ -99,6 +102,8 @@ Unit tests don't cover rendering, so also play-test:
 - **Tweens use wall-clock time**, so they don't advance under instant manual stepping. Await small delays
   between steps when checking tweens.
 - The Arcade debug view toggles with **H** in game.
+- To check on-screen steadiness, record `Math.round(player.x - player.displayOriginX - camera.scrollX)` every frame
+  while running: it should not change once the camera is scrolling.
 
 ## Pitfalls we already hit
 - `this.add.graphics()` to bake textures leaves the drawing on screen. Use `this.make.graphics({}, false)`,
