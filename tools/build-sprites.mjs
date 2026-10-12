@@ -33,17 +33,20 @@ const PADDING = 4;         // empty px around the widest/tallest frame (not belo
 
 const STATES = ['idle', 'move', 'jump'];
 
-// Each animation state lists its frames in play order: a file name, or { file, lift } to draw the same image
-// `lift` px higher (the airborne moment of a trot; the physics body doesn't move). Identical entries are
-// stored once. These are stopgap walk cycles until real walk frames exist (roadmap M7.1):
-// - Sofi alternates her stride pose with her standing pose, so her legs really change.
-// - Kiwi's standing pose was drawn in a different style (colour, size, expression), so alternating would
-//   flicker between two different-looking dogs; she bobs on her stride pose instead.
+// Each animation state lists its frames in play order: a file name, or an object with options:
+//   lift      draw the image this many output px higher (an airborne moment; the physics body doesn't move)
+//   artPixel  size of one drawn pixel in the file; 1 = true pixel art (skips measuring), enlarged exactly
+// Identical entries are stored once.
+// - Kiwi is true pixel art made from her original design by tools/make-kiwi.mjs (smile, trot, tucked jump),
+//   so every pose is the same drawing. Her 4-frame trot bobs up on the passing frames.
+// - Sofi alternates her stride pose with her standing pose (stopgap until real walk frames, roadmap M7.1).
+const KIWI = (name, options = {}) => ({ file: `kiwi_pixel/${name}.png`, artPixel: 1, ...options });
 const SOURCES = {
     kiwi: {
-        idle: ['kiwi_sprites/chill.png'],
-        move: ['kiwi_sprites/chill_move.png', { file: 'kiwi_sprites/chill_move.png', lift: 3 }],
-        jump: ['kiwi_sprites/chill_jump.png'],
+        idle: [KIWI('idle')],
+        move: [KIWI('walk_a'), KIWI('idle', { lift: 2 }), KIWI('walk_b'), KIWI('idle', { lift: 2 })],
+        // Tucked legs end 3 drawn pixels higher; lift keeps the body where it is when standing
+        jump: [KIWI('jump', { lift: 6 })],
     },
     sofi: {
         idle: ['sofi_sprites/smiley.png'],
@@ -189,10 +192,10 @@ function resizeArea(img, scale) {
     return out;
 }
 
-function buildFrame(file) {
+function buildFrame(file, artPixel) {
     const img = readPng(file);
     dropHaze(img);
-    const sourceArtPixel = measureArtPixel(img);
+    const sourceArtPixel = artPixel ?? measureArtPixel(img);
     const dog = crop(img, opaqueBounds(img));
     return { image: resizeArea(dog, ART_PIXEL / sourceArtPixel), sourceArtPixel };
 }
@@ -203,10 +206,11 @@ function main() {
     for (const [character, states] of Object.entries(SOURCES)) {
         const entries = [...new Map(STATES.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
         const built = new Map(); // build each raw file once, even if it's used with several lifts
+        const artPixelOf = (file) => entries.find(e => e.file === file && e.artPixel)?.artPixel;
         characters[character] = {
             entries,
             frames: entries.map(({ file }) => {
-                if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file)));
+                if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file), artPixelOf(file)));
                 return built.get(file);
             }),
             animations: Object.fromEntries(STATES.map(state => [
