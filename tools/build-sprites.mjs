@@ -24,7 +24,9 @@ import { PNG } from 'pngjs';
 const RAW_DIR = 'art/raw';
 const OUT_DIR = 'assets/characters';
 
-const ART_PIXEL = 4;       // output texture px per drawn "pixel"; the game shows them at 0.5 scale
+// Output texture px per drawn "pixel". The game draws sprites at scale 1, so one texture pixel is one
+// screen pixel: that lets Phaser snap them to whole pixels while moving (no subpixel blur).
+const ART_PIXEL = 2;
 const ALPHA_CUTOFF = 128;  // alpha at or above this is part of the dog, below is haze
 const PADDING = 4;         // empty px around the widest/tallest frame (not below the feet)
 
@@ -196,8 +198,11 @@ function main() {
 
     // One cell size for every frame of every character keeps hitboxes and placement uniform.
     const all = Object.values(frames).flatMap(Object.values);
-    const frameWidth = Math.max(...all.map(f => f.image.width)) + 2 * PADDING;
-    const frameHeight = Math.max(...all.map(f => f.image.height)) + PADDING;
+    // Even sizes: with the origin at the bottom-centre, an odd width would put the sprite's edges on half
+    // pixels and blur it even when standing still.
+    const even = (n) => n + (n % 2);
+    const frameWidth = even(Math.max(...all.map(f => f.image.width)) + 2 * PADDING);
+    const frameHeight = even(Math.max(...all.map(f => f.image.height)) + PADDING);
 
     const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, characters: {} };
     fs.mkdirSync(OUT_DIR, { recursive: true });

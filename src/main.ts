@@ -194,6 +194,9 @@ export class MainScene extends Phaser.Scene implements CoopHost {
         this.player = this.physics.add.sprite(spawn.x, spawn.y, this.currentCharacter, 0);
         this.player.setScale(SPRITE_SCALE);
         this.player.setOrigin(0.5, 1); // position = feet, since frames have the feet on the bottom edge
+        // Always snap to whole pixels: Phaser's default only snaps unflipped sprites, so the dog blurred while
+        // running left. Safe because characters never rotate.
+        this.player.vertexRoundMode = 'fullAuto';
         this.applyHitbox();
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);

@@ -43,8 +43,10 @@ export interface Character {
 const sprites = spritesJson as SpriteMeta;
 
 // Sheets come from `npm run build:sprites` (tools/build-sprites.mjs): every frame uses the same
-// size per drawn pixel and has the feet on the frame's bottom edge. They're built at 2x, shown at 0.5.
-export const SPRITE_SCALE = 0.5;
+// size per drawn pixel and has the feet on the frame's bottom edge. They're built at the size they're shown
+// (scale 1), so Phaser's roundPixels can snap them to whole pixels; a scaled sprite at a fractional
+// position gets resampled by the GPU and looks blurry while moving.
+export const SPRITE_SCALE = 1;
 export const FRAME_SIZE = { width: sprites.frameWidth, height: sprites.frameHeight } as const;
 
 // Animation states every character provides. Animation keys are `${character}_${state}`.

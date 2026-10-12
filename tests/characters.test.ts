@@ -2,11 +2,19 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { PNG } from 'pngjs';
 import sprites from '../assets/characters/sprites.json';
-import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, ANIMATION_STATES } from '../src/characters';
+import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, ANIMATION_STATES, SPRITE_SCALE } from '../src/characters';
 
 // src/characters.ts narrows the JSON's `states: string[]` to the AnimationState union; prove that's safe.
 it('sprites.json lists exactly the animation states the game knows', () => {
     expect(sprites.states).toEqual(['idle', 'move', 'jump']);
+});
+
+// Sprites are drawn unscaled with the origin at the bottom-centre; an odd frame width would put their edges on
+// half pixels (blurry). Scale 1 lets Phaser's roundPixels snap them to whole pixels while moving.
+it('frames are even-sized and drawn at scale 1, so they stay pixel-sharp', () => {
+    expect(FRAME_SIZE.width % 2).toBe(0);
+    expect(FRAME_SIZE.height % 2).toBe(0);
+    expect(SPRITE_SCALE).toBe(1);
 });
 
 describe.each(CHARACTER_KEYS)('%s sprites', (key) => {

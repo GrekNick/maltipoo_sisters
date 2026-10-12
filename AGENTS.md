@@ -51,6 +51,9 @@ docs/                  roadmap, story, decisions
 ## How the game is put together (rules to keep)
 - **The sprite origin is at the feet**: `setOrigin(0.5, 1)`. Spawn, checkpoint and goal coordinates are
   feet positions. Generated frames have the feet on the bottom edge (enforced by tests).
+- **Sprites are drawn at scale 1 and snap to whole pixels**: sheets are built at display size with even frame
+  sizes, and characters use `vertexRoundMode = 'fullAuto'`. A scaled or flipped sprite at a fractional position
+  gets resampled by the GPU and looks blurry while moving (tested in `characters.test.ts`).
 - **Hitboxes come from data**: `hitboxFor()` in `characters.ts` derives the body from the idle frame bounds.
   Arcade `body.setSize/setOffset` take **texture pixels**, before scale. Never hand-tune hitbox numbers
   again; change the rule or the art.
