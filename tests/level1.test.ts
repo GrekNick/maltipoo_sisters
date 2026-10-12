@@ -9,6 +9,9 @@ const PLATFORM_THICKNESS = 32;
 // Tallest physics body on screen (px), plus a little room so walking under doesn't snag
 const DOG_HEIGHT = Math.max(...Object.values(CHARACTERS).map(c => c.hitbox.height * SPRITE_SCALE));
 const HEADROOM = DOG_HEIGHT + 4;
+// Lowest standing dog, and the tallest ducked dog (only Sofi can duck)
+const SHORTEST_STANDING = Math.min(...Object.values(CHARACTERS).map(c => c.hitbox.height * SPRITE_SCALE));
+const DUCKED_HEIGHT = Math.max(...Object.values(CHARACTERS).flatMap(c => c.crouchHitbox ? [c.crouchHitbox.height * SPRITE_SCALE] : []));
 
 type Span = { left: number; right: number };
 const overlapsX = (a: Span, b: Span) => a.left < b.right && b.left < a.right;
@@ -51,8 +54,18 @@ describe('level1 layout', () => {
         const ground = level.ground.map(([from, to]) => ({ left: from, right: to }));
         for (const p of level.platforms) {
             const box = { left: p.x, right: p.x + p.width };
+            if (p.low) continue; // low ledges are meant to be ducked under (tested below)
             if (!ground.some(g => overlapsX(g, box))) continue; // over a pit: nothing to walk on below
             expect(level.groundY - (p.y + PLATFORM_THICKNESS), `platform at x=${p.x}`).toBeGreaterThanOrEqual(HEADROOM);
+        }
+    });
+
+    it('low ledges fit a ducked dog but not a standing one', () => {
+        const low = level.platforms.filter(p => p.low);
+        for (const p of low) {
+            const clearance = level.groundY - (p.y + PLATFORM_THICKNESS);
+            expect(clearance, `low ledge at x=${p.x}`).toBeGreaterThanOrEqual(DUCKED_HEIGHT + 4);
+            expect(clearance, `low ledge at x=${p.x}`).toBeLessThan(SHORTEST_STANDING);
         }
     });
 

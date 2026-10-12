@@ -23,6 +23,8 @@ export interface Physics {
     readonly coyoteTime: number;
     /** A jump pressed this long before landing still happens on landing */
     readonly jumpBufferTime: number;
+    /** Top speed while ducked (Sofi crawling) */
+    readonly crawlSpeed: number;
 }
 
 export const PHYSICS: Physics = {
@@ -41,4 +43,5 @@ export const PHYSICS: Physics = {
     jumpCutMultiplier: 0.45,
     coyoteTime: 0.1,
     jumpBufferTime: 0.12,
+    crawlSpeed: 110,
 };

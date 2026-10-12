@@ -6,6 +6,11 @@ export interface Platform {
     /** Top edge (the surface the dog stands on) */
     readonly y: number;
     readonly width: number;
+    /**
+     * A low ledge to duck under: too low for a standing dog, high enough for a ducked one. Sofi crawls under,
+     * Kiwi jumps on top. Exempt from the walk-under headroom rule; tests check its clearance instead.
+     */
+    readonly low?: boolean;
 }
 
 export interface Level {

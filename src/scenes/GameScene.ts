@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, SPRITE_SCALE, type AnimationState, type CharacterKey } from '../characters';
 import { PHYSICS } from '../physics';
-import { RUN_START, JUMP_START, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
+import { RUN_START, JUMP_START, nextCrouching, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
 import { level1 } from '../levels/level1';
 import type { Level } from '../levels/types';
 import { loadSettings, recordBestTime } from '../persistence';
@@ -34,6 +34,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     private startTime = 0;
     private run: RunState = RUN_START;
     private jump: JumpState = JUMP_START;
+    /** Ducked (Sofi's skill): lower hitbox, crawl speed, no jumping */
+    private crouching = false;
 
     constructor() {
         super(SceneKey.Game);
@@ -49,6 +51,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         // Fields keep their values across scene.restart() (the constructor doesn't run again), so reset here
         this.run = RUN_START;
         this.jump = JUMP_START;
+        this.crouching = false;
 
         addBackdrop(this, this.level.width, this.level.groundY);
         this.createLevel();
@@ -151,6 +154,11 @@ export class GameScene extends Phaser.Scene implements CoopHost {
 
     switchCharacter(character: CharacterKey) {
         if (!this.player) return;
+        if (this.crouching && !CHARACTERS[character].crouchHitbox) {
+            // The other sister can't duck: only swap where there's room to stand, or she'd be stuck in the ceiling
+            if (!this.hasHeadroom()) return this.updateCharacterSelect();
+            this.crouching = false;
+        }
         this.currentCharacter = character;
         this.player.anims.play(`${character}_${this.currentAnimation}`);
         this.applyHitbox();
@@ -158,9 +166,21 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     }
 
     applyHitbox() {
-        // Arcade body size/offset are in texture pixels; the sprite's scale is applied on top.
-        const { x, y, width, height } = CHARACTERS[this.currentCharacter].hitbox;
+        // Arcade body size/offset are in texture pixels; the sprite's scale is applied on top. Both hitboxes share
+        // the feet line, so ducking or standing up doesn't move the dog. (For the rest of this frame body.y still holds the old
+        // top; Arcade re-syncs it from the sprite at the next physics step, before any collision runs.)
+        const character = CHARACTERS[this.currentCharacter];
+        const { x, y, width, height } = this.crouching && character.crouchHitbox ? character.crouchHitbox : character.hitbox;
         this.player.body.setSize(width, height, false).setOffset(x, y);
+    }
+
+    /** Is there room above the ducked dog for her standing body? (Static solids only; 1px inset on each side.) */
+    private hasHeadroom(): boolean {
+        const { hitbox, crouchHitbox } = CHARACTERS[this.currentCharacter];
+        if (!crouchHitbox) return true;
+        const body = this.player.body;
+        const extra = (hitbox.height - crouchHitbox.height) * SPRITE_SCALE;
+        return this.physics.overlapRect(body.x + 1, body.y - extra, body.width - 2, extra - 1, false, true).length === 0;
     }
 
     toggleHitboxes() {
@@ -189,6 +209,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.player.setVelocity(0, 0);
         this.run = RUN_START;
         this.jump = JUMP_START;
+        this.crouching = false;
+        this.applyHitbox();
         this.falls++;
     }
 
@@ -219,20 +241,35 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         const body = this.player.body;
         const onGround = body.blocked.down || body.touching.down;
 
-        // Horizontal: walk speed that ramps up to run speed while a direction is held (src/movement.ts)
+        // Ducking (Sofi only): ↓/S on the ground; stays down under a low ceiling (src/movement.ts)
+        const character = CHARACTERS[this.currentCharacter];
+        const crouching = nextCrouching(this.crouching, {
+            wantsCrouch: this.cursors.down.isDown || this.wasd.S.isDown,
+            canCrouch: character.crouchHitbox !== null,
+            onGround,
+            hasHeadroom: !this.crouching || this.hasHeadroom(),
+        });
+        if (crouching !== this.crouching) {
+            this.crouching = crouching;
+            this.applyHitbox();
+        }
+
+        // Horizontal: walk speed that ramps up to run speed while a direction is held; capped while crawling
         const left = this.cursors.left.isDown || this.wasd.A.isDown;
         const right = this.cursors.right.isDown || this.wasd.D.isDown;
         const direction: Direction = left === right ? 0 : left ? -1 : 1;
-        this.run = stepRun({ ...this.run, vx: body.velocity.x }, direction, onGround, dt, PHYSICS);
+        const speedLimit = this.crouching ? PHYSICS.crawlSpeed : Infinity;
+        this.run = stepRun({ ...this.run, vx: body.velocity.x }, direction, onGround, dt, PHYSICS, speedLimit);
         const pushingWall = (direction < 0 && body.blocked.left) || (direction > 0 && body.blocked.right);
         if (pushingWall) this.run = { ...this.run, heldTime: 0 };
         body.setVelocityX(this.run.vx);
         if (direction !== 0) this.player.setFlipX(direction < 0);
 
-        // Vertical: jump buffer, coyote time, variable height, faster falling
+        // Vertical: jump buffer, coyote time, variable height, faster falling. No jumping while ducked.
         const jumpKeys = [this.cursors.up, this.wasd.W, this.spaceKey];
+        const jumpPressed = jumpKeys.some(key => Phaser.Input.Keyboard.JustDown(key));
         const step = stepJump(this.jump, {
-            pressed: jumpKeys.some(key => Phaser.Input.Keyboard.JustDown(key)),
+            pressed: jumpPressed && !this.crouching,
             held: jumpKeys.some(key => key.isDown),
             onGround,
             vy: body.velocity.y,
@@ -243,11 +280,15 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         // World gravity is the rising gravity; add the difference while falling
         body.setGravityY(body.velocity.y > 0 ? PHYSICS.fallGravity - PHYSICS.gravity : 0);
 
-        const animation: AnimationState = step.jump || !onGround ? 'jump'
-            : Math.abs(this.run.vx) > 10 ? 'move' : 'idle';
+        const moving = Math.abs(this.run.vx) > 10;
+        const animation: AnimationState = this.crouching ? (moving ? 'crawl' : 'crouch')
+            : step.jump || !onGround ? 'jump'
+            : moving ? 'move' : 'idle';
         this.player.anims.play(`${this.currentCharacter}_${animation}`, true);
         // Legs move faster as the dog speeds up
-        this.player.anims.timeScale = animation === 'move' ? Math.abs(this.run.vx) / PHYSICS.walkSpeed : 1;
+        const animationSpeed = animation === 'move' ? Math.abs(this.run.vx) / PHYSICS.walkSpeed
+            : animation === 'crawl' ? Math.abs(this.run.vx) / PHYSICS.crawlSpeed : 1;
+        this.player.anims.timeScale = animationSpeed;
         this.currentAnimation = animation;
 
         this.updateCheckpoint(onGround);

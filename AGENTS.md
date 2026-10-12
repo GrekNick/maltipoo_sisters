@@ -29,7 +29,9 @@ npm run dev            # dev server: http://localhost:5173/maltipoo_sisters/  (n
 npm test               # Vitest, runs in CI on PRs and before every deploy
 npm run typecheck      # tsc --noEmit, also in CI
 npm run build          # production build into dist/ (gitignored)
-npm run build:sprites  # regenerate assets/characters/ from art/raw/ (commit the output)
+npm run build:sprites  # regenerate assets/characters/ and assets/ui/ from art/raw/ (commit the output)
+npm run art:kiwi       # regenerate Kiwi's pixel-art frames (art/raw/kiwi_pixel/) from her original image
+npm run art:sofi       # regenerate Sofi's pixel-art frames incl. duck/crawl (art/raw/sofi_pixel/)
 npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 
@@ -50,7 +52,11 @@ src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (use
 src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
 server/coop-server.js  Socket.IO relay for co-op
 assets/characters/     GENERATED spritesheets + sprites.json; don't edit by hand
-art/raw/               original art, the input to tools/build-sprites.mjs
+assets/ui/             GENERATED UI images at display size (title logo)
+art/raw/               original art, the input to tools/build-sprites.mjs (logo in art/raw/logo/)
+art/raw/kiwi_pixel/    Kiwi as true 52x52 pixel art (smile, trot, leap), made by tools/make-kiwi.mjs
+art/raw/sofi_pixel/    Sofi as true pixel art + duck/crawl poses, made by tools/make-sofi.mjs
+tools/pixel-art.mjs    shared helpers: extract pixel grid, lift parts, recolour one pose into another palette
 tests/                 Vitest suites (pure logic + data; no Phaser imports)
 docs/                  roadmap, story, decisions
 ```
@@ -78,6 +84,10 @@ docs/                  roadmap, story, decisions
 - **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
   `scenes/shared.ts`) and `UIScene` draws them. Scene instances survive `restart()`/`start()` (the constructor runs
   once), so reset per-run state in `create()`.
+- **Sister skills are data + pure rules**: a character can duck if its sprites have a `crouch` animation (then it
+  gets a `crouchHitbox`, same width and feet line). The rules live in `movement.ts` (`nextCrouching`): duck only on
+  the ground, no jumping while ducked, crawl at `crawlSpeed`, and never stand up (or swap to a sister who can't
+  duck) without headroom, so nobody gets stuck in a ceiling.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions
@@ -116,7 +126,8 @@ Unit tests don't cover rendering, so also play-test:
 - Assets must be **imported** through Vite (`import url from '…png'`), not referenced by string paths. The
   site is served under `/maltipoo_sisters/` and string paths break in production.
 - The raw AI art was drawn at different scales per pose. Always go through `npm run build:sprites`, never
-  load `art/raw/` directly.
+  load `art/raw/` directly. If poses don't match in style, rebuild them from one design as true pixel art
+  (`tools/extract-pixel-grid.mjs`, see `tools/make-kiwi.mjs`) instead of rescaling.
 - Import project modules **without** a file extension (`'./physics'`); Vite and `tsc` resolve `.ts`.
 - Validate untrusted strings (DOM values, network messages) with `isCharacterKey()` before using them as keys.
 - After upgrading a dependency, restart the dev server with a clean `node_modules/.vite`; Vite can keep serving

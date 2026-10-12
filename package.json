@@ -13,7 +13,9 @@
     "build:sprites": "node tools/build-sprites.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "art:kiwi": "node tools/make-kiwi.mjs",
+    "art:sofi": "node tools/make-sofi.mjs"
   },
   "keywords": [],
   "author": "",

@@ -16,7 +16,7 @@ export class UIScene extends Phaser.Scene {
         this.positionText = this.add.text(16, 38, '', TEXT_STYLE);
         // Controls along the bottom edge, where they don't collide with the character dropdown (top right)
         this.add.text(VIEW.width / 2, VIEW.height - 20,
-            'Move ←/→ or A/D · Jump ↑/W/Space · R restart · Esc menu · H hitboxes',
+            'Move ←/→ or A/D · Jump ↑/W/Space · Duck ↓/S (Sofi) · R restart · Esc menu · H hitboxes',
             { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
 
         const game = this.scene.get(SceneKey.Game);

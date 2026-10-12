@@ -40,10 +40,16 @@ describe.each(CHARACTER_KEYS)('%s sprites', (key) => {
         });
     });
 
-    it('idle and jump frames stand on the bottom edge (only walk frames may be lifted)', () => {
-        for (const state of ['idle', 'jump'] as const) {
-            for (const index of animations[state]) expect(frames[index]?.lift, state).toBe(0);
-        }
+    it('the idle pose stands on the bottom edge (walk and jump frames may be lifted)', () => {
+        for (const index of animations.idle) expect(frames[index]?.lift).toBe(0);
+    });
+
+    it('a duck hitbox (if any) is lower than standing, with the same width and feet line', () => {
+        const { crouchHitbox } = CHARACTERS[key];
+        if (!crouchHitbox) return expect(animations.crouch).toBeUndefined();
+        expect(crouchHitbox.height).toBeLessThan(hitbox.height * 0.85);
+        expect(crouchHitbox.width).toBe(hitbox.width);
+        expect(crouchHitbox.y + crouchHitbox.height).toBe(hitbox.y + hitbox.height);
     });
 
     it('hitbox sits inside the frame with its bottom on the feet', () => {

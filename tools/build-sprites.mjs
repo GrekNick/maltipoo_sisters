@@ -17,6 +17,7 @@
  *   assets/characters/<character>.png   one horizontal strip per character, one cell per distinct source file
  *   assets/characters/sprites.json      frame size, per-frame opaque bounds (used for hitboxes) and the
  *                                       frame list of every animation state
+ *   assets/ui/<name>.png                UI images (title logo) at their display size
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,24 +32,39 @@ const ART_PIXEL = 2;
 const ALPHA_CUTOFF = 128;  // alpha at or above this is part of the dog, below is haze
 const PADDING = 4;         // empty px around the widest/tallest frame (not below the feet)
 
+// Every character has these states; the optional ones only characters with that skill (Sofi ducks and crawls)
 const STATES = ['idle', 'move', 'jump'];
+const OPTIONAL_STATES = ['crouch', 'crawl'];
 
-// Each animation state lists its frames in play order: a file name, or { file, lift } to draw the same image
-// `lift` px higher (the airborne moment of a trot; the physics body doesn't move). Identical entries are
-// stored once. These are stopgap walk cycles until real walk frames exist (roadmap M7.1):
-// - Sofi alternates her stride pose with her standing pose, so her legs really change.
-// - Kiwi's standing pose was drawn in a different style (colour, size, expression), so alternating would
-//   flicker between two different-looking dogs; she bobs on her stride pose instead.
+// Each animation state lists its frames in play order: a file name, or an object with options:
+//   lift      draw the image this many output px higher (an airborne moment; the physics body doesn't move)
+//   artPixel  size of one drawn pixel in the file; 1 = true pixel art (skips measuring), enlarged exactly
+// Identical entries are stored once.
+// - Kiwi is true pixel art made from her original design by tools/make-kiwi.mjs (smile, trot; her leap is
+//   Sofi's leap pose in Kiwi's colours). Her 4-frame trot bobs up on the passing frames.
+// - Sofi is true pixel art from her own images by tools/make-sofi.mjs, plus a duck (crouch) and crawl made from
+//   her standing pose. She walks by alternating her stride and standing poses (until real walk frames, M7.1).
+// UI images (title logo, ...) are drawn unscaled in the game, like the characters, so they're shrunk to their
+// display height here with the same area filter. Width is padded to even so a centred image stays pixel-aligned.
+const UI_IMAGES = {
+    logo: { file: 'logo/logo_roses.png', height: 320 },
+};
+const UI_OUT_DIR = 'assets/ui';
+
+const KIWI = (name, options = {}) => ({ file: `kiwi_pixel/${name}.png`, artPixel: 1, ...options });
+const SOFI = (name, options = {}) => ({ file: `sofi_pixel/${name}.png`, artPixel: 1, ...options });
 const SOURCES = {
     kiwi: {
-        idle: ['kiwi_sprites/chill.png'],
-        move: ['kiwi_sprites/chill_move.png', { file: 'kiwi_sprites/chill_move.png', lift: 3 }],
-        jump: ['kiwi_sprites/chill_jump.png'],
+        idle: [KIWI('idle')],
+        move: [KIWI('walk_a'), KIWI('idle', { lift: 2 }), KIWI('walk_b'), KIWI('idle', { lift: 2 })],
+        jump: [KIWI('jump')],
     },
     sofi: {
-        idle: ['sofi_sprites/smiley.png'],
-        move: ['sofi_sprites/smiley_move.png', 'sofi_sprites/smiley.png'],
-        jump: ['sofi_sprites/smiley_jump.png'],
+        idle: [SOFI('idle')],
+        move: [SOFI('walk'), SOFI('idle')],
+        jump: [SOFI('jump')],
+        crouch: [SOFI('crouch')],
+        crawl: [SOFI('crawl_a'), SOFI('crawl_b')],
     },
 };
 
@@ -189,10 +205,10 @@ function resizeArea(img, scale) {
     return out;
 }
 
-function buildFrame(file) {
+function buildFrame(file, artPixel) {
     const img = readPng(file);
     dropHaze(img);
-    const sourceArtPixel = measureArtPixel(img);
+    const sourceArtPixel = artPixel ?? measureArtPixel(img);
     const dog = crop(img, opaqueBounds(img));
     return { image: resizeArea(dog, ART_PIXEL / sourceArtPixel), sourceArtPixel };
 }
@@ -201,15 +217,17 @@ function main() {
     // Build each distinct source file once per character
     const characters = {};
     for (const [character, states] of Object.entries(SOURCES)) {
-        const entries = [...new Map(STATES.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
+        const characterStates = [...STATES, ...OPTIONAL_STATES.filter(state => states[state])];
+        const entries = [...new Map(characterStates.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
         const built = new Map(); // build each raw file once, even if it's used with several lifts
+        const artPixelOf = (file) => entries.find(e => e.file === file && e.artPixel)?.artPixel;
         characters[character] = {
             entries,
             frames: entries.map(({ file }) => {
-                if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file)));
+                if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file), artPixelOf(file)));
                 return built.get(file);
             }),
-            animations: Object.fromEntries(STATES.map(state => [
+            animations: Object.fromEntries(characterStates.map(state => [
                 state,
                 states[state].map(e => entries.findIndex(x => entryKey(x) === entryKey(entry(e)))),
             ])),
@@ -225,7 +243,7 @@ function main() {
     const maxLift = Math.max(...Object.values(characters).flatMap(c => c.entries.map(e => e.lift)));
     const frameHeight = even(Math.max(...all.map(f => f.image.height)) + Math.max(PADDING, maxLift));
 
-    const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, characters: {} };
+    const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, optionalStates: OPTIONAL_STATES, characters: {} };
     fs.mkdirSync(OUT_DIR, { recursive: true });
 
     for (const [character, { entries, frames, animations }] of Object.entries(characters)) {
@@ -250,6 +268,17 @@ function main() {
 
     fs.writeFileSync(path.join(OUT_DIR, 'sprites.json'), JSON.stringify(meta, null, 2) + '\n');
     console.log(`frame ${frameWidth}x${frameHeight} -> ${OUT_DIR}/`);
+
+    fs.mkdirSync(UI_OUT_DIR, { recursive: true });
+    for (const [name, { file, height }] of Object.entries(UI_IMAGES)) {
+        const img = readPng(path.join(RAW_DIR, file));
+        const art = crop(img, opaqueBounds(img));
+        const resized = resizeArea(art, height / art.height);
+        const out = blank(resized.width + (resized.width % 2), resized.height + (resized.height % 2));
+        PNG.bitblt(resized, out, 0, 0, resized.width, resized.height, 0, 0);
+        fs.writeFileSync(path.join(UI_OUT_DIR, `${name}.png`), PNG.sync.write(out));
+        console.log(`ui ${name}: ${file} ${art.width}x${art.height} -> ${out.width}x${out.height}`);
+    }
 }
 
 main();
