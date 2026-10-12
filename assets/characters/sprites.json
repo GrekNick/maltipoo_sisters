@@ -9,67 +9,112 @@
   ],
   "characters": {
     "kiwi": {
-      "idle": {
-        "frame": 0,
-        "bounds": {
-          "x": 10,
-          "y": 18,
-          "width": 82,
-          "height": 78
+      "frames": [
+        {
+          "source": "kiwi_sprites/chill.png",
+          "lift": 0,
+          "bounds": {
+            "x": 10,
+            "y": 18,
+            "width": 82,
+            "height": 78
+          },
+          "sourceArtPixel": 19.21
         },
-        "sourceArtPixel": 19.21
-      },
-      "move": {
-        "frame": 1,
-        "bounds": {
-          "x": 5,
-          "y": 5,
-          "width": 93,
-          "height": 91
+        {
+          "source": "kiwi_sprites/chill_move.png",
+          "lift": 0,
+          "bounds": {
+            "x": 5,
+            "y": 5,
+            "width": 93,
+            "height": 91
+          },
+          "sourceArtPixel": 18.46
         },
-        "sourceArtPixel": 18.46
-      },
-      "jump": {
-        "frame": 2,
-        "bounds": {
-          "x": 9,
-          "y": 18,
-          "width": 84,
-          "height": 78
+        {
+          "source": "kiwi_sprites/chill_move.png",
+          "lift": 3,
+          "bounds": {
+            "x": 5,
+            "y": 2,
+            "width": 93,
+            "height": 91
+          },
+          "sourceArtPixel": 18.46
         },
-        "sourceArtPixel": 24.4
+        {
+          "source": "kiwi_sprites/chill_jump.png",
+          "lift": 0,
+          "bounds": {
+            "x": 9,
+            "y": 18,
+            "width": 84,
+            "height": 78
+          },
+          "sourceArtPixel": 24.4
+        }
+      ],
+      "animations": {
+        "idle": [
+          0
+        ],
+        "move": [
+          1,
+          2
+        ],
+        "jump": [
+          3
+        ]
       }
     },
     "sofi": {
-      "idle": {
-        "frame": 0,
-        "bounds": {
-          "x": 10,
-          "y": 18,
-          "width": 83,
-          "height": 78
+      "frames": [
+        {
+          "source": "sofi_sprites/smiley.png",
+          "lift": 0,
+          "bounds": {
+            "x": 10,
+            "y": 18,
+            "width": 83,
+            "height": 78
+          },
+          "sourceArtPixel": 19.28
         },
-        "sourceArtPixel": 19.28
-      },
-      "move": {
-        "frame": 1,
-        "bounds": {
-          "x": 7,
-          "y": 14,
-          "width": 88,
-          "height": 82
+        {
+          "source": "sofi_sprites/smiley_move.png",
+          "lift": 0,
+          "bounds": {
+            "x": 7,
+            "y": 14,
+            "width": 88,
+            "height": 82
+          },
+          "sourceArtPixel": 19.4
         },
-        "sourceArtPixel": 19.4
-      },
-      "jump": {
-        "frame": 2,
-        "bounds": {
-          "x": 6,
-          "y": 8,
-          "width": 90,
-          "height": 88
-        },
-        "sourceArtPixel": 17.16
+        {
+          "source": "sofi_sprites/smiley_jump.png",
+          "lift": 0,
+          "bounds": {
+            "x": 6,
+            "y": 8,
+            "width": 90,
+            "height": 88
+          },
+          "sourceArtPixel": 17.16
+        }
+      ],
+      "animations": {
+        "idle": [
+          0
+        ],
+        "move": [
+          1,
+          0
+        ],
+        "jump": [
+          2
+        ]
       }
     }
   }

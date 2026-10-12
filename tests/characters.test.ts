@@ -18,19 +18,31 @@ it('frames are even-sized and drawn at scale 1, so they stay pixel-sharp', () =>
 });
 
 describe.each(CHARACTER_KEYS)('%s sprites', (key) => {
-    const { frames, hitbox } = CHARACTERS[key];
+    const { sprites: { frames, animations }, hitbox } = CHARACTERS[key];
 
-    it('has one distinct frame per animation state', () => {
-        const indices = ANIMATION_STATES.map(state => frames[state]?.frame);
-        expect(indices).toEqual(sprites.states.map((_, i) => i));
+    it('every animation state has frames, and they exist in the sheet', () => {
+        for (const state of ANIMATION_STATES) {
+            expect(animations[state].length, state).toBeGreaterThan(0);
+            for (const index of animations[state]) expect(frames[index], `${state} -> ${index}`).toBeDefined();
+        }
     });
 
-    it('every frame fits in the cell and has its feet on the bottom edge', () => {
-        for (const state of ANIMATION_STATES) {
-            const { x, y, width, height } = frames[state].bounds;
+    it('the walk animation has more than one frame (legs move)', () => {
+        expect(new Set(animations.move).size).toBeGreaterThan(1);
+    });
+
+    it('every frame fits in the cell and has its feet on the bottom edge (or lifted on purpose)', () => {
+        frames.forEach(({ bounds: { x, y, width, height }, source, lift }) => {
             expect(x).toBeGreaterThanOrEqual(0);
             expect(x + width).toBeLessThanOrEqual(FRAME_SIZE.width);
-            expect(y + height, state).toBe(FRAME_SIZE.height);
+            expect(y).toBeGreaterThanOrEqual(0);
+            expect(y + height + lift, source).toBe(FRAME_SIZE.height);
+        });
+    });
+
+    it('idle and jump frames stand on the bottom edge (only walk frames may be lifted)', () => {
+        for (const state of ['idle', 'jump'] as const) {
+            for (const index of animations[state]) expect(frames[index]?.lift, state).toBe(0);
         }
     });
 
@@ -42,7 +54,7 @@ describe.each(CHARACTER_KEYS)('%s sprites', (key) => {
 
     it('spritesheet image matches sprites.json (rerun `npm run build:sprites` if not)', () => {
         const png = PNG.sync.read(fs.readFileSync(`assets/characters/${key}.png`));
-        expect(png.width).toBe(FRAME_SIZE.width * sprites.states.length);
+        expect(png.width).toBe(FRAME_SIZE.width * frames.length);
         expect(png.height).toBe(FRAME_SIZE.height);
     });
 });

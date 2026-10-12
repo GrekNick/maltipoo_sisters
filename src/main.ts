@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import {
-    CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, FRAME_SIZE, SPRITE_SCALE, isCharacterKey,
+    CHARACTERS, CHARACTER_KEYS, ANIMATION_STATES, ANIMATION_FRAME_RATE, FRAME_SIZE, SPRITE_SCALE, isCharacterKey,
     type AnimationState, type CharacterKey,
 } from './characters';
 import { PHYSICS } from './physics';
@@ -182,14 +182,14 @@ export class MainScene extends Phaser.Scene implements CoopHost {
     }
 
     createAnimations() {
-        // Single-frame for now; real spritesheets will replace these without touching game logic.
+        // Frame lists come from sprites.json (tools/build-sprites.mjs); new art only changes that list.
         // Animations are global to the game, so they are shared by the local and remote players.
         CHARACTER_KEYS.forEach(character => {
             ANIMATION_STATES.forEach(state => {
                 const key = `${character}_${state}`;
                 if (!this.anims.exists(key)) {
-                    const frame = CHARACTERS[character].frames[state].frame;
-                    this.anims.create({ key, frames: [{ key: character, frame }], frameRate: 10, repeat: -1 });
+                    const frames = CHARACTERS[character].sprites.animations[state].map(frame => ({ key: character, frame }));
+                    this.anims.create({ key, frames, frameRate: ANIMATION_FRAME_RATE[state], repeat: -1 });
                 }
             });
         });

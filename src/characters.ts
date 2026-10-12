@@ -13,8 +13,10 @@ export interface Rect {
 }
 
 export interface FrameInfo {
-    /** Index of the frame in the character's spritesheet */
-    frame: number;
+    /** Raw art file the frame was built from (art/raw/...) */
+    source: string;
+    /** Drawn this many px above the bottom edge (a trot's airborne moment); 0 = feet on the bottom edge */
+    lift: number;
     /** Opaque area of the frame (texture px) */
     bounds: Rect;
     /** Measured size of one drawn pixel in the raw art, for reference */
@@ -26,14 +28,21 @@ export interface SpriteMeta {
     frameHeight: number;
     artPixel: number;
     states: AnimationState[];
-    characters: Record<CharacterKey, Record<AnimationState, FrameInfo>>;
+    characters: Record<CharacterKey, CharacterSprites>;
+}
+
+export interface CharacterSprites {
+    /** One entry per cell of the character's spritesheet */
+    frames: FrameInfo[];
+    /** Spritesheet frame indices each animation plays, in order */
+    animations: Record<AnimationState, number[]>;
 }
 
 export interface Character {
     name: string;
     /** Spritesheet URL (resolved by Vite) */
     sheet: string;
-    frames: Record<AnimationState, FrameInfo>;
+    sprites: CharacterSprites;
     /** Physics body in texture px, relative to the frame's top-left */
     hitbox: Rect;
 }
@@ -52,13 +61,18 @@ export const FRAME_SIZE = { width: sprites.frameWidth, height: sprites.frameHeig
 // Animation states every character provides. Animation keys are `${character}_${state}`.
 export const ANIMATION_STATES: readonly AnimationState[] = sprites.states;
 
+// Frames per second. `move` is additionally sped up with the dog's speed in the scene.
+export const ANIMATION_FRAME_RATE: Record<AnimationState, number> = { idle: 4, move: 8, jump: 8 };
+
 // Physics body relative to the idle pose's opaque bounds (texture px): a bit smaller than the
 // art so ledges feel forgiving, bottom edge exactly on the feet. Fixed across animation frames.
 const HITBOX_WIDTH_RATIO = 0.7;
 const HITBOX_HEIGHT_RATIO = 0.83;
 
-export function hitboxFor(frames: Record<AnimationState, FrameInfo>): Rect {
-    const idle = frames.idle.bounds;
+export function hitboxFor({ frames, animations }: CharacterSprites): Rect {
+    const idleFrame = frames[animations.idle[0] ?? -1];
+    if (!idleFrame) throw new Error('sprites.json: idle animation has no frames');
+    const idle = idleFrame.bounds;
     const width = Math.round(idle.width * HITBOX_WIDTH_RATIO);
     const height = Math.round(idle.height * HITBOX_HEIGHT_RATIO);
     return {
@@ -70,8 +84,8 @@ export function hitboxFor(frames: Record<AnimationState, FrameInfo>): Rect {
 }
 
 function character(key: CharacterKey, name: string, sheet: string): Character {
-    const frames = sprites.characters[key];
-    return { name, sheet, frames, hitbox: hitboxFor(frames) };
+    const characterSprites = sprites.characters[key];
+    return { name, sheet, sprites: characterSprites, hitbox: hitboxFor(characterSprites) };
 }
 
 export const CHARACTERS: Record<CharacterKey, Character> = {
