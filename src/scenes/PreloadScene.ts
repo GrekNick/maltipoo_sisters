@@ -1,4 +1,4 @@
-// Loads everything once, shows a loading bar, then starts the game.
+// Loads everything once, shows a loading bar, then opens the title screen.
 import Phaser from 'phaser';
 import { CHARACTERS, FRAME_SIZE } from '../characters';
 import { bakePlaceholderTextures, createCharacterAnimations } from './art';
@@ -29,6 +29,6 @@ export class PreloadScene extends Phaser.Scene {
     create() {
         bakePlaceholderTextures(this);
         createCharacterAnimations(this);
-        this.scene.start(SceneKey.Game);
+        this.scene.start(SceneKey.Title);
     }
 }

@@ -1,10 +1,12 @@
 // Entry point: game config + scene list, and the character dropdown next to the canvas.
-// Scenes (like routes): Preload → Game (+ UI on top).
+// Scenes (like routes): Preload → Title ⇄ Settings, Title → Game (+ UI on top) → Esc back to Title.
 import Phaser from 'phaser';
 import { isCharacterKey } from './characters';
 import { PHYSICS } from './physics';
 import { GameScene } from './scenes/GameScene';
 import { PreloadScene } from './scenes/PreloadScene';
+import { SettingsScene } from './scenes/SettingsScene';
+import { TitleScene } from './scenes/TitleScene';
 import { UIScene } from './scenes/UIScene';
 import { SceneKey, VIEW } from './scenes/shared';
 
@@ -29,7 +31,7 @@ const config: Phaser.Types.Core.GameConfig = {
         }
     },
     // The first scene in the list starts automatically
-    scene: [PreloadScene, GameScene, UIScene],
+    scene: [PreloadScene, TitleScene, SettingsScene, GameScene, UIScene],
 };
 
 const game = new Phaser.Game(config);

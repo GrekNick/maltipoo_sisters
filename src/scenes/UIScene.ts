@@ -12,7 +12,7 @@ export class UIScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.text(16, 16, 'Move: ←/→ or A/D   Jump: ↑/W/Space   R: restart   H: hitboxes', TEXT_STYLE);
+        this.add.text(16, 16, 'Move: ←/→ or A/D   Jump: ↑/W/Space   R: restart   Esc: menu   H: hitboxes', TEXT_STYLE);
         this.statusText = this.add.text(16, 40, '', TEXT_STYLE);
         this.positionText = this.add.text(16, 62, '', TEXT_STYLE);
 
@@ -45,6 +45,6 @@ export class UIScene extends Phaser.Scene {
             text(24, best.isNew ? 'New best time!' : `Best: ${best.seconds.toFixed(1)}s`, 18,
                 best.isNew ? '#ffe082' : '#cfd8dc');
         }
-        text(62, 'Press R to play again', 18, '#ffe082');
+        text(62, 'R: play again    Esc: menu', 18, '#ffe082');
     }
 }

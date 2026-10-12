@@ -1,12 +1,12 @@
 // Gameplay only: level, player, physics, goal. The HUD and finish panel live in UIScene, which listens to the
-// events this scene emits (GameEvent).
+// events this scene emits (GameEvent). Started from the title screen; Esc goes back to it.
 import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, SPRITE_SCALE, type AnimationState, type CharacterKey } from '../characters';
 import { PHYSICS } from '../physics';
 import { RUN_START, JUMP_START, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
 import { level1 } from '../levels/level1';
 import type { Level } from '../levels/types';
-import { recordBestTime } from '../persistence';
+import { loadSettings, recordBestTime } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
 import { addBackdrop, addGroundStrip } from './art';
 import { GameEvent, SceneKey, SKY_COLOR, TILE, type FinishedState, type HudState } from './shared';
@@ -56,8 +56,9 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.createPlayer();
         this.createCamera();
         this.createInput();
+        if (loadSettings().showHitboxes) this.toggleHitboxes();
 
-        // The HUD runs as its own scene on top; stop it with this one (e.g. on restart)
+        // The HUD runs as its own scene on top; stop it with this one (restart, or Esc to the title)
         this.scene.launch(SceneKey.UI);
         this.events.once('shutdown', () => this.scene.stop(SceneKey.UI));
 
@@ -132,6 +133,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.spaceKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         keyboard.on('keydown-H', () => this.toggleHitboxes());
         keyboard.on('keydown-R', () => this.scene.restart());
+        keyboard.on('keydown-ESC', () => this.scene.start(SceneKey.Title));
     }
 
     elapsedSeconds() {

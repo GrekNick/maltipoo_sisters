@@ -35,7 +35,13 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.ts            MainScene (one scene for now) + game config + DOM character select
+src/main.ts            game config + scene list + DOM character select
+src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
+  GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
+  UIScene.ts           HUD + finish panel, listens to GameScene's events
+  art.ts               placeholder textures, character animations, backdrop, ground strips
+src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
+src/persistence.ts     settings + best times in localStorage (versioned, never throws)
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
 src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
@@ -66,6 +72,9 @@ docs/                  roadmap, story, decisions
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.
+- **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
+  `scenes/shared.ts`) and `UIScene` draws them. Scene instances survive `restart()`/`start()` (the constructor runs
+  once), so reset per-run state in `create()`.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions
@@ -82,7 +91,8 @@ docs/                  roadmap, story, decisions
 
 ## Verifying changes in the browser
 Unit tests don't cover rendering, so also play-test:
-- In dev builds `window.game` is exposed. Get the scene with `game.scene.getScene('MainScene')`.
+- In dev builds `window.game` is exposed. The game opens on the title screen: start play with
+  `game.scene.getScene('Title').scene.start('Game')`, then get it with `game.scene.getScene('Game')`.
 - A hidden or background tab **pauses the game loop**. To drive it deterministically, step it manually:
   `game.step(t += 16.67, 16.67)` in a loop. Drive input with real `KeyboardEvent`s on `window` (keydown/keyup with
   `code` and `keyCode`): jumping reacts to a fresh press (`JustDown`), so setting `key.isDown` directly won't jump.
