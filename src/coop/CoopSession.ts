@@ -121,6 +121,7 @@ export class CoopSession {
         const sprite = this.host.add.sprite(info.x, info.y, info.character, 0);
         sprite.setScale(SPRITE_SCALE);
         sprite.setOrigin(0.5, 1); // positions are feet, same as the local player
+        sprite.vertexRoundMode = 'fullAuto'; // pixel-sharp when flipped, same as the local player
         sprite.setFlipX(info.flipX);
         this.otherPlayers.set(info.id, { sprite, character: info.character });
     }

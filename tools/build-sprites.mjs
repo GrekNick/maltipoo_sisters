@@ -14,8 +14,9 @@
  *   4. places all frames in equal-size cells, centered, with the feet on the bottom edge
  *
  * Output (commit it — the game and CI don't run this script):
- *   assets/characters/<character>.png   one horizontal strip per character, frame order = STATES
- *   assets/characters/sprites.json      frame size + per-frame opaque bounds (used for hitboxes)
+ *   assets/characters/<character>.png   one horizontal strip per character, one cell per distinct source file
+ *   assets/characters/sprites.json      frame size, per-frame opaque bounds (used for hitboxes) and the
+ *                                       frame list of every animation state
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,24 +25,35 @@ import { PNG } from 'pngjs';
 const RAW_DIR = 'art/raw';
 const OUT_DIR = 'assets/characters';
 
-const ART_PIXEL = 4;       // output texture px per drawn "pixel"; the game shows them at 0.5 scale
+// Output texture px per drawn "pixel". The game draws sprites at scale 1, so one texture pixel is one
+// screen pixel: that lets Phaser snap them to whole pixels while moving (no subpixel blur).
+const ART_PIXEL = 2;
 const ALPHA_CUTOFF = 128;  // alpha at or above this is part of the dog, below is haze
 const PADDING = 4;         // empty px around the widest/tallest frame (not below the feet)
 
 const STATES = ['idle', 'move', 'jump'];
 
+// Each animation state lists its frames in play order: a file name, or { file, lift } to draw the same image
+// `lift` px higher (the airborne moment of a trot; the physics body doesn't move). Identical entries are
+// stored once. These are stopgap walk cycles until real walk frames exist (roadmap M7.1):
+// - Sofi alternates her stride pose with her standing pose, so her legs really change.
+// - Kiwi's standing pose was drawn in a different style (colour, size, expression), so alternating would
+//   flicker between two different-looking dogs; she bobs on her stride pose instead.
 const SOURCES = {
     kiwi: {
-        idle: 'kiwi_sprites/chill.png',
-        move: 'kiwi_sprites/chill_move.png',
-        jump: 'kiwi_sprites/chill_jump.png',
+        idle: ['kiwi_sprites/chill.png'],
+        move: ['kiwi_sprites/chill_move.png', { file: 'kiwi_sprites/chill_move.png', lift: 3 }],
+        jump: ['kiwi_sprites/chill_jump.png'],
     },
     sofi: {
-        idle: 'sofi_sprites/smiley.png',
-        move: 'sofi_sprites/smiley_move.png',
-        jump: 'sofi_sprites/smiley_jump.png',
+        idle: ['sofi_sprites/smiley.png'],
+        move: ['sofi_sprites/smiley_move.png', 'sofi_sprites/smiley.png'],
+        jump: ['sofi_sprites/smiley_jump.png'],
     },
 };
+
+const entry = (e) => (typeof e === 'string' ? { file: e, lift: 0 } : { lift: 0, ...e });
+const entryKey = ({ file, lift }) => `${file}@${lift}`;
 
 function readPng(file) {
     return PNG.sync.read(fs.readFileSync(file));
@@ -186,38 +198,53 @@ function buildFrame(file) {
 }
 
 function main() {
-    const frames = {};
+    // Build each distinct source file once per character
+    const characters = {};
     for (const [character, states] of Object.entries(SOURCES)) {
-        frames[character] = {};
-        for (const state of STATES) {
-            frames[character][state] = buildFrame(path.join(RAW_DIR, states[state]));
-        }
+        const entries = [...new Map(STATES.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
+        const built = new Map(); // build each raw file once, even if it's used with several lifts
+        characters[character] = {
+            entries,
+            frames: entries.map(({ file }) => {
+                if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file)));
+                return built.get(file);
+            }),
+            animations: Object.fromEntries(STATES.map(state => [
+                state,
+                states[state].map(e => entries.findIndex(x => entryKey(x) === entryKey(entry(e)))),
+            ])),
+        };
     }
 
     // One cell size for every frame of every character keeps hitboxes and placement uniform.
-    const all = Object.values(frames).flatMap(Object.values);
-    const frameWidth = Math.max(...all.map(f => f.image.width)) + 2 * PADDING;
-    const frameHeight = Math.max(...all.map(f => f.image.height)) + PADDING;
+    const all = Object.values(characters).flatMap(c => c.frames);
+    // Even sizes: with the origin at the bottom-centre, an odd width would put the sprite's edges on half
+    // pixels and blur it even when standing still.
+    const even = (n) => n + (n % 2);
+    const frameWidth = even(Math.max(...all.map(f => f.image.width)) + 2 * PADDING);
+    const maxLift = Math.max(...Object.values(characters).flatMap(c => c.entries.map(e => e.lift)));
+    const frameHeight = even(Math.max(...all.map(f => f.image.height)) + Math.max(PADDING, maxLift));
 
     const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, characters: {} };
     fs.mkdirSync(OUT_DIR, { recursive: true });
 
-    for (const [character, byState] of Object.entries(frames)) {
-        const sheet = blank(frameWidth * STATES.length, frameHeight);
-        meta.characters[character] = {};
-        STATES.forEach((state, index) => {
-            const { image, sourceArtPixel } = byState[state];
+    for (const [character, { entries, frames, animations }] of Object.entries(characters)) {
+        const sheet = blank(frameWidth * frames.length, frameHeight);
+        const frameMeta = frames.map(({ image, sourceArtPixel }, index) => {
             const x = Math.round((frameWidth - image.width) / 2);
-            const y = frameHeight - image.height; // feet on the bottom edge
+            const { file, lift } = entries[index];
+            const y = frameHeight - image.height - lift; // feet on the bottom edge, unless lifted
             PNG.bitblt(image, sheet, 0, 0, image.width, image.height, index * frameWidth + x, y);
-            meta.characters[character][state] = {
-                frame: index,
+            console.log(`${character}[${index}] ${file}${lift ? ` lift ${lift}` : ''}: drawn pixel ` +
+                `${sourceArtPixel.toFixed(2)}px -> ${image.width}x${image.height}`);
+            return {
+                source: file,
+                lift,
                 bounds: { x, y, width: image.width, height: image.height },
                 sourceArtPixel: Number(sourceArtPixel.toFixed(2)),
             };
-            console.log(`${character}.${state}: drawn pixel ${sourceArtPixel.toFixed(2)}px -> ` +
-                `${image.width}x${image.height}`);
         });
+        meta.characters[character] = { frames: frameMeta, animations };
         fs.writeFileSync(path.join(OUT_DIR, `${character}.png`), PNG.sync.write(sheet));
     }
 

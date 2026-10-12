@@ -35,9 +35,16 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.ts            MainScene (one scene for now) + game config + DOM character select
+src/main.ts            game config + scene list + DOM character select
+src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
+  GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
+  UIScene.ts           HUD + finish panel, listens to GameScene's events
+  art.ts               placeholder textures, character animations, backdrop, ground strips
+src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
+src/persistence.ts     settings + best times in localStorage (versioned, never throws)
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
-src/physics.ts         gravity / run speed / jump velocity, shared by game and tests
+src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
+src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 src/levels/level1.ts   level data (stopgap until Tiled, milestone M2); types in src/levels/types.ts
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)
 src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
@@ -51,16 +58,26 @@ docs/                  roadmap, story, decisions
 ## How the game is put together (rules to keep)
 - **The sprite origin is at the feet**: `setOrigin(0.5, 1)`. Spawn, checkpoint and goal coordinates are
   feet positions. Generated frames have the feet on the bottom edge (enforced by tests).
+- **Sprites are drawn at scale 1 and snap to whole pixels**: sheets are built at display size with even frame
+  sizes, and characters use `vertexRoundMode = 'fullAuto'`. A scaled or flipped sprite at a fractional position
+  gets resampled by the GPU and looks blurry while moving (tested in `characters.test.ts`).
+- **The camera is locked to the player horizontally** (follow lerp 1) and the canvas is shown with
+  `image-rendering: pixelated` (index.html). A lagging camera or browser smoothing on high-DPI screens made the
+  dogs look blurry while moving; measure before changing either (see "Verifying changes" below).
 - **Hitboxes come from data**: `hitboxFor()` in `characters.ts` derives the body from the idle frame bounds.
   Arcade `body.setSize/setOffset` take **texture pixels**, before scale. Never hand-tune hitbox numbers
   again; change the rule or the art.
 - **Visuals and collision are separate**: tile sprites for looks, invisible static `zone`s in
   `this.solids` for physics. This mirrors how Tiled maps will work (tile layer + collision property).
-- **Movement numbers live in `src/physics.ts` only**: the level tests compute reachability from them, so
-  changing jump or run values automatically re-validates every level.
+- **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
+  tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
+  start), so changing them automatically re-validates every level.
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.
+- **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
+  `scenes/shared.ts`) and `UIScene` draws them. Scene instances survive `restart()`/`start()` (the constructor runs
+  once), so reset per-run state in `create()`.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions
@@ -77,13 +94,16 @@ docs/                  roadmap, story, decisions
 
 ## Verifying changes in the browser
 Unit tests don't cover rendering, so also play-test:
-- In dev builds `window.game` is exposed. Get the scene with `game.scene.getScene('MainScene')`.
+- In dev builds `window.game` is exposed. The game opens on the title screen: start play with
+  `game.scene.getScene('Title').scene.start('Game')`, then get it with `game.scene.getScene('Game')`.
 - A hidden or background tab **pauses the game loop**. To drive it deterministically, step it manually:
-  `game.step(t += 16.67, 16.67)` in a loop, and set inputs directly (`scene.wasd.D.isDown = true`,
-  `scene.spaceKey.isDown = true`).
+  `game.step(t += 16.67, 16.67)` in a loop. Drive input with real `KeyboardEvent`s on `window` (keydown/keyup with
+  `code` and `keyCode`): jumping reacts to a fresh press (`JustDown`), so setting `key.isDown` directly won't jump.
 - **Tweens use wall-clock time**, so they don't advance under instant manual stepping. Await small delays
   between steps when checking tweens.
 - The Arcade debug view toggles with **H** in game.
+- To check on-screen steadiness, record `Math.round(player.x - player.displayOriginX - camera.scrollX)` every frame
+  while running: it should not change once the camera is scrolling.
 
 ## Pitfalls we already hit
 - `this.add.graphics()` to bake textures leaves the drawing on screen. Use `this.make.graphics({}, false)`,

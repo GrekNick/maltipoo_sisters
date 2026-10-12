@@ -41,7 +41,7 @@ Cheapest now, while the game is ~500 lines.
 |---|---|
 | ✅ 1.1 TypeScript setup: `tsconfig`, typecheck script and CI step; convert the pure modules first (`physics`, `levels/*`, `characters`) | `npm run typecheck` passes in CI; tests still pass |
 | ✅ 1.2 Phaser 3.90 → 4 upgrade; convert `main.js` to TS | Level 1 plays the same; no console errors |
-| 1.3 Split scenes: `Boot` → `Preload` (loading bar) → `Game` (takes a level key) → `UI` (HUD overlay) | `GameScene` contains no HUD code; restart still works |
+| ✅ 1.3 Split scenes: `Preload` (loading bar) → `Title` → `Game` → `UI` (HUD overlay). No separate `Boot`: the loading bar is drawn with shapes, so it needs no assets. The level key parameter comes with M2 | `GameScene` contains no HUD code; restart still works |
 | 1.4 Responsive canvas (`Scale.FIT`) | The game fills a phone or tablet screen without distortion |
 
 ### M2 — Level planner: Tiled pipeline
@@ -58,8 +58,8 @@ The tool we chose in [decisions.md](decisions.md).
 ### M3 — Game shell: start screen, settings, progress
 | Chunk | Done when |
 |---|---|
-| 3.1 **Title screen**: logo, Play / Continue, Settings, Credits; idle dogs animated | The game opens on the title screen; Enter, tap or gamepad starts it |
-| 3.2 **Settings**: music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
+| ✅ 3.1 **Title screen**: title, Start and Settings buttons (mouse, touch, keyboard), animated dogs. Continue and Credits come later | The game opens on the title screen; Enter, tap or gamepad starts it |
+| ◐ 3.2 **Settings** (screen and saving done; "show hitboxes" works; sound and language rows are placeholders): music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
 | 3.3 **Level select = a map of the route** (Wieliczka → Wawel): locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
 | 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map | Esc or a tap on the pause icon pauses the game |
 | 3.5 Save progress (localStorage, versioned) | A refresh keeps unlocked levels and best times |
@@ -77,7 +77,7 @@ The tool we chose in [decisions.md](decisions.md).
 ### M5 — Game feel and kid-friendly controls
 | Chunk | Done when |
 |---|---|
-| 5.1 Jump feel: coyote time, jump buffering, variable jump height | Jumps feel forgiving; tested on the pure movement logic |
+| ✅ 5.1 Jump feel: coyote time, jump buffering, variable jump height; plus a walk → run speed ramp and faster falling | Jumps feel forgiving; tested on the pure movement logic |
 | 5.2 Touch controls (on-screen buttons) and gamepad | Playable on a tablet and with a controller |
 | 5.3 Sound: jump, land, collect, swap, finish; a music loop per location | Volume settings apply |
 | 5.4 Juice: dust puffs, squash and stretch on landing, camera nudge, treat sparkle | Players notice it feels alive |

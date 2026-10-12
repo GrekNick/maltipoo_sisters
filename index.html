@@ -21,6 +21,12 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
+
+        /* The game draws 800x600 pixels; on high-DPI (Retina) screens the browser enlarges the canvas 2x and
+           smooths it, which blurs everything. Pixelated keeps each game pixel a crisp block. */
+        #game-container canvas {
+            image-rendering: pixelated;
+        }
         
         .controls {
             color: white;
@@ -62,7 +68,7 @@
         </div>
         <div id="game-container"></div>
         <div class="controls">
-            Керування: A/D або ←/→ для руху, W або ↑/Пробіл для стрибка, R — почати знову
+            Керування: A/D або ←/→ для руху, W або ↑/Пробіл для стрибка, R — почати знову, Esc — меню
         </div>
     </div>
 

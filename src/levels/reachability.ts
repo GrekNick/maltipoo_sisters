@@ -7,15 +7,20 @@ export function maxJumpHeight({ gravity, jumpVelocity }: Physics): number {
 }
 
 /**
- * Horizontal distance a full-speed jump covers before landing `rise` px above the take-off height
- * (negative rise = landing lower). Returns null if the height can't be reached at all.
+ * Horizontal distance a full jump covers before landing `rise` px above the take-off height (negative rise =
+ * landing lower). Returns null if the height can't be reached at all.
+ *
+ * Uses walking speed, not the ramped-up run speed: levels must be finishable without a running start.
+ * Rising uses `gravity`, falling the stronger `fallGravity`. The fall-speed cap is ignored, which only
+ * underestimates air time, so the check stays on the safe side.
  */
 export function jumpDistance(rise: number, physics: Physics): number | null {
-    const { gravity, jumpVelocity, runSpeed } = physics;
-    if (rise > maxJumpHeight(physics)) return null;
-    // y(t) = v·t − g·t²/2 = rise  →  take the later root (landing while falling)
-    const t = (jumpVelocity + Math.sqrt(jumpVelocity * jumpVelocity - 2 * gravity * rise)) / gravity;
-    return runSpeed * t;
+    const { gravity, fallGravity, jumpVelocity, walkSpeed } = physics;
+    const apex = maxJumpHeight(physics);
+    if (rise > apex) return null;
+    const timeUp = jumpVelocity / gravity;
+    const timeDown = Math.sqrt((2 * (apex - rise)) / fallGravity);
+    return walkSpeed * (timeUp + timeDown);
 }
 
 /** Every standable surface of a level. */
