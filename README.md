@@ -14,6 +14,7 @@ A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built wi
 - [Roadmap](docs/roadmap.md): vision, design pillars, milestones and the next chunks of work
 - [Story and levels](docs/story-and-levels.md): Wieliczka → Wawel, friend Smok Junior, the level sequence
 - [Art direction](docs/art-direction.md): pixel-art style rules and character briefs (Smok Junior)
+- [Level design](docs/level-design.md): making levels in Tiled, and the rules that keep them fair
 - [Decisions](docs/decisions.md): why things are the way they are
 - [AGENTS.md](AGENTS.md): conventions and pitfalls for contributors and AI agents
 
@@ -139,6 +140,12 @@ The tests cover the parts that are plain data and math, which is where most mist
 - `tests/characters.test.js` — sprite frames have the feet on the bottom edge, hitboxes fit, and the
   spritesheets match `sprites.json`
 
+## Making Levels
+
+Levels are painted in [Tiled](https://www.mapeditor.org/) and saved in `levels/` as `.tmj` maps; no code needed.
+Open `levels/maltipoo.tiled-project` in Tiled, edit, save: the running game reloads, and `npm test` checks that
+every level can be finished. See [docs/level-design.md](docs/level-design.md).
+
 ## Character Sprites
 
 The dogs' raw art lives in `art/raw/`. The game uses spritesheets generated from it:
@@ -171,8 +178,9 @@ maltipoo_sisters/
 │   ├── main.ts          # Main game logic and Phaser scenes
 │   ├── characters.ts    # Character spritesheets, animations and hitboxes
 │   ├── physics.ts       # Gravity, run speed, jump speed
-│   ├── levels/          # Level data + reachability checks (until levels move to Tiled)
+│   ├── levels/          # Tiled map parser, level registry, reachability checks
 │   └── coop/            # Online co-op client (parked, behind VITE_COOP)
+├── levels/              # Tiled project, level maps (*.tmj), tilesets
 ├── assets/
 │   └── characters/      # Generated spritesheets + sprites.json (from `npm run build:sprites`)
 ├── art/raw/             # Original character art (input for build:sprites)

@@ -10,6 +10,7 @@ villains). It's a browser game deployed to GitHub Pages.
 
 - Plan and milestones: [docs/roadmap.md](docs/roadmap.md). Check which milestone/chunk the task belongs to.
 - Story and level sequence: [docs/story-and-levels.md](docs/story-and-levels.md)
+- Making or changing levels (Tiled): [docs/level-design.md](docs/level-design.md)
 - Art style rules and character briefs: [docs/art-direction.md](docs/art-direction.md). Follow these when adding art.
   Never commit found reference images.
 - Why things are the way they are: [docs/decisions.md](docs/decisions.md). Read it before proposing
@@ -32,6 +33,7 @@ npm run build          # production build into dist/ (gitignored)
 npm run build:sprites  # regenerate assets/characters/ and assets/ui/ from art/raw/ (commit the output)
 npm run art:kiwi       # regenerate Kiwi's pixel-art frames (art/raw/kiwi_pixel/) from her original image
 npm run art:sofi       # regenerate Sofi's pixel-art frames incl. duck/crawl (art/raw/sofi_pixel/)
+npm run art:tileset    # regenerate the placeholder level tileset (levels/tilesets/placeholder.png)
 npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 
@@ -47,7 +49,9 @@ src/persistence.ts     settings + best times in localStorage (versioned, never t
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
 src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
-src/levels/level1.ts   level data (stopgap until Tiled, milestone M2); types in src/levels/types.ts
+levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
+src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
+src/levels/tiled.ts    pure Tiled map parser/validator: solid tiles, surfaces, spawn/goal/checkpoints
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)
 src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
 server/coop-server.js  Socket.IO relay for co-op
@@ -73,8 +77,10 @@ docs/                  roadmap, story, decisions
 - **Hitboxes come from data**: `hitboxFor()` in `characters.ts` derives the body from the idle frame bounds.
   Arcade `body.setSize/setOffset` take **texture pixels**, before scale. Never hand-tune hitbox numbers
   again; change the rule or the art.
-- **Visuals and collision are separate**: tile sprites for looks, invisible static `zone`s in
-  `this.solids` for physics. This mirrors how Tiled maps will work (tile layer + collision property).
+- **Levels are Tiled maps, not code**: `GameScene` renders the map's tile layers, collides with tiles that have
+  the `collides` property, and takes spawn/goal/checkpoints from `parseTiledMap()`. Gameplay code must not hard-code
+  level coordinates. The level rules (headroom in whole tiles, reachability) are in `tests/levels.test.ts` and
+  explained in `docs/level-design.md`.
 - **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
   tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
   start), so changing them automatically re-validates every level.
@@ -99,8 +105,9 @@ docs/                  roadmap, story, decisions
   for the reviewer (breaking changes, known leftovers).
 - Don't push or open PRs unless asked. The `gh` CLI may not be installed; the fallback is a pre-filled
   `https://github.com/GrekNick/maltipoo_sisters/compare/main...<branch>?quick_pull=1&title=…&body=…` link.
-- Add a test when you add level data or pure logic. Level changes must keep `tests/level1.test.ts` green;
-  it checks bounds, overlaps, headroom under platforms and that every surface plus the goal is reachable.
+- Add a test when you add pure logic. Every map in `levels/` is checked by `tests/levels.test.ts` (registered,
+  valid, spawn/goal/checkpoints on ground, everything reachable at walking speed, headroom rules); new maps are
+  picked up automatically. Use `tests/helpers/asciiMap.ts` to build small maps in tests.
 
 ## Verifying changes in the browser
 Unit tests don't cover rendering, so also play-test:
@@ -121,8 +128,10 @@ Unit tests don't cover rendering, so also play-test:
 - Teleporting a physics sprite with `setPosition` can tunnel it through the ground (its body keeps the old
   previous position). Use `body.reset(x, y)`.
 - Objects draw in creation order: background first, HUD last (and HUD uses `setScrollFactor(0)`).
-- A platform hanging over the ground needs headroom: its underside must be at least the dog's body height
-  plus a margin above the ground, or the dog can't walk under it. There's a test for this.
+- Headroom in tiles: 3+ free tiles = everyone walks under, 2 = only Sofi ducked, 1 = a trap (tests reject it).
+  Hitbox heights were chosen to fit this grid (standing ≈70px, ducked ≈50px); keep them that way.
+- Tiled maps must **embed** their tilesets (Phaser can't load external `.tsx`/`.tsj`); `parseTiledMap` rejects them.
+- Phaser 4's `map.createLayer()` returns `TilemapLayer | TilemapGPULayer`; narrow with `instanceof` before use.
 - Assets must be **imported** through Vite (`import url from '…png'`), not referenced by string paths. The
   site is served under `/maltipoo_sisters/` and string paths break in production.
 - The raw AI art was drawn at different scales per pose. Always go through `npm run build:sprites`, never
