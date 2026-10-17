@@ -1,6 +1,6 @@
 // Pure jump math + a "can the level be finished?" check. No Phaser here, so it runs in unit tests.
 import type { Physics } from '../physics';
-import type { Level, Surface } from './types';
+import type { Surface } from './types';
 
 export function maxJumpHeight({ gravity, jumpVelocity }: Physics): number {
     return (jumpVelocity * jumpVelocity) / (2 * gravity);
@@ -23,20 +23,9 @@ export function jumpDistance(rise: number, physics: Physics): number | null {
     return walkSpeed * (timeUp + timeDown);
 }
 
-/** Every standable surface of a level. */
-export function surfacesOf(level: Level): Surface[] {
-    const ground = level.ground.map(([from, to], i) => ({ id: `ground${i}`, left: from, right: to, top: level.groundY }));
-    const platforms = level.platforms.map((p, i) => ({ id: `platform${i}`, left: p.x, right: p.x + p.width, top: p.y }));
-    return [...ground, ...platforms];
-}
-
 /** The surface a point (feet position) stands on, if any. */
 export function surfaceAt(surfaces: readonly Surface[], point: { x: number; y: number }): Surface | undefined {
     return surfaces.find(s => s.top === point.y && point.x >= s.left && point.x <= s.right);
-}
-
-function surfaceUnder(surfaces: readonly Surface[], x: number, y: number): Surface | undefined {
-    return surfaceAt(surfaces, { x, y });
 }
 
 /**
@@ -49,11 +38,6 @@ export function canReach(a: Surface, b: Surface, physics: Physics, safety = 0.85
     if (rise > maxJumpHeight(physics) * safety) return false;
     const distance = jumpDistance(rise, physics);
     return distance !== null && gap <= distance * safety;
-}
-
-/** Ids of all surfaces reachable from the spawn point (breadth-first search). */
-export function reachableSurfaceIds(level: Level, physics: Physics, safety?: number): Set<string> {
-    return reachableFrom(surfacesOf(level), level.spawn, physics, safety);
 }
 
 /** Ids of all surfaces reachable from the surface under `start` (breadth-first search over jumps). */
@@ -73,8 +57,4 @@ export function reachableFrom(
         }
     }
     return seen;
-}
-
-export function goalSurface(level: Level): Surface | undefined {
-    return surfaceUnder(surfacesOf(level), level.goal.x, level.groundY);
 }

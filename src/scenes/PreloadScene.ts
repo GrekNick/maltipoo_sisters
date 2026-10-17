@@ -2,6 +2,7 @@
 import Phaser from 'phaser';
 import { CHARACTERS, FRAME_SIZE } from '../characters';
 import logoUrl from '../../assets/ui/logo.png';
+import { LEVELS, TILESETS } from '../levels';
 import { bakePlaceholderTextures, createCharacterAnimations } from './art';
 import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
@@ -23,6 +24,8 @@ export class PreloadScene extends Phaser.Scene {
         this.load.on('progress', (progress: number) => bar.setSize(BAR.width * progress, BAR.height));
 
         this.load.image('logo', logoUrl);
+        LEVELS.forEach(level => this.load.tilemapTiledJSON(level.key, level.url));
+        TILESETS.forEach(tileset => this.load.image(tileset.key, tileset.url));
         Object.entries(CHARACTERS).forEach(([character, { sheet }]) => {
             this.load.spritesheet(character, sheet, { frameWidth: FRAME_SIZE.width, frameHeight: FRAME_SIZE.height });
         });
