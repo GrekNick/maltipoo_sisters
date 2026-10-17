@@ -30,8 +30,13 @@ export function surfacesOf(level: Level): Surface[] {
     return [...ground, ...platforms];
 }
 
+/** The surface a point (feet position) stands on, if any. */
+export function surfaceAt(surfaces: readonly Surface[], point: { x: number; y: number }): Surface | undefined {
+    return surfaces.find(s => s.top === point.y && point.x >= s.left && point.x <= s.right);
+}
+
 function surfaceUnder(surfaces: readonly Surface[], x: number, y: number): Surface | undefined {
-    return surfaces.find(s => s.top === y && x >= s.left && x <= s.right);
+    return surfaceAt(surfaces, { x, y });
 }
 
 /**
@@ -48,11 +53,17 @@ export function canReach(a: Surface, b: Surface, physics: Physics, safety = 0.85
 
 /** Ids of all surfaces reachable from the spawn point (breadth-first search). */
 export function reachableSurfaceIds(level: Level, physics: Physics, safety?: number): Set<string> {
-    const surfaces = surfacesOf(level);
-    const start = surfaceUnder(surfaces, level.spawn.x, level.spawn.y);
-    if (!start) return new Set();
-    const seen = new Set([start.id]);
-    const queue = [start];
+    return reachableFrom(surfacesOf(level), level.spawn, physics, safety);
+}
+
+/** Ids of all surfaces reachable from the surface under `start` (breadth-first search over jumps). */
+export function reachableFrom(
+    surfaces: readonly Surface[], start: { x: number; y: number }, physics: Physics, safety?: number,
+): Set<string> {
+    const first = surfaceAt(surfaces, start);
+    if (!first) return new Set();
+    const seen = new Set([first.id]);
+    const queue = [first];
     for (let from = queue.shift(); from; from = queue.shift()) {
         for (const to of surfaces) {
             if (!seen.has(to.id) && canReach(from, to, physics, safety)) {
