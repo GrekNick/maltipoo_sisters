@@ -3,6 +3,8 @@
 import Phaser from 'phaser';
 import { isCharacterKey } from './characters';
 import { displayScale } from './display';
+import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type MessageKey } from './i18n';
+import { loadSettings } from './persistence';
 import { PHYSICS } from './physics';
 import { GameScene } from './scenes/GameScene';
 import { PreloadScene } from './scenes/PreloadScene';
@@ -17,6 +19,19 @@ declare global {
         game?: Phaser.Game;
     }
 }
+
+// Language: the one chosen in Settings, otherwise the browser's (if we have it), otherwise English
+setLanguage(loadSettings().language ?? detectLanguage(navigator.languages ?? [navigator.language]));
+
+// Text on the page outside the canvas: elements carry data-i18n="<message key>"
+function translatePage() {
+    document.documentElement.lang = getLanguage();
+    document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(element => {
+        element.textContent = t(element.dataset.i18n as MessageKey);
+    });
+}
+translatePage();
+onLanguageChange(translatePage);
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,

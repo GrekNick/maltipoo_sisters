@@ -18,8 +18,8 @@ const throwingStore: KeyValueStore = {
 describe('settings', () => {
     it('round-trips through storage', () => {
         const store = memoryStore();
-        saveSettings({ showHitboxes: true }, store);
-        expect(loadSettings(store)).toEqual({ showHitboxes: true });
+        saveSettings({ showHitboxes: true, language: 'uk' }, store);
+        expect(loadSettings(store)).toEqual({ showHitboxes: true, language: 'uk' });
     });
 
     it('uses defaults when nothing is saved, the value is corrupt, or fields have the wrong type', () => {
@@ -30,13 +30,18 @@ describe('settings', () => {
     });
 
     it('ignores unknown fields', () => {
-        expect(parseSettings('{"version":1,"showHitboxes":true,"cheats":true}')).toEqual({ showHitboxes: true });
+        expect(parseSettings('{"version":1,"showHitboxes":true,"cheats":true}')).toEqual({ showHitboxes: true, language: null });
+    });
+
+    it('keeps only languages the game has (otherwise: follow the browser)', () => {
+        expect(parseSettings('{"language":"pl"}').language).toBe('pl');
+        expect(parseSettings('{"language":"de"}').language).toBeNull();
     });
 
     it('never throws when storage is missing or broken', () => {
         expect(loadSettings(null)).toEqual(DEFAULT_SETTINGS);
         expect(loadSettings(throwingStore)).toEqual(DEFAULT_SETTINGS);
-        expect(() => saveSettings({ showHitboxes: true }, throwingStore)).not.toThrow();
+        expect(() => saveSettings({ showHitboxes: true, language: null }, throwingStore)).not.toThrow();
     });
 });
 

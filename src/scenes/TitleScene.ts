@@ -1,6 +1,7 @@
 // The start screen: the logo, Start / Settings buttons, and the sisters on a meadow.
 import Phaser from 'phaser';
 import { Menu } from '../ui/Menu';
+import { t } from '../i18n';
 import { addBackdrop, addGroundStrip } from './art';
 import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
@@ -22,11 +23,11 @@ export class TitleScene extends Phaser.Scene {
         this.tweens.add({ targets: logo, y: 14, duration: 1800, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
 
         new Menu(this, VIEW.width / 2, 370, [
-            { label: 'Start', onSelect: () => this.scene.start(SceneKey.Game) },
-            { label: 'Settings', onSelect: () => this.scene.start(SceneKey.Settings) },
+            { label: t('menu.start'), onSelect: () => this.scene.start(SceneKey.Game) },
+            { label: t('menu.settings'), onSelect: () => this.scene.start(SceneKey.Settings) },
         ]);
 
-        this.add.text(VIEW.width / 2, 580, '↑/↓ to choose · Enter to select · or click', { ...TEXT_STYLE, fontSize: '14px' })
+        this.add.text(VIEW.width / 2, 580, t('title.hint'), { ...TEXT_STYLE, fontSize: '14px' })
             .setOrigin(0.5);
     }
 

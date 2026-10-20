@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -96,17 +96,15 @@
 </head>
 <body>
     <div class="top-bar">
-        <label for="character-select">Персонаж:</label>
+        <label for="character-select" data-i18n="page.character">Character:</label>
         <select id="character-select">
             <option value="sofi" selected>Sofi</option>
             <option value="kiwi">Kiwi</option>
         </select>
     </div>
     <div id="game-container"></div>
-    <div class="controls">
-        Керування: A/D або ←/→ для руху, W або ↑/Пробіл для стрибка, R — почати знову, Esc — меню
-    </div>
-    <div class="rotate-hint">↻ Turn your device sideways to play</div>
+    <div class="controls" data-i18n="page.controls"></div>
+    <div class="rotate-hint" data-i18n="page.rotate"></div>
 
     <script type="module" src="/src/main.ts"></script>
 </body>

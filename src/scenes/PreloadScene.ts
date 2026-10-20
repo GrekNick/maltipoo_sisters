@@ -1,6 +1,7 @@
 // Loads everything once, shows a loading bar, then opens the title screen.
 import Phaser from 'phaser';
 import { CHARACTERS, FRAME_SIZE } from '../characters';
+import { t } from '../i18n';
 import logoUrl from '../../assets/ui/logo.png';
 import { LEVELS, TILESETS } from '../levels';
 import { bakePlaceholderTextures, createCharacterAnimations } from './art';
@@ -18,7 +19,7 @@ export class PreloadScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor(SKY_COLOR);
         const x = VIEW.width / 2;
         const y = VIEW.height / 2;
-        this.add.text(x, y - 36, 'Loading…', TEXT_STYLE).setOrigin(0.5);
+        this.add.text(x, y - 36, t('loading'), TEXT_STYLE).setOrigin(0.5);
         this.add.rectangle(x, y, BAR.width + 8, BAR.height + 8).setStrokeStyle(2, 0xffffff);
         const bar = this.add.rectangle(x - BAR.width / 2, y, 0, BAR.height, 0xffe082).setOrigin(0, 0.5);
         this.load.on('progress', (progress: number) => bar.setSize(BAR.width * progress, BAR.height));

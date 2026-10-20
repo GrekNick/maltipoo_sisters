@@ -59,11 +59,11 @@ The tool we chose in [decisions.md](decisions.md).
 | Chunk | Done when |
 |---|---|
 | ✅ 3.1 **Title screen**: title, Start and Settings buttons (mouse, touch, keyboard), animated dogs. Continue and Credits come later | The game opens on the title screen; Enter, tap or gamepad starts it |
-| ◐ 3.2 **Settings** (screen and saving done; "show hitboxes" works; sound and language rows are placeholders): music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
+| ◐ 3.2 **Settings** (screen, saving, "show hitboxes" and **language** done; sound comes with 5.3): music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
 | 3.3 **Level select = a map of the route** (Wieliczka → Wawel): locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
 | 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map | Esc or a tap on the pause icon pauses the game |
 | 3.5 Save progress (localStorage, versioned) | A refresh keeps unlocked levels and best times |
-| 3.6 i18n: all UI text comes from `locales/{en,uk,pl}.json`; English is the default and the fallback for missing keys; the first launch picks the browser language if it's supported | Switching language changes every on-screen string; a test fails if a key is missing in any language |
+| ✅ 3.6 i18n: all UI text comes from `src/i18n/locales/{en,uk,pl}.json`; English is the default and the fallback for missing keys; the first launch picks the browser language if it's supported | Switching language changes every on-screen string; a test fails if a key is missing in any language |
 
 ### M4 — The sisters mechanic
 | Chunk | Done when |
