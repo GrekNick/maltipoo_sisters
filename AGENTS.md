@@ -41,7 +41,8 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.ts            game config + scene list + DOM character select
+src/main.ts            game config + scene list + screen fitting + DOM character select
+src/display.ts         pure: how big to show the 800x600 game in the window (whole-pixel scales preferred)
 src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
   GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
   UIScene.ts           HUD + finish panel, listens to GameScene's events
@@ -76,6 +77,10 @@ docs/                  roadmap, story, decisions
 - **The camera is locked to the player horizontally** (follow lerp 1) and the canvas is shown with
   `image-rendering: pixelated` (index.html). A lagging camera or browser smoothing on high-DPI screens made the
   dogs look blurry while moving; measure before changing either (see "Verifying changes" below).
+- **The game always renders 800x600 and is shown scaled** to fill the window (`displayScale()` in `src/display.ts`,
+  applied in `main.ts` with Phaser's scale mode NONE + `game.scale.refresh()` so input still maps). It prefers a
+  whole number of device pixels per game pixel (crisp, even pixels) unless that loses more than 15% of the size.
+  Never scale the game inside Phaser or change the 800x600 view to "fit" a device.
 - **Hitboxes come from data**: `hitboxFor()` in `characters.ts` derives the body from the idle frame bounds.
   Arcade `body.setSize/setOffset` take **texture pixels**, before scale. Never hand-tune hitbox numbers
   again; change the rule or the art.

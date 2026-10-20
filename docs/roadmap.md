@@ -42,7 +42,7 @@ Cheapest now, while the game is ~500 lines.
 | ✅ 1.1 TypeScript setup: `tsconfig`, typecheck script and CI step; convert the pure modules first (`physics`, `levels/*`, `characters`) | `npm run typecheck` passes in CI; tests still pass |
 | ✅ 1.2 Phaser 3.90 → 4 upgrade; convert `main.js` to TS | Level 1 plays the same; no console errors |
 | ✅ 1.3 Split scenes: `Preload` (loading bar) → `Title` → `Game` → `UI` (HUD overlay). No separate `Boot`: the loading bar is drawn with shapes, so it needs no assets. The level key parameter comes with M2 | `GameScene` contains no HUD code; restart still works |
-| 1.4 Responsive canvas (`Scale.FIT`) | The game fills a phone or tablet screen without distortion |
+| ✅ 1.4 Responsive canvas: fills the window, keeps 4:3, prefers whole-pixel scales (`src/display.ts`); rotate hint on upright phones | The game fills a phone or tablet screen without distortion |
 
 ### M2 — Level planner: Tiled pipeline
 The tool we chose in [decisions.md](decisions.md).
