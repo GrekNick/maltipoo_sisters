@@ -1,15 +1,18 @@
 // Settings and best times, kept in this browser (localStorage). Storage can be missing or throw (private mode,
 // previews), so every function degrades to defaults instead of failing. Functions take an optional store so
 // tests can pass a fake one.
+import { isLanguage, type Language } from './i18n';
 
 export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem'>;
 
 export interface Settings {
     /** Draw the Arcade physics bodies (for grown-ups tuning levels) */
     showHitboxes: boolean;
+    /** Chosen in Settings; null = follow the browser's language */
+    language: Language | null;
 }
 
-export const DEFAULT_SETTINGS: Readonly<Settings> = { showHitboxes: false };
+export const DEFAULT_SETTINGS: Readonly<Settings> = { showHitboxes: false, language: null };
 
 const SETTINGS_KEY = 'maltipoo.settings';
 const SETTINGS_VERSION = 1;
@@ -29,9 +32,9 @@ export function parseSettings(raw: string | null): Settings {
     if (!raw) return settings;
     try {
         const saved: unknown = JSON.parse(raw);
-        if (typeof saved === 'object' && saved !== null && 'showHitboxes' in saved && typeof saved.showHitboxes === 'boolean') {
-            settings.showHitboxes = saved.showHitboxes;
-        }
+        if (typeof saved !== 'object' || saved === null) return settings;
+        if ('showHitboxes' in saved && typeof saved.showHitboxes === 'boolean') settings.showHitboxes = saved.showHitboxes;
+        if ('language' in saved && isLanguage(saved.language)) settings.language = saved.language;
     } catch {
         // corrupted value: use defaults
     }
@@ -52,6 +55,11 @@ export function saveSettings(settings: Settings, store: KeyValueStore | null = b
     } catch {
         // can't save: the settings still apply for this session
     }
+}
+
+/** Saves the chosen language, keeping the other settings. */
+export function saveLanguage(language: Language, store: KeyValueStore | null = browserStore()): void {
+    saveSettings({ ...loadSettings(store), language }, store);
 }
 
 export interface BestTime {

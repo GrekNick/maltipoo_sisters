@@ -40,7 +40,15 @@ export interface FinishedState {
     best: BestTime | null;
 }
 
+/**
+ * One font for all game text. Phaser's default (Courier) has no Cyrillic on many systems, so Ukrainian fell back to
+ * a different font mid-word. These are installed everywhere and cover Latin, Polish and Cyrillic.
+ * (A bundled pixel font is an option for the art pass, M7.)
+ */
+export const FONT_FAMILY = '"Trebuchet MS", "Segoe UI", Verdana, Arial, sans-serif';
+
 export const TEXT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontFamily: FONT_FAMILY,
     fontSize: '16px',
     color: '#ffffff',
     stroke: '#2c3e50',

@@ -1,9 +1,10 @@
-// Settings, saved in the browser. Sound and language arrive with roadmap M3.2 / M3.6 (audio, i18n).
+// Settings, saved in the browser. Sound arrives with roadmap M5.3 (audio).
 import Phaser from 'phaser';
-import { loadSettings, saveSettings, type Settings } from '../persistence';
+import { getLanguage, languageName, LANGUAGES, setLanguage, t } from '../i18n';
+import { loadSettings, saveLanguage, saveSettings, type Settings } from '../persistence';
 import { Menu } from '../ui/Menu';
 import { addBackdrop, addGroundStrip } from './art';
-import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
+import { FONT_FAMILY, SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
 const GROUND_Y = 520;
 
@@ -20,8 +21,8 @@ export class SettingsScene extends Phaser.Scene {
         addBackdrop(this, VIEW.width, GROUND_Y);
         addGroundStrip(this, 0, GROUND_Y, VIEW.width);
 
-        this.add.text(VIEW.width / 2, 90, 'Settings', {
-            fontSize: '48px', fontStyle: 'bold', color: '#ffe082', stroke: '#5d3a1a', strokeThickness: 8,
+        this.add.text(VIEW.width / 2, 90, t('settings.title'), {
+            fontFamily: FONT_FAMILY, fontSize: '48px', fontStyle: 'bold', color: '#ffe082', stroke: '#5d3a1a', strokeThickness: 8,
         }).setOrigin(0.5);
 
         const back = () => this.scene.start(SceneKey.Title);
@@ -34,16 +35,25 @@ export class SettingsScene extends Phaser.Scene {
                     menu.setLabel(0, this.hitboxLabel());
                 },
             },
-            { label: 'Sound: coming soon', enabled: false },
-            { label: 'Language: English (more soon)', enabled: false },
-            { label: 'Back', onSelect: back },
+            { label: t('settings.sound'), enabled: false },
+            { label: t('settings.language', { language: languageName(getLanguage()) }), onSelect: () => this.nextLanguage() },
+            { label: t('menu.back'), onSelect: back },
         ], 420);
 
         this.input.keyboard?.on('keydown-ESC', back);
-        this.add.text(VIEW.width / 2, 580, 'Esc to go back', { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
+        this.add.text(VIEW.width / 2, 580, t('settings.hint'), { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
     }
 
     private hitboxLabel(): string {
-        return `Show hitboxes: ${this.settings.showHitboxes ? 'On' : 'Off'}`;
+        return t('settings.hitboxes', { state: t(this.settings.showHitboxes ? 'settings.on' : 'settings.off') });
+    }
+
+    /** Cycles English → Українська → Polski, saves it, and rebuilds this screen in the new language. */
+    private nextLanguage() {
+        const index = LANGUAGES.findIndex(l => l.code === getLanguage());
+        const next = LANGUAGES[(index + 1) % LANGUAGES.length]?.code ?? 'en';
+        setLanguage(next);
+        saveLanguage(next);
+        this.scene.restart();
     }
 }

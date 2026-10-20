@@ -1,7 +1,9 @@
 // The start screen: the logo, Start / Settings buttons, and the sisters on a meadow.
 import Phaser from 'phaser';
 import { Menu } from '../ui/Menu';
-import { addBackdrop, addGroundStrip } from './art';
+import { getLanguage, languageName, LANGUAGES, setLanguage, t, type Language } from '../i18n';
+import { saveLanguage } from '../persistence';
+import { addBackdrop, addGroundStrip, FLAG_SIZE } from './art';
 import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
 const GROUND_Y = 520;
@@ -22,12 +24,44 @@ export class TitleScene extends Phaser.Scene {
         this.tweens.add({ targets: logo, y: 14, duration: 1800, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
 
         new Menu(this, VIEW.width / 2, 370, [
-            { label: 'Start', onSelect: () => this.scene.start(SceneKey.Game) },
-            { label: 'Settings', onSelect: () => this.scene.start(SceneKey.Settings) },
+            { label: t('menu.start'), onSelect: () => this.scene.start(SceneKey.Game) },
+            { label: t('menu.settings'), onSelect: () => this.scene.start(SceneKey.Settings) },
         ]);
 
-        this.add.text(VIEW.width / 2, 580, '↑/↓ to choose · Enter to select · or click', { ...TEXT_STYLE, fontSize: '14px' })
+        this.add.text(VIEW.width / 2, 580, t('title.hint'), { ...TEXT_STYLE, fontSize: '14px' })
             .setOrigin(0.5);
+
+        this.addLanguageFlags();
+    }
+
+    /** Top-left corner: one flag per language; the current one is framed. Tap or click to switch. */
+    private addLanguageFlags() {
+        const gap = 10;
+        const y = 16 + FLAG_SIZE.height / 2;
+        const nameText = this.add.text(16, y + FLAG_SIZE.height / 2 + 6, '', { ...TEXT_STYLE, fontSize: '13px' });
+        LANGUAGES.forEach(({ code }, index) => {
+            const x = 16 + FLAG_SIZE.width / 2 + index * (FLAG_SIZE.width + gap);
+            const current = code === getLanguage();
+            if (current) {
+                this.add.rectangle(x, y, FLAG_SIZE.width + 8, FLAG_SIZE.height + 8, 0xffffff).setRounded(4);
+            }
+            // The tap area reaches 6px past the flag on every side: on a phone the flag is only ~16px wide
+            const pad = 6;
+            const hitArea = new Phaser.Geom.Rectangle(-pad, -pad, FLAG_SIZE.width + 2 * pad, FLAG_SIZE.height + 2 * pad);
+            const flag = this.add.image(x, y, `flag-${code}`)
+                .setAlpha(current ? 1 : 0.75)
+                .setInteractive({ hitArea, hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true });
+            flag.on('pointerover', () => { flag.setAlpha(1); nameText.setText(languageName(code)); });
+            flag.on('pointerout', () => { flag.setAlpha(current ? 1 : 0.75); nameText.setText(''); });
+            flag.on('pointerup', () => this.chooseLanguage(code));
+        });
+    }
+
+    private chooseLanguage(language: Language) {
+        if (language === getLanguage()) return;
+        setLanguage(language);
+        saveLanguage(language);
+        this.scene.restart(); // redraw the buttons in the new language
     }
 
     private addSisters() {

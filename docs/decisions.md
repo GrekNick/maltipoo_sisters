@@ -5,6 +5,20 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-20 — Screen scaling: fill the window, but prefer crisp whole-pixel scales
+
+**Status:** accepted (roadmap 1.4).
+
+The game renders 800×600 and the page enlarges the canvas to fit the window (4:3 kept, letterboxed). With pixel art,
+a non-whole number of device pixels per game pixel makes some game pixels wider than others, which shimmers while
+scrolling. So we use the largest **whole-device-pixel** scale if it fills at least 85% of the space, otherwise we fill
+it. On 2× screens that means CSS steps of 0.5, which almost always fits well.
+*Alternatives considered:* Phaser's `Scale.FIT` (always fills, uneven pixels); integer scaling only (crisp, but
+an 800×600 game on a 1080p monitor would stay small); rendering at device resolution (sharpest, but every scene,
+camera and text would need rework; revisit if text sharpness matters).
+
+---
+
 ## 2026-10-17 — Level grid: 32px tiles, ground on row 17, hitboxes sized to the grid
 
 **Status:** accepted (implements the Tiled decision below; guide in [level-design.md](level-design.md)).

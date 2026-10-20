@@ -1,6 +1,7 @@
 // A vertical list of buttons that works with mouse, touch and keyboard (↑/↓ or W/S to choose, Enter/Space to
 // press). One button is always "focused" (highlighted), so it also works without a pointer.
 import Phaser from 'phaser';
+import { FONT_FAMILY } from '../scenes/shared';
 
 export interface MenuItem {
     label: string;
@@ -31,7 +32,7 @@ export class Menu {
                 .setRounded(14)
                 .setStrokeStyle(3, COLORS.border);
             const text = scene.add.text(x, buttonY, item.label, {
-                fontSize: '24px', color: '#ffffff', stroke: '#1b2631', strokeThickness: 4,
+                fontFamily: FONT_FAMILY, fontSize: '24px', color: '#ffffff', stroke: '#1b2631', strokeThickness: 4,
             }).setOrigin(0.5);
 
             if (this.isEnabled(item)) {

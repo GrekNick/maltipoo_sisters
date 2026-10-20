@@ -41,13 +41,15 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.ts            game config + scene list + DOM character select
+src/main.ts            game config + scene list + screen fitting + DOM character select
+src/display.ts         pure: how big to show the 800x600 game in the window (whole-pixel scales preferred)
 src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
   GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
   UIScene.ts           HUD + finish panel, listens to GameScene's events
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
-src/persistence.ts     settings + best times in localStorage (versioned, never throws)
+src/persistence.ts     settings (incl. language) + best times in localStorage (versioned, never throws)
+src/i18n/              t(), language detection; locales/{en,uk,pl}.json hold every player-facing string
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
 src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
@@ -77,6 +79,10 @@ docs/                  roadmap, story, decisions
 - **The camera is locked to the player horizontally** (follow lerp 1) and the canvas is shown with
   `image-rendering: pixelated` (index.html). A lagging camera or browser smoothing on high-DPI screens made the
   dogs look blurry while moving; measure before changing either (see "Verifying changes" below).
+- **The game always renders 800x600 and is shown scaled** to fill the window (`displayScale()` in `src/display.ts`,
+  applied in `main.ts` with Phaser's scale mode NONE + `game.scale.refresh()` so input still maps). It prefers a
+  whole number of device pixels per game pixel (crisp, even pixels) unless that loses more than 15% of the size.
+  Never scale the game inside Phaser or change the 800x600 view to "fit" a device.
 - **Hitboxes come from data**: `hitboxFor()` in `characters.ts` derives the body from the idle frame bounds.
   Arcade `body.setSize/setOffset` take **texture pixels**, before scale. Never hand-tune hitbox numbers
   again; change the rule or the art.
@@ -145,6 +151,11 @@ Unit tests don't cover rendering, so also play-test:
 - After upgrading a dependency, restart the dev server with a clean `node_modules/.vite`; Vite can keep serving
   the old pre-bundled version (we were briefly "testing Phaser 4" while running 3.90).
 - `localStorage` may throw (private mode, previews); wrap access in try/catch and degrade gracefully.
-- The UI text is currently mixed Ukrainian and English. i18n is planned in M3 (English is the default and
-  fallback; Ukrainian and Polish selectable in Settings). Don't "fix" single strings ad hoc. Once it lands,
-  every player-facing string must exist in all three locale files.
+- **Every player-facing string goes through `t()`** (`src/i18n`), in the canvas and on the page (`data-i18n`
+  attributes in index.html). Add new keys to **all three** locale files (`en`, `uk`, `pl`); English is the source
+  of truth for key names (typed) and the fallback. `tests/i18n.test.ts` fails if a key or `{placeholder}` is missing.
+  Character names (Kiwi, Sofi, Smok Junior) are the same in every language.
+- Game text uses `FONT_FAMILY` (`scenes/shared.ts`): Phaser's default Courier has no Cyrillic on many systems and
+  Ukrainian fell back to another font mid-word. Use `TEXT_STYLE` or set `fontFamily` on every new text style.
+- When adding text, check the longest translation fits (Ukrainian is usually longest): read `text.width` in the
+  browser for each language.
