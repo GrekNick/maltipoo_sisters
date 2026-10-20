@@ -8,7 +8,8 @@ unfinishable level fails CI instead of reaching players. No code is needed to ch
 
 1. Install Tiled: `brew install --cask tiled`, or download it from mapeditor.org.
 2. In Tiled: **File → Open File or Project…** → `levels/maltipoo.tiled-project`.
-   The project knows our object classes (`spawn`, `goal`, `checkpoint`), so they appear in the Class dropdown.
+   The project knows our object classes (`spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`), so they
+   appear in the Class dropdown.
 3. Run the game: `npm run dev`, then open http://localhost:5173/maltipoo_sisters/ and press Start.
    **Saving a map in Tiled reloads the game automatically.**
 
@@ -27,7 +28,7 @@ unfinishable level fails CI instead of reaching players. No code is needed to ch
 |---|---|---|
 | `Background` | tile layer | decoration behind the dogs (flowers). Never solid. Optional |
 | `Ground` | tile layer | everything the dogs stand on or bump into. Solid wherever the tile has `collides` |
-| `Objects` | object layer | points: exactly one `spawn`, exactly one `goal`, any number of `checkpoint`s |
+| `Objects` | object layer | exactly one `spawn` and one `goal`; any number of checkpoints, pickups, hazards, sister gates |
 
 **Tiles** (placeholder set, `levels/tilesets/placeholder.png`, made by `npm run art:tileset`):
 
@@ -38,9 +39,16 @@ unfinishable level fails CI instead of reaching players. No code is needed to ch
 | plank | yes | ledges and benches (e.g. a duck ledge) |
 | flower | no | decoration, on the Background layer |
 
-**Objects:** use the **Insert Point** tool, then set the **Class** to `spawn`, `goal` or `checkpoint`. Place them
-anywhere above the ground: the game drops them onto the first solid tile below. The dogs respawn at the furthest
-checkpoint they've reached on foot, so put one after each pit or tricky section.
+**Objects** (set the **Class** of each one):
+
+| Class | Tool | What it does | Placement |
+|---|---|---|---|
+| `spawn` | Insert Point | where the level starts | anywhere above the ground; dropped onto it |
+| `goal` | Insert Point | the dog house; reaching it finishes the level | dropped onto the ground |
+| `checkpoint` | Insert Point | respawn point after a fall or a puddle (the furthest one reached on foot) | dropped onto the ground; put one after each pit or tricky section |
+| `pickup` | Insert Point | a treat (smaczek) to collect; counted in the HUD and finish panel | **stays exactly where you put it**: float treats in the air to reward jumps, or hide them in Sofi-only gaps |
+| `hazard` | **Insert Rectangle** | a puddle: touching it sends the dog back to the last checkpoint | draw the water area, e.g. 2 tiles wide and half a tile tall, sunk into the grass |
+| `sister-gate` | Insert Point | a sign showing which sister a spot needs; set its **sister** property (`sofi` by default, or `kiwi`) | dropped onto the ground, just before the spot |
 
 ## Rules for a fair level (in tiles)
 
@@ -62,6 +70,11 @@ The tests compute these from `src/physics.ts` with a safety margin, so a level t
 | 0 – 2 tiles | 4 tiles |
 | 3 – 5 tiles | 3 tiles |
 | 6 or more | impossible: add a step |
+
+**Objects:**
+- Every treat must be collectable: above ground the dogs can reach, within jump height.
+- Every puddle must be jumpable at walking speed (at most 4 tiles wide) and keep clear of the spawn, checkpoints
+  and goal (a respawn must never land in water).
 
 Going *down* always allows longer gaps. If you change the movement numbers in `src/physics.ts`, these limits
 change with them, and the tests re-check every level automatically.
