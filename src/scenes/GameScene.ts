@@ -33,12 +33,15 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     // Created in create(); `!` tells TypeScript they're always set before use
     player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     private groundLayer!: Phaser.Tilemaps.TilemapLayer;
+    private hazardZones!: Phaser.Physics.Arcade.StaticGroup;
+    private treatGroup!: Phaser.Physics.Arcade.StaticGroup;
     private goalZone!: Phaser.GameObjects.Zone;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
     private spaceKey!: Phaser.Input.Keyboard.Key;
     private checkpoint = { x: 0, y: 0 };
     private startTime = 0;
+    private treats = 0;
     private run: RunState = RUN_START;
     private jump: JumpState = JUMP_START;
     /** Ducked (Sofi's skill): lower hitbox, crawl speed, no jumping */
@@ -60,6 +63,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.checkpoint = { ...this.level.spawn };
         this.finished = false;
         this.falls = 0;
+        this.treats = 0;
         this.startTime = this.time.now;
         // Fields keep their values across scene.restart() (the constructor doesn't run again), so reset here
         this.run = RUN_START;
@@ -69,6 +73,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         addBackdrop(this, this.level.width, this.level.spawn.y);
         this.createLevel();
         this.createGoal(); // before the player so the dog is drawn in front of the house
+        this.createLevelObjects();
         this.createPlayer();
         this.createCamera();
         this.createInput();
@@ -113,6 +118,39 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.physics.add.existing(this.goalZone, true);
     }
 
+    /**
+     * Treats, puddles and sister signs from the map's Objects layer. Their overlaps with the dog are wired up in
+     * createPlayer(); everything here is drawn before the dog so she stays in front.
+     */
+    createLevelObjects() {
+        for (const gate of this.level.sisterGates) {
+            this.add.image(gate.x, gate.y, `sign-${gate.sister}`).setOrigin(0.5, 1);
+        }
+
+        // Puddles: blue water over the area; touching it sends the dog back to the last checkpoint
+        this.hazardZones = this.physics.add.staticGroup();
+        for (const { x, y, width, height } of this.level.hazards) {
+            this.add.rectangle(x, y, width, height, 0x4fc3f7, 0.85).setOrigin(0, 0);
+            this.add.rectangle(x + 4, y + 2, width - 8, 2, 0xe1f5fe, 0.9).setOrigin(0, 0);
+            this.hazardZones.add(this.add.zone(x, y, width, height).setOrigin(0, 0));
+        }
+
+        // Treats bob gently; the physics body stays put (static), which is close enough for a 3px bob
+        this.treatGroup = this.physics.add.staticGroup();
+        for (const { x, y } of this.level.pickups) {
+            const treat = this.treatGroup.create(x, y, 'treat') as Phaser.Physics.Arcade.Image;
+            this.tweens.add({ targets: treat, y: y - 3, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        }
+    }
+
+    collectTreat(treat: Phaser.Physics.Arcade.Image) {
+        if (!treat.body?.enable) return;
+        treat.disableBody(false, false);
+        this.treats++;
+        this.tweens.killTweensOf(treat);
+        this.tweens.add({ targets: treat, y: treat.y - 24, alpha: 0, duration: 250, onComplete: () => treat.destroy() });
+    }
+
     createPlayer() {
         const { spawn } = this.level;
         this.player = this.physics.add.sprite(spawn.x, spawn.y, this.currentCharacter, 0);
@@ -126,6 +164,10 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.player.body.setMaxVelocityY(PHYSICS.maxFallSpeed);
         this.physics.add.collider(this.player, this.groundLayer);
         this.physics.add.overlap(this.player, this.goalZone, () => this.reachHome());
+        this.physics.add.overlap(this.player, this.hazardZones, () => this.respawn());
+        this.physics.add.overlap(this.player, this.treatGroup, (_player, treat) => {
+            this.collectTreat(treat as Phaser.Physics.Arcade.Image);
+        });
     }
 
     createCamera() {
@@ -245,7 +287,13 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             ease: 'Sine.easeIn',
         });
 
-        const finished: FinishedState = { seconds, falls: this.falls, best: recordBestTime(this.level.id, seconds) };
+        const finished: FinishedState = {
+            seconds,
+            falls: this.falls,
+            treats: this.treats,
+            totalTreats: this.level.pickups.length,
+            best: recordBestTime(this.level.id, seconds),
+        };
         this.events.emit(GameEvent.Finished, finished);
     }
 
@@ -316,6 +364,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             characterName: CHARACTERS[this.currentCharacter].name,
             seconds: this.elapsedSeconds(),
             falls: this.falls,
+            treats: this.treats,
+            totalTreats: this.level.pickups.length,
             x: this.player.x,
             y: this.player.y,
         };
