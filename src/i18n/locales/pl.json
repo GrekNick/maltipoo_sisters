@@ -1,0 +1,31 @@
+{
+    "loading": "Ładowanie…",
+
+    "menu.start": "Graj",
+    "menu.settings": "Ustawienia",
+    "menu.back": "Wstecz",
+    "title.hint": "↑/↓ — wybierz · Enter — zatwierdź · lub kliknij",
+
+    "settings.title": "Ustawienia",
+    "settings.hitboxes": "Pokaż hitboxy: {state}",
+    "settings.on": "Tak",
+    "settings.off": "Nie",
+    "settings.sound": "Dźwięk: wkrótce",
+    "settings.language": "Język: {language}",
+    "settings.hint": "Esc — wstecz",
+
+    "hud.time": "Czas: {seconds} s",
+    "hud.falls": "Upadki: {falls}",
+    "hud.treats": "Smaczki: {treats}/{total}",
+    "hud.position": "Pozycja: X: {x}, Y: {y}",
+    "hud.controls": "Ruch ←/→ lub A/D · Skok ↑/W/Spacja · Schyl się ↓/S (Sofi) · R od nowa · Esc menu · H hitboxy",
+
+    "finish.title": "Nareszcie w domu!",
+    "finish.newBest": "Nowy rekord!",
+    "finish.best": "Rekord: {seconds} s",
+    "finish.actions": "R — zagraj jeszcze    Esc — menu",
+
+    "page.character": "Postać:",
+    "page.controls": "Sterowanie: A/D lub ←/→ — ruch, W lub ↑/Spacja — skok, ↓/S — schylanie się (Sofi), R — od nowa, Esc — menu",
+    "page.rotate": "↻ Obróć urządzenie poziomo, aby grać"
+}

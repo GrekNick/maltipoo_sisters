@@ -1,0 +1,31 @@
+{
+    "loading": "Завантаження…",
+
+    "menu.start": "Грати",
+    "menu.settings": "Налаштування",
+    "menu.back": "Назад",
+    "title.hint": "↑/↓ — вибрати · Enter — підтвердити · або клацніть",
+
+    "settings.title": "Налаштування",
+    "settings.hitboxes": "Показувати хітбокси: {state}",
+    "settings.on": "Так",
+    "settings.off": "Ні",
+    "settings.sound": "Звук: незабаром",
+    "settings.language": "Мова: {language}",
+    "settings.hint": "Esc — назад",
+
+    "hud.time": "Час: {seconds} с",
+    "hud.falls": "Падіння: {falls}",
+    "hud.treats": "Смаколики: {treats}/{total}",
+    "hud.position": "Позиція: X: {x}, Y: {y}",
+    "hud.controls": "Рух ←/→ або A/D · Стрибок ↑/W/Пробіл · Пригнутися ↓/S (Sofi) · R заново · Esc меню · H хітбокси",
+
+    "finish.title": "Вдома найкраще!",
+    "finish.newBest": "Новий рекорд!",
+    "finish.best": "Рекорд: {seconds} с",
+    "finish.actions": "R — грати ще    Esc — меню",
+
+    "page.character": "Персонаж:",
+    "page.controls": "Керування: A/D або ←/→ — рух, W або ↑/Пробіл — стрибок, ↓/S — пригнутися (Sofi), R — почати знову, Esc — меню",
+    "page.rotate": "↻ Поверніть пристрій горизонтально, щоб грати"
+}
