@@ -1,7 +1,7 @@
 // Settings, saved in the browser. Sound arrives with roadmap M5.3 (audio).
 import Phaser from 'phaser';
 import { getLanguage, languageName, LANGUAGES, setLanguage, t } from '../i18n';
-import { loadSettings, saveSettings, type Settings } from '../persistence';
+import { loadSettings, saveLanguage, saveSettings, type Settings } from '../persistence';
 import { Menu } from '../ui/Menu';
 import { addBackdrop, addGroundStrip } from './art';
 import { FONT_FAMILY, SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
@@ -53,8 +53,7 @@ export class SettingsScene extends Phaser.Scene {
         const index = LANGUAGES.findIndex(l => l.code === getLanguage());
         const next = LANGUAGES[(index + 1) % LANGUAGES.length]?.code ?? 'en';
         setLanguage(next);
-        this.settings = { ...this.settings, language: next };
-        saveSettings(this.settings);
+        saveLanguage(next);
         this.scene.restart();
     }
 }

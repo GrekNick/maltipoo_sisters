@@ -58,7 +58,7 @@ The tool we chose in [decisions.md](decisions.md).
 ### M3 — Game shell: start screen, settings, progress
 | Chunk | Done when |
 |---|---|
-| ✅ 3.1 **Title screen**: title, Start and Settings buttons (mouse, touch, keyboard), animated dogs. Continue and Credits come later | The game opens on the title screen; Enter, tap or gamepad starts it |
+| ✅ 3.1 **Title screen**: title, Start and Settings buttons (mouse, touch, keyboard), language flags in the corner, animated dogs. Continue and Credits come later | The game opens on the title screen; Enter, tap or gamepad starts it |
 | ◐ 3.2 **Settings** (screen, saving, "show hitboxes" and **language** done; sound comes with 5.3): music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
 | 3.3 **Level select = a map of the route** (Wieliczka → Wawel): locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
 | 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map | Esc or a tap on the pause icon pauses the game |

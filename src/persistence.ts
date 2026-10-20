@@ -57,6 +57,11 @@ export function saveSettings(settings: Settings, store: KeyValueStore | null = b
     }
 }
 
+/** Saves the chosen language, keeping the other settings. */
+export function saveLanguage(language: Language, store: KeyValueStore | null = browserStore()): void {
+    saveSettings({ ...loadSettings(store), language }, store);
+}
+
 export interface BestTime {
     seconds: number;
     /** True when this run beat an earlier best time (not on the very first finish) */

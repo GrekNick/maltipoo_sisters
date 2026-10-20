@@ -59,8 +59,29 @@ export function bakePlaceholderTextures(scene: Phaser.Scene): void {
         g.generateTexture(key, 40, 48);
     }
 
+    // Language flags (36x24) for the title screen switcher. Drawn, not emoji: Windows shows flag emoji as letters.
+    const W = FLAG_SIZE.width, H = FLAG_SIZE.height;
+    g.clear(); // Ukrainian: blue over yellow
+    g.fillStyle(0x0057b7).fillRect(0, 0, W, H / 2).fillStyle(0xffd700).fillRect(0, H / 2, W, H / 2);
+    g.lineStyle(1, 0x1b2631).strokeRect(0.5, 0.5, W - 1, H - 1);
+    g.generateTexture('flag-uk', W, H);
+    g.clear(); // Polish: white over red
+    g.fillStyle(0xffffff).fillRect(0, 0, W, H / 2).fillStyle(0xdc143c).fillRect(0, H / 2, W, H / 2);
+    g.lineStyle(1, 0x1b2631).strokeRect(0.5, 0.5, W - 1, H - 1);
+    g.generateTexture('flag-pl', W, H);
+    g.clear(); // English: a simplified Union Jack
+    g.fillStyle(0x012169).fillRect(0, 0, W, H);
+    g.lineStyle(5, 0xffffff).lineBetween(0, 0, W, H).lineBetween(W, 0, 0, H);
+    g.lineStyle(2, 0xc8102e).lineBetween(0, 0, W, H).lineBetween(W, 0, 0, H);
+    g.fillStyle(0xffffff).fillRect(W / 2 - 5, 0, 10, H).fillRect(0, H / 2 - 5, W, 10);
+    g.fillStyle(0xc8102e).fillRect(W / 2 - 3, 0, 6, H).fillRect(0, H / 2 - 3, W, 6);
+    g.lineStyle(1, 0x1b2631).strokeRect(0.5, 0.5, W - 1, H - 1);
+    g.generateTexture('flag-en', W, H);
+
     g.destroy();
 }
+
+export const FLAG_SIZE = { width: 36, height: 24 } as const;
 
 /**
  * Character animations (`${character}_${state}`). Animations are global to the game, so every scene and the

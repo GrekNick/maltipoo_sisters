@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_SETTINGS, loadSettings, parseSettings, recordBestTime, saveSettings, type KeyValueStore } from '../src/persistence';
+import { DEFAULT_SETTINGS, loadSettings, parseSettings, recordBestTime, saveLanguage, saveSettings, type KeyValueStore } from '../src/persistence';
 
 function memoryStore(): KeyValueStore & { data: Map<string, string> } {
     const data = new Map<string, string>();
@@ -31,6 +31,13 @@ describe('settings', () => {
 
     it('ignores unknown fields', () => {
         expect(parseSettings('{"version":1,"showHitboxes":true,"cheats":true}')).toEqual({ showHitboxes: true, language: null });
+    });
+
+    it('saving the language keeps the other settings', () => {
+        const store = memoryStore();
+        saveSettings({ showHitboxes: true, language: null }, store);
+        saveLanguage('pl', store);
+        expect(loadSettings(store)).toEqual({ showHitboxes: true, language: 'pl' });
     });
 
     it('keeps only languages the game has (otherwise: follow the browser)', () => {
