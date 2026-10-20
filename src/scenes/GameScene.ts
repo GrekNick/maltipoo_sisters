@@ -4,19 +4,26 @@ import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, SPRITE_SCALE, type AnimationState, type CharacterKey } from '../characters';
 import { PHYSICS } from '../physics';
 import { RUN_START, JUMP_START, nextCrouching, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
-import { level1 } from '../levels/level1';
-import type { Level } from '../levels/types';
+import { FIRST_LEVEL, TILESETS } from '../levels';
+import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/tiled';
 import { loadSettings, recordBestTime } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
-import { addBackdrop, addGroundStrip } from './art';
-import { GameEvent, SceneKey, SKY_COLOR, TILE, type FinishedState, type HudState } from './shared';
+import { addBackdrop } from './art';
+import { GameEvent, SceneKey, SKY_COLOR, VIEW, type FinishedState, type HudState } from './shared';
 
 // Online co-op is parked behind a build flag (`npm run dev:coop`, see README).
 // When the flag is off the co-op module and socket.io are not bundled at all.
 const COOP_ENABLED = import.meta.env.VITE_COOP === 'true';
 
+/** Data passed to scene.start(SceneKey.Game, …) */
+export interface GameSceneData {
+    levelKey?: string;
+}
+
 export class GameScene extends Phaser.Scene implements CoopHost {
-    readonly level: Level = level1;
+    levelKey = FIRST_LEVEL.key;
+    /** Parsed from the Tiled map in create() */
+    level!: LevelData;
     currentCharacter: CharacterKey = Phaser.Utils.Array.GetRandom(CHARACTER_KEYS);
     currentAnimation: AnimationState = 'idle';
     coop: CoopSession | null = null;
@@ -25,7 +32,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
 
     // Created in create(); `!` tells TypeScript they're always set before use
     player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-    private solids!: Phaser.Physics.Arcade.StaticGroup;
+    private groundLayer!: Phaser.Tilemaps.TilemapLayer;
     private goalZone!: Phaser.GameObjects.Zone;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
@@ -41,9 +48,15 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         super(SceneKey.Game);
     }
 
+    /** Runs before create() on every start/restart; restart() keeps the data it was started with */
+    init(data: GameSceneData = {}) {
+        if (data.levelKey) this.levelKey = data.levelKey;
+    }
+
     create() {
         // Draw order follows creation order: backdrop first, player last
         this.cameras.main.setBackgroundColor(SKY_COLOR);
+        this.level = parseTiledMap(this.levelKey, this.cache.tilemap.get(this.levelKey).data as TiledMap);
         this.checkpoint = { ...this.level.spawn };
         this.finished = false;
         this.falls = 0;
@@ -53,7 +66,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.jump = JUMP_START;
         this.crouching = false;
 
-        addBackdrop(this, this.level.width, this.level.groundY);
+        addBackdrop(this, this.level.width, this.level.spawn.y);
         this.createLevel();
         this.createGoal(); // before the player so the dog is drawn in front of the house
         this.createPlayer();
@@ -76,30 +89,28 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         }
     }
 
+    /** The Tiled map: Background (decoration), Ground (solid where tiles have `collides`), Objects (parsed). */
     createLevel() {
-        const { ground, groundY, platforms, width, height } = this.level;
-        this.solids = this.physics.add.staticGroup();
-
-        ground.forEach(([from, to]) => this.addBlock(from, groundY, to - from, height - groundY));
-        platforms.forEach(p => this.addBlock(p.x, p.y, p.width, TILE));
+        const map = this.make.tilemap({ key: this.levelKey });
+        const tilesets = TILESETS.flatMap(t => map.addTilesetImage(t.name, t.key) ?? []);
+        if (map.getLayer(LAYER.background)) map.createLayer(LAYER.background, tilesets);
+        const ground = map.createLayer(LAYER.ground, tilesets);
+        // createLayer can also return a GPU-only layer type (when asked for one); ours is a normal tile layer
+        if (!(ground instanceof Phaser.Tilemaps.TilemapLayer)) throw new Error(`${this.levelKey}: no "${LAYER.ground}" layer`);
+        ground.setCollisionByProperty({ collides: true });
+        this.groundLayer = ground;
 
         // The world is wider than the screen and has no floor, so the dog can fall into pits
+        const { width, height } = this.level;
         this.physics.world.setBounds(0, 0, width, height, true, true, true, false);
     }
 
     createGoal() {
-        const { goal, groundY } = this.level;
-        this.add.image(goal.x, groundY, 'doghouse').setOrigin(0.5, 1);
+        const { goal } = this.level;
+        this.add.image(goal.x, goal.y, 'doghouse').setOrigin(0.5, 1);
         // Trigger area in front of the door; reaching it finishes the level
-        this.goalZone = this.add.zone(goal.x, groundY - 30, 40, 60);
+        this.goalZone = this.add.zone(goal.x, goal.y - 30, 40, 60);
         this.physics.add.existing(this.goalZone, true);
-    }
-
-    // Looks and collision are separate on purpose, like a Tiled map will be: tiles for the
-    // visuals, one invisible zone per block for physics.
-    addBlock(x: number, y: number, width: number, height: number) {
-        addGroundStrip(this, x, y, width, height);
-        this.solids.add(this.add.zone(x, y, width, height).setOrigin(0, 0));
     }
 
     createPlayer() {
@@ -113,13 +124,16 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.applyHitbox();
         this.player.setCollideWorldBounds(true);
         this.player.body.setMaxVelocityY(PHYSICS.maxFallSpeed);
-        this.physics.add.collider(this.player, this.solids);
+        this.physics.add.collider(this.player, this.groundLayer);
         this.physics.add.overlap(this.player, this.goalZone, () => this.reachHome());
     }
 
     createCamera() {
         const camera = this.cameras.main;
-        camera.setBounds(0, 0, this.level.width, this.level.height);
+        // Maps are 19 tiles (608px) tall and the view is 600px: show the bottom of the map (the ground) and don't
+        // scroll vertically by those few pixels.
+        const top = Math.max(0, this.level.height - VIEW.height);
+        camera.setBounds(0, top, this.level.width, this.level.height - top);
         // Locked to the dog (lerp 1): a smooth, lagging camera let the dog creep across the screen in uneven
         // 1-2px steps while it sped up, which read as blur. Now the dog stays still on screen and the world scrolls.
         camera.startFollow(this.player, true, 1, 1);
@@ -174,13 +188,14 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.player.body.setSize(width, height, false).setOffset(x, y);
     }
 
-    /** Is there room above the ducked dog for her standing body? (Static solids only; 1px inset on each side.) */
+    /** Is there room above the ducked dog for her standing body? (Solid tiles only; 1px inset on each side.) */
     private hasHeadroom(): boolean {
         const { hitbox, crouchHitbox } = CHARACTERS[this.currentCharacter];
         if (!crouchHitbox) return true;
         const body = this.player.body;
         const extra = (hitbox.height - crouchHitbox.height) * SPRITE_SCALE;
-        return this.physics.overlapRect(body.x + 1, body.y - extra, body.width - 2, extra - 1, false, true).length === 0;
+        const tiles = this.groundLayer.getTilesWithinWorldXY(body.x + 1, body.y - extra, body.width - 2, extra - 1, { isColliding: true });
+        return tiles.length === 0;
     }
 
     toggleHitboxes() {
@@ -193,13 +208,12 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         world.debugGraphic?.clear();
     }
 
-    // Respawn point = start of the last ground segment the dog stood on
+    // Respawn point = the furthest checkpoint object (from the map) the dog has reached on foot
     updateCheckpoint(onGround: boolean) {
-        const { ground, groundY } = this.level;
-        if (!onGround || Math.abs(this.player.y - groundY) > 1) return;
-        const index = ground.findIndex(([from, to]) => this.player.x >= from && this.player.x <= to);
-        const segment = ground[index];
-        if (index > 0 && segment) this.checkpoint = { x: segment[0] + 48, y: groundY };
+        if (!onGround) return;
+        for (const checkpoint of this.level.checkpoints) {
+            if (checkpoint.x <= this.player.x && checkpoint.x > this.checkpoint.x) this.checkpoint = { ...checkpoint };
+        }
     }
 
     respawn() {

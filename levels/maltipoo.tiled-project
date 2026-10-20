@@ -1,0 +1,50 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "color": "#ff4caf50",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+            ],
+            "name": "spawn",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ffe53935",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+            ],
+            "name": "goal",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ff1e88e5",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+            ],
+            "name": "checkpoint",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        }
+    ]
+}

@@ -5,6 +5,20 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-17 — Level grid: 32px tiles, ground on row 17, hitboxes sized to the grid
+
+**Status:** accepted (implements the Tiled decision below; guide in [level-design.md](level-design.md)).
+
+- Maps are 19 tiles tall (608 px) with the ground top on row 17 (y = 544); the camera shows the bottom 600 px.
+- Standing hitbox ≈ 70 px (0.9 of the idle art), ducked ≈ 50 px. So **3 free tiles = everyone, 2 = ducking
+  only, 1 = nobody**. The old 65 px was 1 px over 2 tiles, which made 2-tile gaps "almost" passable.
+- Collision comes from the `collides` tile property (Phaser tile collision), replacing the hand-placed zones.
+- Placeholder tiles are **generated** (`npm run art:tileset`) instead of downloaded from Kenney for now: no
+  third-party files or licences yet, and it matches the current look. A real tileset replaces it in M7.3.
+- Maps must embed their tilesets (Phaser can't read external ones); the tests enforce it.
+
+---
+
 ## 2026-10-10 — Audience: families and kids
 
 **Status:** accepted.
@@ -62,8 +76,7 @@ Order: TypeScript setup on the pure modules → Phaser 4 → scene split.
 
 ## 2026-10-10 — Levels will be authored in Tiled, loaded with Phaser's native tilemap support
 
-**Status:** accepted, milestone M2 in [roadmap.md](roadmap.md) (right after the M1 tech foundation).
-Until then, levels live as plain data in `src/levels/`.
+**Status:** done (M2). See [level-design.md](level-design.md).
 
 **Decision**
 - Paint levels in [Tiled](https://www.mapeditor.org/) and export them as JSON.

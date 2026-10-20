@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "art:kiwi": "node tools/make-kiwi.mjs",
-    "art:sofi": "node tools/make-sofi.mjs"
+    "art:sofi": "node tools/make-sofi.mjs",
+    "art:tileset": "node tools/make-tileset.mjs"
   },
   "keywords": [],
   "author": "",

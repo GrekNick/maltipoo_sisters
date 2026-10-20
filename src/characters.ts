@@ -71,10 +71,13 @@ export const ANIMATION_STATES: readonly BaseAnimationState[] = sprites.states;
 // Frames per second. `move` and `crawl` are additionally sped up with the dog's speed in the scene.
 export const ANIMATION_FRAME_RATE: Record<AnimationState, number> = { idle: 4, move: 8, jump: 8, crouch: 4, crawl: 6 };
 
-// Physics body relative to the idle pose's opaque bounds (texture px): a bit smaller than the
-// art so ledges feel forgiving, bottom edge exactly on the feet. Fixed across animation frames.
+// Physics body relative to the idle pose's opaque bounds (texture px): narrower than the art so ledges feel
+// forgiving, bottom edge exactly on the feet. Fixed across animation frames.
+// Heights are chosen to fit the 32px level grid with margin: standing ≈ 70px (needs 3 free tiles = 96px, never fits
+// a 2-tile gap), ducked ≈ 50px (fits a 2-tile gap = 64px). See docs/level-design.md.
 const HITBOX_WIDTH_RATIO = 0.7;
-const HITBOX_HEIGHT_RATIO = 0.83;
+const HITBOX_HEIGHT_RATIO = 0.9;
+const CROUCH_HEIGHT_RATIO = 0.83;
 
 export function hitboxFor({ frames, animations }: CharacterSprites): Rect {
     const idleFrame = frames[animations.idle[0] ?? -1];
@@ -90,13 +93,13 @@ export function hitboxFor({ frames, animations }: CharacterSprites): Rect {
     };
 }
 
-/** Same width and feet line as the standing hitbox, height from the crouch pose by the same ratio. */
+/** Same width and feet line as the standing hitbox, height from the crouch pose. */
 export function crouchHitboxFor(characterSprites: CharacterSprites, standing: Rect): Rect | null {
     const index = characterSprites.animations.crouch?.[0];
     const crouchFrame = index === undefined ? undefined : characterSprites.frames[index];
     if (!crouchFrame) return null;
     const { y, height } = crouchFrame.bounds;
-    const crouchHeight = Math.round(height * HITBOX_HEIGHT_RATIO);
+    const crouchHeight = Math.round(height * CROUCH_HEIGHT_RATIO);
     return { x: standing.x, width: standing.width, y: y + height - crouchHeight, height: crouchHeight };
 }
 
