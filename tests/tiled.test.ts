@@ -64,6 +64,38 @@ describe('parseTiledMap', () => {
     });
 });
 
+describe('pickups, hazards and sister gates', () => {
+    const ground = ['..........', '..........', '##########'];
+
+    it('pickups stay exactly where they were placed (they may float)', () => {
+        const level = parseTiledMap('t', asciiMap(ground, [...SPAWN_GOAL, { type: 'pickup', column: 4, row: 0 }]));
+        expect(level.pickups).toEqual([{ x: 4 * 32 + 16, y: 16 }]);
+    });
+
+    it('hazards are rectangles', () => {
+        const level = parseTiledMap('t', asciiMap(ground, [...SPAWN_GOAL, { type: 'hazard', column: 3, row: 1, width: 2, height: 1 }]));
+        expect(level.hazards).toEqual([{ x: 96, y: 32, width: 64, height: 32 }]);
+    });
+
+    it('a hazard drawn as a point is rejected', () => {
+        expect(() => parseTiledMap('t', asciiMap(ground, [...SPAWN_GOAL, { type: 'hazard', column: 3, row: 1 }]))).toThrow(/rectangle/);
+    });
+
+    it('sister gates drop onto the ground and default to Sofi', () => {
+        const level = parseTiledMap('t', asciiMap(ground, [
+            ...SPAWN_GOAL,
+            { type: 'sister-gate', column: 2, row: 0 },
+            { type: 'sister-gate', column: 6, row: 0, properties: [{ name: 'sister', type: 'string', value: 'kiwi' }] },
+        ]));
+        expect(level.sisterGates).toEqual([{ x: 2 * 32 + 16, y: 64, sister: 'sofi' }, { x: 6 * 32 + 16, y: 64, sister: 'kiwi' }]);
+    });
+
+    it('a sister gate naming someone else is rejected', () => {
+        const gate = { type: 'sister-gate', column: 2, row: 0, properties: [{ name: 'sister', type: 'string', value: 'smok' }] };
+        expect(() => parseTiledMap('t', asciiMap(ground, [...SPAWN_GOAL, gate]))).toThrow(/sister "smok"/);
+    });
+});
+
 describe('parseTiledMap rejects broken maps with a clear message', () => {
     const valid = () => asciiMap(['..........', '##########'], SPAWN_GOAL);
     const broken = (change: (map: TiledMap) => void) => { const map = valid(); change(map); return () => parseTiledMap('t', map); };

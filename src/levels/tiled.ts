@@ -1,6 +1,7 @@
 // Reads a level made in Tiled (JSON map, .tmj) into what game logic and tests need. Pure: no Phaser, so the
 // same code validates every map in the tests. Phaser renders the tile layers and handles tile collision itself.
 // Format reference: https://doc.mapeditor.org/en/stable/reference/json-map-format/
+import { isCharacterKey, type CharacterKey } from '../characters';
 import type { Surface } from './types';
 
 export const TILE_SIZE = 32;
@@ -11,13 +12,19 @@ export const LAYER = {
     background: 'Background',
     /** Ground, platforms, ledges: tiles with the `collides` property are solid */
     ground: 'Ground',
-    /** Points: spawn, goal, checkpoints */
+    /** Spawn, goal, checkpoints, pickups, hazards, sister gates */
     objects: 'Objects',
 } as const;
 
 /** Object classes the game understands (also defined in levels/maltipoo.tiled-project) */
-export const OBJECT_TYPES = ['spawn', 'goal', 'checkpoint'] as const;
+export const OBJECT_TYPES = ['spawn', 'goal', 'checkpoint', 'pickup', 'hazard', 'sister-gate'] as const;
 export type ObjectType = (typeof OBJECT_TYPES)[number];
+
+/**
+ * A sister gate's `sister` when the map doesn't say: Tiled leaves class members at their default out of the JSON,
+ * so this must match the default in levels/maltipoo.tiled-project (a test checks it).
+ */
+export const DEFAULT_GATE_SISTER: CharacterKey = 'sofi';
 
 // ---------- The parts of the Tiled JSON format we use ----------
 
@@ -55,6 +62,11 @@ export interface TiledObject {
     class?: string;
     x: number;
     y: number;
+    /** 0 (or missing) for point objects */
+    width?: number;
+    height?: number;
+    /** Custom properties (only those changed from the class defaults) */
+    properties?: TiledProperty[];
 }
 
 export interface TiledObjectLayer {
@@ -81,6 +93,18 @@ export interface Point {
     y: number;
 }
 
+export interface Rect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+/** A sign marking a spot that needs a particular sister */
+export interface SisterGate extends Point {
+    sister: CharacterKey;
+}
+
 export interface LevelData {
     id: string;
     columns: number;
@@ -96,6 +120,12 @@ export interface LevelData {
     goal: Point;
     /** Sorted left to right */
     checkpoints: Point[];
+    /** Treats to collect, exactly where they were placed (they may float, so you jump for them) */
+    pickups: Point[];
+    /** Areas that send the dog back to the last checkpoint (puddles) */
+    hazards: Rect[];
+    /** Dropped onto the ground like checkpoints */
+    sisterGates: SisterGate[];
 }
 
 export class LevelError extends Error {
@@ -187,6 +217,25 @@ export function parseTiledMap(id: string, map: TiledMap): LevelData {
         return found[0] as TiledObject;
     };
 
+    const objectsOf = (type: ObjectType) => byType.get(type) ?? [];
+    const label = (object: TiledObject) => `${object.type || object.class} #${object.id}`;
+    const property = (object: TiledObject, name: string) => object.properties?.find(p => p.name === name)?.value;
+
+    const hazards = objectsOf('hazard').map((object): Rect => {
+        const { x, y, width = 0, height = 0 } = object;
+        if (width <= 0 || height <= 0) fail(`${label(object)} must be a rectangle (Insert Rectangle), not a point`);
+        return { x, y, width, height };
+    });
+
+    const sisterGates = objectsOf('sister-gate').map((object): SisterGate => {
+        const sister = property(object, 'sister') ?? DEFAULT_GATE_SISTER;
+        if (!isCharacterKey(sister)) return fail(`${label(object)} has sister "${String(sister)}" (use kiwi or sofi)`);
+        return { ...dropToGround(object), sister };
+    });
+
+    // A pickup drawn as a rectangle counts at its centre
+    const pickups = objectsOf('pickup').map(({ x, y, width = 0, height = 0 }): Point => ({ x: x + width / 2, y: y + height / 2 }));
+
     return {
         id,
         columns,
@@ -197,7 +246,10 @@ export function parseTiledMap(id: string, map: TiledMap): LevelData {
         surfaces,
         spawn: dropToGround(exactlyOne('spawn')),
         goal: dropToGround(exactlyOne('goal')),
-        checkpoints: (byType.get('checkpoint') ?? []).map(dropToGround).sort((a, b) => a.x - b.x),
+        checkpoints: objectsOf('checkpoint').map(dropToGround).sort((a, b) => a.x - b.x),
+        pickups,
+        hazards,
+        sisterGates,
     };
 }
 

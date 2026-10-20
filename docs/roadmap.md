@@ -49,7 +49,7 @@ The tool we chose in [decisions.md](decisions.md).
 
 | Chunk | Done when |
 |---|---|
-| ✅ 2.1 Tiled project in `levels/` (`.tiled-project`, object types: `spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`) plus a placeholder tileset (32 px; generated, Kenney later) | Opening the project in Tiled shows ready-to-use object types |
+| ✅ 2.1 Tiled project in `levels/` (`.tiled-project`, object types: `spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`) plus a placeholder tileset (32 px; generated, Kenney later). Pickups = treats, hazards = puddles (back to checkpoint), sister gates = signs (blocking comes with 4.4) | Opening the project in Tiled shows ready-to-use object types |
 | ✅ 2.2 Loader: `make.tilemap` + layers (`Background`, `Ground`, `Foreground`, `Objects`) → solids, spawn, goal, checkpoints | A test map loads with no coordinates in code |
 | ✅ 2.3 Rebuild level 1 in Tiled; delete `src/levels/level1.ts` | Level 1 plays the same as today |
 | ✅ 2.4 Tests read Tiled JSON: reachability, headroom, a spawn and a goal exist, all object types are known | `npm test` validates every map in `levels/` |

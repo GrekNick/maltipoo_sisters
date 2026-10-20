@@ -41,6 +41,24 @@ export function bakePlaceholderTextures(scene: Phaser.Scene): void {
     g.lineStyle(3, 0x5d3a1a).strokeRect(14, 62, 132, 78).strokeTriangle(0, 62, 80, 4, 160, 62);
     g.generateTexture('doghouse', 160, 142);
 
+    // Treat (smaczek): a little bone
+    g.clear();
+    g.fillStyle(0x7a5230).fillCircle(5, 4, 4).fillCircle(5, 10, 4).fillCircle(19, 4, 4).fillCircle(19, 10, 4).fillRect(5, 3, 14, 8);
+    g.fillStyle(0xfff3d6).fillCircle(5, 4, 3).fillCircle(5, 10, 3).fillCircle(19, 4, 3).fillCircle(19, 10, 3).fillRect(5, 4, 14, 6);
+    g.fillStyle(0xffffff).fillRect(7, 5, 9, 1);
+    g.generateTexture('treat', 24, 14);
+
+    // Sister signs: a post with a board showing the sister's paw, in her fur colour
+    for (const [key, fur] of [['sign-kiwi', 0xe08a2c], ['sign-sofi', 0xf3d9a4]] as const) {
+        g.clear();
+        g.fillStyle(0x5d3a1a).fillRect(17, 22, 6, 26);
+        g.fillStyle(0x5d3a1a).fillRoundedRect(0, 0, 40, 26, 5);
+        g.fillStyle(0xd9a066).fillRoundedRect(2, 2, 36, 22, 4);
+        g.fillStyle(fur).fillCircle(20, 15, 5).fillCircle(13, 8, 2.5).fillCircle(18, 6, 2.5).fillCircle(23, 6, 2.5).fillCircle(28, 8, 2.5);
+        g.lineStyle(1, 0x5d3a1a).strokeCircle(20, 15, 5);
+        g.generateTexture(key, 40, 48);
+    }
+
     g.destroy();
 }
 

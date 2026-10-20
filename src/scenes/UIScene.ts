@@ -28,12 +28,13 @@ export class UIScene extends Phaser.Scene {
         });
     }
 
-    private updateHud({ characterName, seconds, falls, x, y }: HudState) {
-        this.statusText.setText(`${characterName}   Time: ${seconds.toFixed(1)}s   Falls: ${falls}`);
+    private updateHud({ characterName, seconds, falls, treats, totalTreats, x, y }: HudState) {
+        const treatText = totalTreats > 0 ? `   Treats: ${treats}/${totalTreats}` : '';
+        this.statusText.setText(`${characterName}   Time: ${seconds.toFixed(1)}s   Falls: ${falls}${treatText}`);
         this.positionText.setText(`Позиція: X: ${Math.floor(x)}, Y: ${Math.floor(y)}`);
     }
 
-    private showFinishPanel({ seconds, falls, best }: FinishedState) {
+    private showFinishPanel({ seconds, falls, treats, totalTreats, best }: FinishedState) {
         const x = VIEW.width / 2;
         const y = 210;
         const text = (dy: number, content: string, size: number, color = '#ffffff') =>
@@ -43,7 +44,8 @@ export class UIScene extends Phaser.Scene {
 
         this.add.rectangle(x, y, 440, 190, 0x2c3e50, 0.85).setStrokeStyle(3, 0xffffff);
         text(-55, 'Home sweet home!', 34);
-        text(-8, `Time: ${seconds.toFixed(1)}s    Falls: ${falls}`, 20);
+        const treatText = totalTreats > 0 ? `    Treats: ${treats}/${totalTreats}` : '';
+        text(-8, `Time: ${seconds.toFixed(1)}s    Falls: ${falls}${treatText}`, 20);
         if (best) {
             text(24, best.isNew ? 'New best time!' : `Best: ${best.seconds.toFixed(1)}s`, 18,
                 best.isNew ? '#ffe082' : '#cfd8dc');
