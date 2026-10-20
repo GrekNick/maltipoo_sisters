@@ -20,7 +20,8 @@ A fun platformer game featuring two adorable characters: Sofi and Kiwi! Built wi
 
 ## Prerequisites
 
-Before running the game, make sure you have [Node.js](https://nodejs.org/) installed on your system (version 14 or higher recommended).
+Before running the game, install [Node.js](https://nodejs.org/) **24 (LTS)**, the version CI uses (from `.nvmrc`;
+`nvm use`, `fnm use` and Volta pick it up automatically).
 
 ## Installation
 
