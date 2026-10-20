@@ -1,21 +1,18 @@
 {
     "automappingRulesFile": "",
-    "commands": [
-    ],
+    "commands": [],
     "compatibilityVersion": 1100,
     "extensionsPath": "extensions",
     "folders": [
         "."
     ],
-    "properties": [
-    ],
+    "properties": [],
     "propertyTypes": [
         {
             "color": "#ff4caf50",
             "drawFill": true,
             "id": 1,
-            "members": [
-            ],
+            "members": [],
             "name": "spawn",
             "type": "class",
             "useAs": [
@@ -26,8 +23,7 @@
             "color": "#ffe53935",
             "drawFill": true,
             "id": 2,
-            "members": [
-            ],
+            "members": [],
             "name": "goal",
             "type": "class",
             "useAs": [
@@ -38,9 +34,59 @@
             "color": "#ff1e88e5",
             "drawFill": true,
             "id": 3,
-            "members": [
-            ],
+            "members": [],
             "name": "checkpoint",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "id": 4,
+            "name": "sister",
+            "type": "enum",
+            "storageType": "string",
+            "values": [
+                "kiwi",
+                "sofi"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffffb300",
+            "drawFill": true,
+            "id": 5,
+            "members": [],
+            "name": "pickup",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ff29b6f6",
+            "drawFill": true,
+            "id": 6,
+            "members": [],
+            "name": "hazard",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ff8e24aa",
+            "drawFill": true,
+            "id": 7,
+            "members": [
+                {
+                    "name": "sister",
+                    "propertyType": "sister",
+                    "type": "string",
+                    "value": "sofi"
+                }
+            ],
+            "name": "sister-gate",
             "type": "class",
             "useAs": [
                 "object"
