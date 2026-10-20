@@ -26,6 +26,8 @@ export interface HudState {
     characterName: string;
     seconds: number;
     falls: number;
+    treats: number;
+    totalTreats: number;
     x: number;
     y: number;
 }
@@ -33,6 +35,8 @@ export interface HudState {
 export interface FinishedState {
     seconds: number;
     falls: number;
+    treats: number;
+    totalTreats: number;
     best: BestTime | null;
 }
 

@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { LEVELS, TILESETS } from '../src/levels';
-import { headroomAbove, parseTiledMap, TILE_SIZE, type LevelData, type TiledMap } from '../src/levels/tiled';
-import { reachableFrom, surfaceAt } from '../src/levels/reachability';
+import { DEFAULT_GATE_SISTER, headroomAbove, OBJECT_TYPES, parseTiledMap, TILE_SIZE, type LevelData, type TiledMap } from '../src/levels/tiled';
+import { jumpDistance, maxJumpHeight, reachableFrom, surfaceAt } from '../src/levels/reachability';
 import { PHYSICS } from '../src/physics';
 import { CHARACTERS, SPRITE_SCALE } from '../src/characters';
 import { asciiMap } from './helpers/asciiMap';
@@ -24,6 +24,29 @@ function unreachable(level: LevelData): string[] {
     const problems = level.surfaces.filter(s => !reachable.has(s.id)).map(s => `surface ${s.id}`);
     const goal = surfaceAt(level.surfaces, level.goal);
     if (!goal || !reachable.has(goal.id)) problems.push('goal');
+    return problems;
+}
+
+/** Treats that can't be collected: no reachable surface below them within jump height (body height included). */
+function unreachablePickups(level: LevelData): string[] {
+    const reachable = reachableFrom(level.surfaces, level.spawn, PHYSICS);
+    const jumpReach = maxJumpHeight(PHYSICS) * 0.85 + STANDING;
+    return level.pickups
+        .filter(p => !level.surfaces.some(s => reachable.has(s.id) && p.x >= s.left && p.x <= s.right && p.y <= s.top && s.top - p.y <= jumpReach))
+        .map(p => `pickup at (${Math.round(p.x)}, ${Math.round(p.y)})`);
+}
+
+/** Puddles that are too wide to jump at walking speed, or that sit on the spawn, a checkpoint or the goal. */
+function hazardProblems(level: LevelData): string[] {
+    const longestJump = (jumpDistance(0, PHYSICS) ?? 0) * 0.85;
+    const problems: string[] = [];
+    for (const h of level.hazards) {
+        if (h.width > longestJump) problems.push(`hazard at x=${h.x} is ${h.width}px wide (longest easy jump ${Math.round(longestJump)}px)`);
+        for (const point of [level.spawn, level.goal, ...level.checkpoints]) {
+            const covered = point.x >= h.x - 32 && point.x <= h.x + h.width + 32 && point.y >= h.y && point.y <= h.y + h.height + 1;
+            if (covered) problems.push(`hazard at x=${h.x} covers the point at x=${Math.round(point.x)}`);
+        }
+    }
     return problems;
 }
 
@@ -50,6 +73,22 @@ describe('dog sizes fit the 32px grid', () => {
         expect(STANDING + MARGIN).toBeLessThanOrEqual(3 * TILE_SIZE);
         expect(STANDING).toBeGreaterThan(2 * TILE_SIZE);
         expect(DUCKED + MARGIN).toBeLessThanOrEqual(2 * TILE_SIZE);
+    });
+});
+
+describe('Tiled project file', () => {
+    const project = JSON.parse(fs.readFileSync('levels/maltipoo.tiled-project', 'utf8')) as {
+        propertyTypes: Array<{ name: string; type: string; members?: Array<{ name: string; value: unknown }> }>;
+    };
+    const classes = project.propertyTypes.filter(t => t.type === 'class');
+
+    it('offers exactly the object classes the game understands', () => {
+        expect(classes.map(c => c.name).sort()).toEqual([...OBJECT_TYPES].sort());
+    });
+
+    it("the sister gate's default sister matches the parser's default", () => {
+        const gate = classes.find(c => c.name === 'sister-gate');
+        expect(gate?.members?.find(m => m.name === 'sister')?.value).toBe(DEFAULT_GATE_SISTER);
     });
 });
 
@@ -93,6 +132,14 @@ describe.each(MAP_FILES)('%s', (file) => {
     it('headroom: room to walk under (3+ tiles) or a duck gap (2 tiles), never a 1-tile trap', () => {
         expect(headroomProblems(level())).toEqual([]);
     });
+
+    it('every treat can be collected', () => {
+        expect(unreachablePickups(level())).toEqual([]);
+    });
+
+    it('every puddle can be jumped and keeps away from spawn, checkpoints and goal', () => {
+        expect(hazardProblems(level())).toEqual([]);
+    });
 });
 
 describe('the checks catch broken levels', () => {
@@ -118,6 +165,34 @@ describe('the checks catch broken levels', () => {
             '##############################',
         ], objects));
         expect(headroomProblems(level)).toHaveLength(5);
+    });
+
+    it('a treat placed out of reach', () => {
+        const level = parseTiledMap('high-treat', asciiMap([
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '##############################',
+        ], [{ type: 'spawn', column: 0, row: 7 }, { type: 'goal', column: 29, row: 7 }, { type: 'pickup', column: 10, row: 0 }]));
+        expect(unreachablePickups(level)).toHaveLength(1);
+    });
+
+    it('a puddle too wide to jump, and one on top of the spawn', () => {
+        const level = parseTiledMap('puddles', asciiMap([
+            '..............................',
+            '..............................',
+            '##############################',
+        ], [
+            { type: 'spawn', column: 0, row: 1 }, { type: 'goal', column: 29, row: 1 },
+            { type: 'hazard', column: 10, row: 1, width: 8, height: 1 },
+            { type: 'hazard', column: 0, row: 1, width: 1, height: 1 },
+        ]));
+        expect(hazardProblems(level)).toHaveLength(2);
     });
 
     it('a duck gap (2 tiles) and a walk-under gap (3 tiles) are fine', () => {

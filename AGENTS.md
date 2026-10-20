@@ -54,7 +54,8 @@ src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
 src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
-src/levels/tiled.ts    pure Tiled map parser/validator: solid tiles, surfaces, spawn/goal/checkpoints
+src/levels/tiled.ts    pure Tiled map parser/validator: solid tiles, surfaces, spawn/goal/checkpoints, pickups,
+                       hazards, sister gates (object classes must match levels/maltipoo.tiled-project; tests check)
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)
 src/coop/              parked online co-op client, only bundled when VITE_COOP=true; typed socket events
 server/coop-server.js  Socket.IO relay for co-op
