@@ -22,7 +22,9 @@ concept (tilemaps, coyote time, parallax…), explain it briefly in the PR or re
 
 ## Stack and commands
 Phaser 4 (WebGL, Arcade Physics) · Vite 5 · Vitest 2 · **TypeScript 5.9** everywhere in `src/` and `tests/`
-(strict + `noUncheckedIndexedAccess`; type-check only: Vite/Vitest strip types, `tsc` never emits). Node 20 in CI.
+(strict + `noUncheckedIndexedAccess`; type-check only: Vite/Vitest strip types, `tsc` never emits). Node 24, set once
+in `.nvmrc` (both workflows read it). When GitHub warns that an action's runtime is deprecated, bump the action's major
+version after reading its release notes.
 Only `tools/*.mjs` (Node scripts) and `server/` (CommonJS) are still JavaScript.
 
 ```bash
