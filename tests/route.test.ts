@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { LEVELS } from '../src/levels';
 import {
-    currentLocationIndex, isPlayable, levelToPlay, locationIndexOf, locationStatus, ROUTE, routeLevels, type Location,
+    arrivalToPlay, currentLocationIndex, isPlayable, levelToPlay, locationIndexOf, locationStatus, ROUTE, routeLevels, type Location,
 } from '../src/levels/route';
 import { NO_PROGRESS, type Progress } from '../src/progress';
 
@@ -73,5 +73,25 @@ describe('where the map opens', () => {
     it('finds the place of a level', () => {
         expect(locationIndexOf('b1', TEST_ROUTE)).toBe(1);
         expect(locationIndexOf('nope', TEST_ROUTE)).toBe(-1);
+    });
+});
+
+describe('arrival scenes', () => {
+    const withScene: Location = { ...place('mine', ['m1']), arrival: 'intro' };
+
+    it('play the first time a playable place is reached, then not again', () => {
+        expect(arrivalToPlay(withScene, 'open', new Set())).toBe('intro');
+        expect(arrivalToPlay(withScene, 'done', new Set())).toBe('intro');
+        expect(arrivalToPlay(withScene, 'open', new Set(['intro']))).toBeUndefined();
+    });
+
+    it("don't play for locked or unbuilt places, or places without one", () => {
+        expect(arrivalToPlay(withScene, 'locked', new Set())).toBeUndefined();
+        expect(arrivalToPlay(withScene, 'soon', new Set())).toBeUndefined();
+        expect(arrivalToPlay(place('bridge', ['b1']), 'open', new Set())).toBeUndefined();
+    });
+
+    it('the first place on the real route opens with the intro', () => {
+        expect(ROUTE[0]?.arrival).toBe('intro');
     });
 });

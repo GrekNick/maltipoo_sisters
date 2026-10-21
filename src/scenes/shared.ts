@@ -12,6 +12,7 @@ export const SceneKey = {
     Title: 'Title',
     Settings: 'Settings',
     Map: 'Map',
+    Cutscene: 'Cutscene',
     Game: 'Game',
     UI: 'UI',
     Pause: 'Pause',

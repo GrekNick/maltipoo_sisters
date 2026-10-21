@@ -33,6 +33,7 @@
     "map.locked": "Locked: finish the place before it first",
     "map.soon": "Coming soon",
     "map.hint": "←/→ choose · Enter play · Esc back",
+    "map.story": "▶ Story",
 
     "hud.time": "Time: {seconds}s",
     "hud.falls": "Falls: {falls}",
@@ -51,6 +52,15 @@
     "finish.best": "Best: {seconds}s",
     "finish.toMap": "Continue",
     "finish.replay": "Play again",
+
+    "cutscene.skip": "Skip",
+    "cutscene.continue": "Tap or press Enter",
+    "story.intro.found": "Look what I found in the salt!",
+    "story.intro.glow": "A red stone, glowing deep down in the mine.",
+    "story.intro.sun": "How will it shine in real sunlight?",
+    "story.intro.castle": "Let's see outside! Then it goes to the castle.",
+    "story.intro.lost": "Smok? Smok! Where did he go?",
+    "story.intro.wawel": "He'll head home to Wawel. Let's find him!",
 
     "page.controls": "Controls: A/D or ←/→ to move, W or ↑/Space to jump (Kiwi jumps higher), ↓/S to duck (Sofi), Q or Tab to swap sisters, R to restart, Esc or P to pause",
     "page.rotate": "↻ Turn your device sideways to play"

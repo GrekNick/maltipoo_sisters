@@ -33,6 +33,7 @@
     "map.locked": "Zamknięte: najpierw przejdź poprzednie miejsce",
     "map.soon": "Wkrótce",
     "map.hint": "←/→ — wybierz · Enter — graj · Esc — wstecz",
+    "map.story": "▶ Historia",
 
     "hud.time": "Czas: {seconds} s",
     "hud.falls": "Upadki: {falls}",
@@ -51,6 +52,15 @@
     "finish.best": "Rekord: {seconds} s",
     "finish.toMap": "Dalej",
     "finish.replay": "Zagraj jeszcze",
+
+    "cutscene.skip": "Pomiń",
+    "cutscene.continue": "Dotknij lub naciśnij Enter",
+    "story.intro.found": "Zobaczcie, co znalazłem w soli!",
+    "story.intro.glow": "Czerwony kamień świeci głęboko w kopalni.",
+    "story.intro.sun": "Jak zabłyśnie w prawdziwym słońcu?",
+    "story.intro.castle": "Chodźmy na zewnątrz! Potem zaniesiemy go na zamek.",
+    "story.intro.lost": "Smok? Smok! Gdzie on się podział?",
+    "story.intro.wawel": "Pójdzie do domu, na Wawel. Znajdźmy go!",
 
     "page.controls": "Sterowanie: A/D lub ←/→ — ruch, W lub ↑/Spacja — skok (Kiwi skacze wyżej), ↓/S — schylanie się (Sofi), Q lub Tab — zamiana sióstr, R — od nowa, Esc lub P — pauza",
     "page.rotate": "↻ Obróć urządzenie poziomo, aby grać"
