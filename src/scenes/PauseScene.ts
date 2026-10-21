@@ -3,6 +3,7 @@
 import Phaser from 'phaser';
 import { t } from '../i18n';
 import { Menu } from '../ui/Menu';
+import type { MapSceneData } from './MapScene';
 import type { SettingsSceneData } from './SettingsScene';
 import { FONT_FAMILY, SceneKey, TEXT_STYLE, VIEW } from './shared';
 
@@ -23,7 +24,7 @@ export class PauseScene extends Phaser.Scene {
             { label: t('pause.resume'), onSelect: () => this.resumeGame() },
             { label: t('pause.restart'), onSelect: () => this.scene.start(SceneKey.Game) }, // restarts the paused level
             { label: t('menu.settings'), onSelect: () => this.openSettings() },
-            { label: t('pause.quit'), onSelect: () => this.quitToTitle() },
+            { label: t('pause.quit'), onSelect: () => this.quitToMap() },
         ], 300);
 
         this.input.keyboard?.on('keydown-ESC', () => this.resumeGame());
@@ -45,8 +46,8 @@ export class PauseScene extends Phaser.Scene {
         this.scene.bringToTop(SceneKey.Settings);
     }
 
-    private quitToTitle() {
+    private quitToMap() {
         this.scene.stop(SceneKey.Game); // also stops the HUD
-        this.scene.start(SceneKey.Title);
+        this.scene.start(SceneKey.Map, {} satisfies MapSceneData);
     }
 }

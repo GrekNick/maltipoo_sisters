@@ -88,10 +88,11 @@ change with them, and the tests re-check every level automatically.
 
 1. In Tiled, open `levels/level1.tmj` and **File → Save As…** `levels/level2.tmj`, then change it. This keeps the
    tileset embedded and the layers named right.
-2. Register it in `src/levels/index.ts` (one line: key, name, URL import).
+2. Register it in `src/levels/index.ts` (one line: key, name, URL import), and add its key to its place's
+   `levels` in `src/levels/route.ts`, in the same order. That order is the unlock order on the map.
 3. `npm test`: every check prints which tile, object or surface is wrong.
-4. Play it: for now the game starts the first level, so to try a new one put it first in `LEVELS`, or start it
-   from the browser console with `game.scene.getScene('Title').scene.start('Game', { levelKey: 'level2' })`.
+4. Play it: it appears on the map once the level before it is finished. To try it right away, start it from the
+   browser console with `game.scene.getScene('Title').scene.start('Game', { levelKey: 'level2' })`.
 
 ## Gotchas
 

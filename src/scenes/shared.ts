@@ -11,6 +11,7 @@ export const SceneKey = {
     Preload: 'Preload',
     Title: 'Title',
     Settings: 'Settings',
+    Map: 'Map',
     Game: 'Game',
     UI: 'UI',
     Pause: 'Pause',
@@ -30,6 +31,10 @@ export const UIEvent = {
     Swap: 'swap',
     /** Pause (same as Esc/P) */
     Pause: 'pause',
+    /** Finish panel: back to the map */
+    ToMap: 'toMap',
+    /** Finish panel: play the level again (same as R) */
+    Replay: 'replay',
 } as const;
 
 export interface HudState {

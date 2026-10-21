@@ -8,6 +8,7 @@ import { FIRST_LEVEL, TILESETS } from '../levels';
 import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/tiled';
 import { loadSettings, recordLevelFinish, saveSettings } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
+import type { MapSceneData } from './MapScene';
 import { addBackdrop } from './art';
 import { GameEvent, SceneKey, SKY_COLOR, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
 
@@ -88,12 +89,16 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         const ui = this.scene.get(SceneKey.UI);
         ui.events.on(UIEvent.Swap, this.swapSister, this);
         ui.events.on(UIEvent.Pause, this.pause, this);
+        ui.events.on(UIEvent.ToMap, this.backToMap, this);
+        ui.events.on(UIEvent.Replay, this.replay, this);
         // Pause when the tab is hidden or the phone locks; resuming is then up to the player
         this.game.events.on(Phaser.Core.Events.HIDDEN, this.pause, this);
         this.events.on(Phaser.Scenes.Events.RESUME, this.onResume, this);
         this.events.once('shutdown', () => {
             ui.events.off(UIEvent.Swap, this.swapSister, this);
             ui.events.off(UIEvent.Pause, this.pause, this);
+            ui.events.off(UIEvent.ToMap, this.backToMap, this);
+            ui.events.off(UIEvent.Replay, this.replay, this);
             this.game.events.off(Phaser.Core.Events.HIDDEN, this.pause, this);
             this.events.off(Phaser.Scenes.Events.RESUME, this.onResume, this);
             this.scene.stop(SceneKey.UI);
@@ -223,14 +228,25 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             keyboard.addKey(code).on('down', () => this.swapSister());
         }
         keyboard.on('keydown-H', () => this.toggleHitboxes());
-        keyboard.on('keydown-R', () => this.scene.restart());
-        // Esc pauses while playing; on the finish panel it goes back to the title
-        keyboard.on('keydown-ESC', () => (this.finished ? this.scene.start(SceneKey.Title) : this.pause()));
+        keyboard.on('keydown-R', () => this.replay());
+        // Esc pauses while playing; on the finish panel it goes back to the map
+        keyboard.on('keydown-ESC', () => (this.finished ? this.backToMap() : this.pause()));
         keyboard.on('keydown-P', () => this.pause());
     }
 
     elapsedSeconds() {
         return this.elapsedMs / 1000;
+    }
+
+    replay() {
+        this.scene.restart();
+    }
+
+    /** After the finish: the map, where the sisters walk on if this level opened the next place */
+    backToMap() {
+        if (!this.finished) return;
+        const data: MapSceneData = { finishedLevel: this.level.id };
+        this.scene.start(SceneKey.Map, data);
     }
 
     /** Freezes the game (physics, tweens, timers, update) and shows the pause menu on top. */

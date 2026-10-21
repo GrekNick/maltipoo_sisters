@@ -14,6 +14,18 @@
     "settings.language": "Мова: {language}",
     "settings.hint": "Esc — назад",
 
+    "map.title": "Дорога до Вавеля",
+    "map.wieliczka": "Величка",
+    "map.podgorze": "Подґуже",
+    "map.kazimierz": "Казімеж",
+    "map.rynek": "Ринок",
+    "map.wawel": "Вавель",
+    "map.river": "Вісла",
+    "map.notPlayed": "Ще не зіграно",
+    "map.locked": "Закрито: спершу пройдіть попереднє місце",
+    "map.soon": "Скоро буде",
+    "map.hint": "←/→ — вибрати · Enter — грати · Esc — назад",
+
     "hud.time": "Час: {seconds} с",
     "hud.falls": "Падіння: {falls}",
     "hud.treats": "Смаколики: {treats}/{total}",
@@ -23,13 +35,14 @@
     "pause.title": "Пауза",
     "pause.resume": "Продовжити",
     "pause.restart": "Почати знову",
-    "pause.quit": "Головне меню",
+    "pause.quit": "До мапи",
     "pause.hint": "Esc або P — продовжити",
 
     "finish.title": "Вдома найкраще!",
     "finish.newBest": "Новий рекорд!",
     "finish.best": "Рекорд: {seconds} с",
-    "finish.actions": "R — грати ще    Esc — меню",
+    "finish.toMap": "Далі",
+    "finish.replay": "Грати ще",
 
     "page.controls": "Керування: A/D або ←/→ — рух, W або ↑/Пробіл — стрибок (Kiwi стрибає вище), ↓/S — пригнутися (Sofi), Q або Tab — змінити сестру, R — почати знову, Esc або P — пауза",
     "page.rotate": "↻ Поверніть пристрій горизонтально, щоб грати"
