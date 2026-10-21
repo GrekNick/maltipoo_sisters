@@ -56,6 +56,7 @@ src/scenes/            Preload → Title ⇄ Settings; Title → Map → Game (+
   UIScene.ts           HUD + finish panel, listens to GameScene's events
   PauseScene.ts        pause menu over the paused (not stopped) GameScene; can open Settings on top
   MapScene.ts          the level map: places of the route, the sisters walking between them, start a level
+  CutsceneScene.ts     plays a cutscene script (bubbles with typewriter text, panels, Skip), then goes back
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
 src/ui/TouchControls.ts  on-screen ◀ ▶ jump duck buttons (multi-touch); rules in src/input/touch.ts, device in device.ts
@@ -67,7 +68,9 @@ src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
 src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
-src/levels/route.ts    places on the map in story order and their levels (= unlock order; must match the registry)
+src/levels/route.ts    places on the map in story order and their levels (= unlock order; must match the registry),
+                       plus each place's arrival cutscene
+src/cutscenes/         cutscene scripts (typed beats: say, move, face, panel, wait, together); design in docs/cutscenes.md
 src/levels/tiled.ts    pure Tiled map parser/validator: solid tiles, surfaces, spawn/goal/checkpoints, pickups,
                        hazards, sister gates (object classes must match levels/maltipoo.tiled-project; tests check)
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)

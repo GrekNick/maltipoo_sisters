@@ -1,7 +1,8 @@
 # Cutscenes
 
 How the story is shown between levels (roadmap 3.7, then 6.1 and 6.2b). Decided 2026-10-21; the why is in
-[decisions.md](decisions.md). This is the design to build from; update it when the code differs.
+[decisions.md](decisions.md). **Built** (first version): `src/scenes/CutsceneScene.ts` plays the scripts in
+`src/cutscenes/`; the intro is the first scene. Keep this page in sync with the code.
 
 ## What a cutscene is
 
@@ -37,9 +38,8 @@ instead: finding the glowing red stone, and the reunion at sunset. Pictures carr
 
 | Hook | Scene | Where |
 |---|---|---|
-| Before the first level, the first time | Intro: the salt mine, the red stone, getting separated (6.1) | Start → intro → map |
-| The map opens a new place (after the sisters walk there) | That place's arrival scene: where Smok Junior was seen, why the sisters head there (6.2b) | on the map |
-| After finishing the last level | Ending: the reunion, the stone glowing in the sun (6.1) | before the credits |
+| A place's `arrival` in `src/levels/route.ts`, the first time the sisters are there and it's playable | That place's scene (6.2b). The first place's arrival is the **intro**, so a fresh start goes Start → intro → map | on the map |
+| After finishing the last level | Ending: the reunion, the stone glowing in the sun (6.1) | before the credits (not built yet) |
 
 ## How a scene is written
 
@@ -51,13 +51,13 @@ text keys; a typo is a compile error, and `tests/cutscenes.test.ts` checks the r
 export const intro: Cutscene = {
     id: 'intro',
     backdrop: 'salt-mine',
-    actors: { smok: 300, kiwi: 520, sofi: 600 },   // starting x on the floor line
+    actors: { smok: { x: 250 }, kiwi: { x: 500, face: 'left' }, sofi: { x: 590, face: 'left' } },
     beats: [
-        { move: 'smok', to: 380 },
-        { say: 'smok', line: 'story.intro.stone' },
+        { move: 'smok', to: 330 },
+        { say: 'smok', line: 'story.intro.found' },
         { panel: 'red-stone-glow', line: 'story.intro.glow' },
         { say: 'sofi', line: 'story.intro.sun' },
-        { together: [{ move: 'kiwi', to: 900 }, { move: 'sofi', to: 950 }] },
+        { together: [{ move: 'smok', to: -120, speed: 'run' }, { wait: 300 }] },
     ],
 };
 ```
@@ -75,8 +75,11 @@ Beat types (the first version; add one only when a scene needs it):
 
 - **Text** lives in the locale files like all other text (`story.<scene>.<line>` keys in en/uk/pl), so translators
   work in one place and the i18n test keeps all three complete.
-- **Actors** are characters with sprites: `kiwi`, `sofi`, `smok` (Smok Junior needs his sprite first, roadmap 7.2:
-  at least idle and walk). Locals (the café owner, a flower seller) come later the same way.
+- **Actors** are characters with sprites: `kiwi`, `sofi`, and `smok` (an "actor" in `characters.ts`: idle, talk,
+  walk). Locals (the café owner, a flower seller) come later the same way: art → a `make-*.mjs` tool →
+  `ACTOR_SOURCES` in `tools/build-sprites.mjs` → `ACTORS`.
+- **Adding a scene:** write `src/cutscenes/<id>.ts`, add it to `CUTSCENES` in `src/cutscenes/index.ts`, add its lines
+  to all three locale files, and hook it up (a place's `arrival` in `route.ts`). `npm test` checks the rest.
 - **Backdrops** start as simple code-drawn scenes (dark mine with salt crystals, Podgórze street, riverbank) and are
   replaced by painted ones in the art pass (7.4).
 - **Panels** are images in `art/raw/panels/`, recorded in `art/raw/SOURCES.md`. Until a panel exists, the player
