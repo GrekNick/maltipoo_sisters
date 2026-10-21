@@ -49,7 +49,8 @@ src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on t
   PauseScene.ts        pause menu over the paused (not stopped) GameScene; can open Settings on top
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
-src/persistence.ts     settings (incl. language) + best times in localStorage (versioned, never throws)
+src/persistence.ts     settings (incl. language) + progress in localStorage (versioned, never throws)
+src/progress.ts        pure progress rules: per-level best time/treats, unlocking in order, where Continue goes
 src/i18n/              t(), language detection; locales/{en,uk,pl}.json hold every player-facing string
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
 src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), per sister; shared by game and tests

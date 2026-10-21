@@ -6,7 +6,7 @@ import { PHYSICS, SISTER_PHYSICS } from '../physics';
 import { RUN_START, JUMP_START, nextCrouching, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
 import { FIRST_LEVEL, TILESETS } from '../levels';
 import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/tiled';
-import { loadSettings, recordBestTime, saveSettings } from '../persistence';
+import { loadSettings, recordLevelFinish, saveSettings } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
 import { addBackdrop } from './art';
 import { GameEvent, SceneKey, SKY_COLOR, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
@@ -348,7 +348,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             falls: this.falls,
             treats: this.treats,
             totalTreats: this.level.pickups.length,
-            best: recordBestTime(this.level.id, seconds),
+            best: recordLevelFinish(this.level.id, seconds, this.treats)?.best ?? null,
         };
         this.events.emit(GameEvent.Finished, finished);
     }

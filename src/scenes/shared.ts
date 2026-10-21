@@ -1,6 +1,6 @@
 // Things several scenes share: screen size, scene keys, the events GameScene sends to UIScene, text styles.
 import type { CharacterKey } from '../characters';
-import type { BestTime } from '../persistence';
+import type { BestTime } from '../progress';
 
 export const VIEW = { width: 800, height: 600 } as const;
 export const TILE = 32;

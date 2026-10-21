@@ -5,6 +5,24 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-21 — Saved progress: one versioned record per browser, levels unlock in order
+
+**Status:** accepted (roadmap 3.5).
+
+Progress is saved in `localStorage` under `maltipoo.progress` as `{ version: 1, levels: { <level id>: { bestSeconds,
+bestTreats } } }`. A level is in the record once it has been finished; the first level is always open and each
+other one unlocks when the level before it is finished. Level ids are the map keys, so **renaming a level's key
+loses its saved progress**; reordering levels changes what is unlocked.
+
+**Why:** levels are short and kid-sized, so finishing (not checkpoints) is the unit worth saving. One record with a
+version number can be migrated later (the old per-level best-time keys are read once, if no record exists yet).
+An unknown version is ignored rather than misread.
+
+**Alternatives considered:** saving mid-level state (position, checkpoint): more to keep consistent for little
+gain on 2-minute levels. Cloud saves or accounts: out of scope for a static GitHub Pages game.
+
+---
+
 ## 2026-10-20 — Screen scaling: fill the window, but prefer crisp whole-pixel scales
 
 **Status:** accepted (roadmap 1.4).
