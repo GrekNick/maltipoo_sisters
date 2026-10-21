@@ -64,7 +64,7 @@ const SOURCES = {
         move: [SOFI('walk'), SOFI('idle')],
         jump: [SOFI('jump')],
         crouch: [SOFI('crouch')],
-        crawl: [SOFI('crawl_a'), SOFI('crawl_b')],
+        crawl: [SOFI('crawl_a'), SOFI('crawl_b'), SOFI('crawl_c'), SOFI('crawl_d')],
     },
 };
 

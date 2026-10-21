@@ -69,7 +69,7 @@ export const FRAME_SIZE = { width: sprites.frameWidth, height: sprites.frameHeig
 export const ANIMATION_STATES: readonly BaseAnimationState[] = sprites.states;
 
 // Frames per second. `move` and `crawl` are additionally sped up with the dog's speed in the scene.
-export const ANIMATION_FRAME_RATE: Record<AnimationState, number> = { idle: 4, move: 8, jump: 8, crouch: 4, crawl: 6 };
+export const ANIMATION_FRAME_RATE: Record<AnimationState, number> = { idle: 4, move: 8, jump: 8, crouch: 4, crawl: 8 };
 
 // Physics body relative to the idle pose's opaque bounds (texture px): narrower than the art so ledges feel
 // forgiving, bottom edge exactly on the feet. Fixed across animation frames.
