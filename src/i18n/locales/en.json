@@ -9,8 +9,10 @@
 
     "settings.title": "Settings",
     "settings.hitboxes": "Show hitboxes: {state}",
+    "settings.touch": "On-screen controls: {state}",
     "settings.on": "On",
     "settings.off": "Off",
+    "settings.auto": "Auto",
     "settings.sound": "Sound: coming soon",
     "settings.language": "Language: {language}",
     "settings.reset": "Reset progress",

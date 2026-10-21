@@ -3,6 +3,7 @@
 // finishing a level goes back to the Map.
 import Phaser from 'phaser';
 import { displayScale } from './display';
+import { watchTouchDevice } from './input/device';
 import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type MessageKey } from './i18n';
 import { loadSettings } from './persistence';
 import { PHYSICS } from './physics';
@@ -41,6 +42,8 @@ const config: Phaser.Types.Core.GameConfig = {
     height: VIEW.height,
     parent: 'game-container',
     roundPixels: true, // avoids shimmering seams while the camera scrolls
+    // Up to 3 fingers at once (move + jump + swap); Phaser tracks one by default
+    input: { activePointers: 3 },
     physics: {
         default: 'arcade',
         arcade: {
@@ -51,6 +54,8 @@ const config: Phaser.Types.Core.GameConfig = {
     // The first scene in the list starts automatically
     scene: [PreloadScene, TitleScene, SettingsScene, MapScene, GameScene, UIScene, PauseScene],
 };
+
+watchTouchDevice(); // for the "auto" on-screen controls
 
 const game = new Phaser.Game(config);
 

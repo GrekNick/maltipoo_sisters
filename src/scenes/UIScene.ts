@@ -4,7 +4,11 @@
 import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, type CharacterKey } from '../characters';
 import { t } from '../i18n';
+import { onTouchDeviceChange, touchDevice } from '../input/device';
+import { showTouchControls } from '../input/touch';
+import { loadSettings } from '../persistence';
 import { Menu } from '../ui/Menu';
+import { TouchControls } from '../ui/TouchControls';
 import { FONT_FAMILY, GameEvent, SceneKey, TEXT_STYLE, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
 
 const SWAP_BUTTON = { x: VIEW.width - 46, y: 46, radius: 32 } as const;
@@ -17,6 +21,9 @@ export class UIScene extends Phaser.Scene {
     private pauseButton!: Phaser.GameObjects.Container;
     private swapIcon!: Phaser.GameObjects.Image;
     private character: CharacterKey | null = null;
+    private controlsHint!: Phaser.GameObjects.Text;
+    private touchControls!: TouchControls;
+    private finished = false;
 
     constructor() {
         super(SceneKey.UI);
@@ -24,22 +31,37 @@ export class UIScene extends Phaser.Scene {
 
     create() {
         this.character = null; // fields survive restarts; the first HUD update sets the swap button's icon
+        this.finished = false;
         this.statusText = this.add.text(16, 16, '', TEXT_STYLE);
         this.positionText = this.add.text(16, 38, '', TEXT_STYLE);
-        // Controls along the bottom edge, where they don't collide with the character dropdown (top right)
-        this.add.text(VIEW.width / 2, VIEW.height - 20,
+        // Keyboard controls along the bottom edge (hidden while the on-screen buttons show)
+        this.controlsHint = this.add.text(VIEW.width / 2, VIEW.height - 20,
             t('hud.controls'),
             { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
         this.createSwapButton();
         this.createPauseButton();
+        this.touchControls = new TouchControls(this, state => this.events.emit(UIEvent.Touch, state));
+        this.refreshTouchControls();
+        const stopWatching = onTouchDeviceChange(() => this.refreshTouchControls());
 
         const game = this.scene.get(SceneKey.Game);
         game.events.on(GameEvent.Hud, this.updateHud, this);
         game.events.on(GameEvent.Finished, this.showFinishPanel, this);
+        // The setting may have changed in Settings (opened from the pause menu)
+        game.events.on(Phaser.Scenes.Events.RESUME, this.refreshTouchControls, this);
         this.events.once('shutdown', () => {
             game.events.off(GameEvent.Hud, this.updateHud, this);
             game.events.off(GameEvent.Finished, this.showFinishPanel, this);
+            game.events.off(Phaser.Scenes.Events.RESUME, this.refreshTouchControls, this);
+            stopWatching();
         });
+    }
+
+    /** On-screen buttons per the setting (auto = touch devices); the keyboard hint shows when they don't */
+    private refreshTouchControls() {
+        const visible = !this.finished && showTouchControls(loadSettings().touchControls, touchDevice());
+        this.touchControls.setVisible(visible);
+        this.controlsHint.setVisible(!visible && !this.finished);
     }
 
     /** Top right: a round button showing the other sister; tap it to swap (same as Q/Tab). */
@@ -80,6 +102,7 @@ export class UIScene extends Phaser.Scene {
             this.character = character;
             const other = CHARACTER_KEYS.find(key => key !== character) ?? character;
             this.swapIcon.setTexture(other, 0);
+            this.touchControls.setDuckAvailable(CHARACTERS[character].crouchHitbox !== null);
             this.swapButton.setVisible(true);
         }
         const parts = [CHARACTERS[character].name, t('hud.time', { seconds: seconds.toFixed(1) }), t('hud.falls', { falls })];
@@ -91,6 +114,8 @@ export class UIScene extends Phaser.Scene {
     private showFinishPanel({ seconds, falls, treats, totalTreats, best }: FinishedState) {
         this.swapButton.setVisible(false);
         this.pauseButton.setVisible(false);
+        this.finished = true;
+        this.refreshTouchControls();
         const x = VIEW.width / 2;
         const text = (y: number, content: string, size: number, color = '#ffffff') =>
             this.add.text(x, y, content, {

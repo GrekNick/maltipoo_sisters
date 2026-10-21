@@ -9,8 +9,10 @@
 
     "settings.title": "Налаштування",
     "settings.hitboxes": "Показувати хітбокси: {state}",
+    "settings.touch": "Сенсорні кнопки: {state}",
     "settings.on": "Так",
     "settings.off": "Ні",
+    "settings.auto": "Авто",
     "settings.sound": "Звук: незабаром",
     "settings.language": "Мова: {language}",
     "settings.reset": "Скинути прогрес",

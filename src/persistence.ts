@@ -2,6 +2,7 @@
 // previews), so every function degrades to defaults instead of failing. Functions take an optional store so
 // tests can pass a fake one. Each value is saved with a version number, so a later format can migrate it.
 import { isLanguage, type Language } from './i18n';
+import { isTouchControlsSetting, type TouchControlsSetting } from './input/touch';
 import { NO_PROGRESS, parseProgress, recordFinish, type FinishResult, type Progress } from './progress';
 
 export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -11,9 +12,11 @@ export interface Settings {
     showHitboxes: boolean;
     /** Chosen in Settings; null = follow the browser's language */
     language: Language | null;
+    /** On-screen buttons: auto (touch devices), always on, or off */
+    touchControls: TouchControlsSetting;
 }
 
-export const DEFAULT_SETTINGS: Readonly<Settings> = { showHitboxes: false, language: null };
+export const DEFAULT_SETTINGS: Readonly<Settings> = { showHitboxes: false, language: null, touchControls: 'auto' };
 
 const SETTINGS_KEY = 'maltipoo.settings';
 const SETTINGS_VERSION = 1;
@@ -40,6 +43,7 @@ export function parseSettings(raw: string | null): Settings {
         if (typeof saved !== 'object' || saved === null) return settings;
         if ('showHitboxes' in saved && typeof saved.showHitboxes === 'boolean') settings.showHitboxes = saved.showHitboxes;
         if ('language' in saved && isLanguage(saved.language)) settings.language = saved.language;
+        if ('touchControls' in saved && isTouchControlsSetting(saved.touchControls)) settings.touchControls = saved.touchControls;
     } catch {
         // corrupted value: use defaults
     }

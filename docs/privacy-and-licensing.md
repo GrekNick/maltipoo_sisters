@@ -10,7 +10,7 @@ app store's kids section, have a lawyer look at it.
 
 | What | Where it goes | Personal data? |
 |---|---|---|
-| Settings (`maltipoo.settings`: hitboxes, language) | `localStorage`, this browser only | No |
+| Settings (`maltipoo.settings`: hitboxes, language, on-screen controls) | `localStorage`, this browser only | No |
 | Progress (`maltipoo.progress`: best time and treat count per finished level; old `maltipoo.best.*` keys are only read) | `localStorage`, this browser only | No |
 | Page and asset requests | GitHub Pages servers | Your IP address and browser details reach GitHub's server logs, as with any website ([GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)) |
 
