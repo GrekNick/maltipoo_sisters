@@ -4,6 +4,7 @@ import { Menu } from '../ui/Menu';
 import { getLanguage, languageName, LANGUAGES, setLanguage, t, type Language } from '../i18n';
 import { saveLanguage } from '../persistence';
 import { addBackdrop, addGroundStrip, FLAG_SIZE } from './art';
+import type { MapSceneData } from './MapScene';
 import type { SettingsSceneData } from './SettingsScene';
 import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
@@ -25,7 +26,7 @@ export class TitleScene extends Phaser.Scene {
         this.tweens.add({ targets: logo, y: 14, duration: 1800, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
 
         new Menu(this, VIEW.width / 2, 370, [
-            { label: t('menu.start'), onSelect: () => this.scene.start(SceneKey.Game) },
+            { label: t('menu.start'), onSelect: () => this.scene.start(SceneKey.Map, {} satisfies MapSceneData) },
             // Explicit empty data: a scene started without data keeps its previous data (e.g. "back to the pause menu")
             { label: t('menu.settings'), onSelect: () => this.scene.start(SceneKey.Settings, {} satisfies SettingsSceneData) },
         ]);

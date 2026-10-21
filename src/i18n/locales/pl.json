@@ -14,6 +14,18 @@
     "settings.language": "Język: {language}",
     "settings.hint": "Esc — wstecz",
 
+    "map.title": "Droga na Wawel",
+    "map.wieliczka": "Wieliczka",
+    "map.podgorze": "Podgórze",
+    "map.kazimierz": "Kazimierz",
+    "map.rynek": "Rynek",
+    "map.wawel": "Wawel",
+    "map.river": "Wisła",
+    "map.notPlayed": "Jeszcze nie grane",
+    "map.locked": "Zamknięte: najpierw przejdź poprzednie miejsce",
+    "map.soon": "Wkrótce",
+    "map.hint": "←/→ — wybierz · Enter — graj · Esc — wstecz",
+
     "hud.time": "Czas: {seconds} s",
     "hud.falls": "Upadki: {falls}",
     "hud.treats": "Smaczki: {treats}/{total}",
@@ -23,13 +35,14 @@
     "pause.title": "Pauza",
     "pause.resume": "Wznów",
     "pause.restart": "Od nowa",
-    "pause.quit": "Menu główne",
+    "pause.quit": "Do mapy",
     "pause.hint": "Esc lub P — wznów",
 
     "finish.title": "Nareszcie w domu!",
     "finish.newBest": "Nowy rekord!",
     "finish.best": "Rekord: {seconds} s",
-    "finish.actions": "R — zagraj jeszcze    Esc — menu",
+    "finish.toMap": "Dalej",
+    "finish.replay": "Zagraj jeszcze",
 
     "page.controls": "Sterowanie: A/D lub ←/→ — ruch, W lub ↑/Spacja — skok (Kiwi skacze wyżej), ↓/S — schylanie się (Sofi), Q lub Tab — zamiana sióstr, R — od nowa, Esc lub P — pauza",
     "page.rotate": "↻ Obróć urządzenie poziomo, aby grać"

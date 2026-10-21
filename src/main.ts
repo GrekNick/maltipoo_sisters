@@ -1,11 +1,13 @@
 // Entry point: game config + scene list, translated page text, and fitting the canvas to the window.
-// Scenes (like routes): Preload → Title ⇄ Settings, Title → Game (+ UI on top) ⇄ Pause (→ Settings, or → Title).
+// Scenes (like routes): Preload → Title ⇄ Settings, Title → Map → Game (+ UI on top) ⇄ Pause (→ Settings, or → Map);
+// finishing a level goes back to the Map.
 import Phaser from 'phaser';
 import { displayScale } from './display';
 import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type MessageKey } from './i18n';
 import { loadSettings } from './persistence';
 import { PHYSICS } from './physics';
 import { GameScene } from './scenes/GameScene';
+import { MapScene } from './scenes/MapScene';
 import { PauseScene } from './scenes/PauseScene';
 import { PreloadScene } from './scenes/PreloadScene';
 import { SettingsScene } from './scenes/SettingsScene';
@@ -47,7 +49,7 @@ const config: Phaser.Types.Core.GameConfig = {
         }
     },
     // The first scene in the list starts automatically
-    scene: [PreloadScene, TitleScene, SettingsScene, GameScene, UIScene, PauseScene],
+    scene: [PreloadScene, TitleScene, SettingsScene, MapScene, GameScene, UIScene, PauseScene],
 };
 
 const game = new Phaser.Game(config);
