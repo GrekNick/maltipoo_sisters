@@ -26,22 +26,31 @@ Collecting none keeps us outside most of them. Saving settings and progress on t
 uses counts as "strictly necessary" under the EU cookie rules (ePrivacy), so **no consent banner is needed**. Adding
 analytics, ads, accounts or a server changes all of that, hence the rule below.
 
-### Licensing: code and art are both under MIT today
+Players can read this in the **privacy notice** ([privacy.html](../privacy.html), linked from the title screen and
+the README; EN/UK/PL) and delete their progress in Settings → Reset progress. **Keep the notice in sync with this
+document.**
 
-- `LICENSE` is MIT ("Copyright (c) 2025 GrekNick") and the repository is **public**. MIT applies to everything in
-  the repository, so **anyone may copy and even sell the art, the logo and the characters**, not only the code.
-  `package.json` says `ISC`, which contradicts it.
+### Licensing: code MIT, everything creative all rights reserved (since 2026-10-21)
+
+- `LICENSE` (MIT) covers **the source code only**; it says so at the top. [ASSETS-LICENSE.md](../ASSETS-LICENSE.md)
+  reserves all rights in the characters, art, logo, story and level designs. Before that, MIT covered everything
+  in the public repository, so copies made from older commits could claim MIT for the art. That's a small,
+  accepted risk; the current terms apply from now on.
+- `package.json` says `SEE LICENSE IN LICENSE` and is `"private": true`, so it can't be published to npm by accident.
 - Libraries in the build: Phaser (MIT). socket.io and express are only used by the parked co-op. MIT asks that its
   notice stays with the code; Phaser's license comments survive in the built file.
-- Art provenance is not written down. The raw sprites, the logo and the Smok Junior sheet look AI-generated, then
-  were rebuilt as pixel art by our tools. Two things follow:
-  1. Whether we may publish them depends on the generator's terms of use.
+- Art provenance is in [art/raw/SOURCES.md](../art/raw/SOURCES.md). The originals were generated with Google Gemini
+  and Anthropic Claude from the owner's prompts, then rebuilt as pixel art by our tools. Two things follow:
+  1. Publishing them depends on the providers' terms; both say they don't claim ownership of outputs. Re-check them
+     before a commercial release.
   2. Purely AI-generated images may not be protected by copyright in some countries (e.g. the US), so we might not
      be able to stop others from copying them. Our hand-edited pixel versions are on firmer ground.
 - **A found image in the public history:** `assests/test_man_sprites/man.png` (and a copy), a 6-frame man sprite
-  sheet. It was added in February 2026 in commit c063afe, later deleted, but still downloadable from the git
-  history. Its source is unknown; if it came from the web, it's someone else's art published in our repo.
-- `assets/characters/smok_jr.png` is untracked; its source isn't recorded yet.
+  sheet of unknown source. It was added in February 2026 and deleted later. **Decided 2026-10-21: remove it from
+  the git history** (see decisions.md). GitHub may still serve it from old pull request pages until its support
+  team purges cached views, and forks or old clones keep their copy.
+- `assets/characters/smok_jr.png` is untracked; its source (AI, Gemini or Claude) is in SOURCES.md, to be moved
+  into `art/raw/` when it's ready.
 - Contributors: besides the owner, Vadym Moiseyenko (co-op prototype, README, the test sprite above), committing
   with a work address. Normally contributions to an MIT repo are under MIT, but it's worth his OK, especially if
   any of it was done on work time.
@@ -72,27 +81,20 @@ Also in the roadmap ("Privacy and licensing" before M8). Do the first group soon
 public and deployed.
 
 **Soon (now):**
-- [ ] **Decide the art license.** Suggested: code stays MIT; art, characters, logo and story are "all rights
-      reserved" (or CC BY-NC 4.0 if you're happy for people to reuse them non-commercially with credit). Then add
-      `ASSETS-LICENSE.md` (or `art/LICENSE`), update `LICENSE` and the README's License section so they say which
-      covers what, and set `package.json` `license` to `MIT` with `"private": true` (it also prevents an
-      accidental `npm publish`).
-- [ ] **Record art provenance** in `art/raw/SOURCES.md`: generator and date for each raw image, plus what our
-      tools derived from it. Check the generator's terms allow a public game.
-- [ ] **The found test sprite in history:** ask Vadym where `man.png` came from. If it isn't free to use, either
-      accept the low risk (it's not in the game or the site) or rewrite history with `git filter-repo` and
-      force-push. That's disruptive: every clone needs re-cloning and forks keep the old history. Write down what
-      was decided.
-- [ ] **Smok Junior sheet:** record its source before it's committed (and move it to `art/raw/smok_junior/`).
-- [ ] **Contributor OK:** a short note from Vadym that his contributions are his to give under the repo's license.
-- [ ] **Commit email:** `git config --global user.email <id>+GrekNick@users.noreply.github.com` (the exact
-      address is in GitHub → Settings → Emails), and tick "Keep my email addresses private" there.
+- [x] **Art license:** code MIT, the rest all rights reserved (`ASSETS-LICENSE.md`, `LICENSE`, README,
+      `package.json` with `"private": true`).
+- [x] **Art provenance** recorded in `art/raw/SOURCES.md` (Gemini and Claude).
+- [ ] **The found test sprite in history:** remove it with a history rewrite and force-push (decided). Afterwards:
+      everyone re-clones; optionally ask GitHub Support to purge cached views of old pull requests.
+- [x] **Smok Junior sheet:** source recorded; move it to `art/raw/smok_junior/` when it's ready.
+- [ ] **Contributor OK:** a short note from Vadym that his contributions are his to give under the repo's
+      license. Also tell him to re-clone after the history rewrite.
+- [x] **Commit email:** future commits use `10743531+GrekNick@users.noreply.github.com`. Also tick "Keep my email
+      addresses private" and "Block command line pushes that expose my email" in GitHub → Settings → Emails.
 
 **Before sharing the game widely (with M8):**
-- [ ] **Privacy notice** in EN/UK/PL, linked from the title screen or credits and the README. It says: no personal
-      data, what is saved on the device and how to delete it, hosting by GitHub Pages (IP logs), and a contact.
-      Short and kid-readable on top, details below.
-- [ ] **"Reset progress"** in Settings, with a confirmation: deleting your data without browser menus.
+- [x] **Privacy notice** in EN/UK/PL (`privacy.html`), linked from the title screen and the README.
+- [x] **"Reset progress"** in Settings, with a confirmation (No is focused first).
 - [ ] **Credits screen**: Phaser (MIT), any third-party assets, contributors, "not affiliated with" the Wieliczka
       Salt Mine or Wawel Royal Castle.
 - [ ] **itch.io or app stores:** stores require a privacy policy URL even for "we collect nothing". They also need
