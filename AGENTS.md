@@ -43,9 +43,10 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 src/main.ts            game config + scene list + screen fitting + translated page text
 src/display.ts         pure: how big to show the 800x600 game in the window (whole-pixel scales preferred)
-src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
+src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top) ⇄ Pause; shared.ts has keys/events/sizes
   GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
   UIScene.ts           HUD + finish panel, listens to GameScene's events
+  PauseScene.ts        pause menu over the paused (not stopped) GameScene; can open Settings on top
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
 src/persistence.ts     settings (incl. language) + best times in localStorage (versioned, never throws)
@@ -101,7 +102,8 @@ docs/                  roadmap, story, decisions
 - **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
   `scenes/shared.ts`) and `UIScene` draws them. Taps on HUD buttons go the other way as `UIEvent` (e.g. the swap
   button), which `GameScene` handles like the matching key. Scene instances survive `restart()`/`start()` (the
-  constructor runs once), so reset per-run state in `create()`.
+  constructor runs once), so reset per-run state in `create()`. A scene started **without** data keeps its previous
+  data (Phaser), so pass `{}` explicitly when that matters (Title → Settings does).
 - **Sister skills are data + pure rules**: a character can duck if its sprites have a `crouch` animation (then it
   gets a `crouchHitbox`, same width and feet line). The rules live in `movement.ts` (`nextCrouching`): duck only on
   the ground, no jumping while ducked, crawl at `crawlSpeed`, and never stand up (or swap to a sister who can't
@@ -131,7 +133,9 @@ Unit tests don't cover rendering, so also play-test:
   `code` and `keyCode`): jumping reacts to a fresh press (`JustDown`), so setting `key.isDown` directly won't jump.
 - **Tweens use wall-clock time**, so they don't advance under instant manual stepping. Await small delays
   between steps when checking tweens.
-- The Arcade debug view toggles with **H** in game.
+- The game **pauses itself when the page is hidden** (pause menu on top). Press Esc or call
+  `game.scene.getScene('Pause')` → Resume before stepping further.
+- The Arcade debug view toggles with **H** in game (saved, like the Settings switch).
 - To check on-screen steadiness, record `Math.round(player.x - player.displayOriginX - camera.scrollX)` every frame
   while running: it should not change once the camera is scrolling.
 

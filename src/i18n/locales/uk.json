@@ -18,13 +18,19 @@
     "hud.falls": "Падіння: {falls}",
     "hud.treats": "Смаколики: {treats}/{total}",
     "hud.position": "Позиція: X: {x}, Y: {y}",
-    "hud.controls": "Рух ←/→ A/D · Стрибок ↑/W/Пробіл · Пригнутися ↓/S (Sofi) · Змінити Q/Tab · R заново · Esc меню",
+    "hud.controls": "Рух ←/→ A/D · Стрибок ↑/W/Пробіл · Пригнутися ↓/S (Sofi) · Змінити Q/Tab · R заново · Esc пауза",
+
+    "pause.title": "Пауза",
+    "pause.resume": "Продовжити",
+    "pause.restart": "Почати знову",
+    "pause.quit": "Головне меню",
+    "pause.hint": "Esc або P — продовжити",
 
     "finish.title": "Вдома найкраще!",
     "finish.newBest": "Новий рекорд!",
     "finish.best": "Рекорд: {seconds} с",
     "finish.actions": "R — грати ще    Esc — меню",
 
-    "page.controls": "Керування: A/D або ←/→ — рух, W або ↑/Пробіл — стрибок (Kiwi стрибає вище), ↓/S — пригнутися (Sofi), Q або Tab — змінити сестру, R — почати знову, Esc — меню",
+    "page.controls": "Керування: A/D або ←/→ — рух, W або ↑/Пробіл — стрибок (Kiwi стрибає вище), ↓/S — пригнутися (Sofi), Q або Tab — змінити сестру, R — почати знову, Esc або P — пауза",
     "page.rotate": "↻ Поверніть пристрій горизонтально, щоб грати"
 }

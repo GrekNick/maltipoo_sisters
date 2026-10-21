@@ -56,6 +56,7 @@ http://localhost:5173
 - **Jump:** W or ↑ (Up Arrow) or Space (Kiwi jumps higher)
 - **Duck / crawl (Sofi):** S or ↓ (Down Arrow)
 - **Swap sisters:** Q or Tab, or tap the round button in the top-right corner
+- **Pause:** Esc or P, or the pause button in the top-right corner
 - **Restart:** R
 - **Show hitboxes:** H
 

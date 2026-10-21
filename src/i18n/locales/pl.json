@@ -18,13 +18,19 @@
     "hud.falls": "Upadki: {falls}",
     "hud.treats": "Smaczki: {treats}/{total}",
     "hud.position": "Pozycja: X: {x}, Y: {y}",
-    "hud.controls": "Ruch ←/→ A/D · Skok ↑/W/Spacja · Schyl się ↓/S (Sofi) · Zamiana Q/Tab · R od nowa · Esc menu",
+    "hud.controls": "Ruch ←/→ A/D · Skok ↑/W/Spacja · Schyl się ↓/S (Sofi) · Zamiana Q/Tab · R od nowa · Esc pauza",
+
+    "pause.title": "Pauza",
+    "pause.resume": "Wznów",
+    "pause.restart": "Od nowa",
+    "pause.quit": "Menu główne",
+    "pause.hint": "Esc lub P — wznów",
 
     "finish.title": "Nareszcie w domu!",
     "finish.newBest": "Nowy rekord!",
     "finish.best": "Rekord: {seconds} s",
     "finish.actions": "R — zagraj jeszcze    Esc — menu",
 
-    "page.controls": "Sterowanie: A/D lub ←/→ — ruch, W lub ↑/Spacja — skok (Kiwi skacze wyżej), ↓/S — schylanie się (Sofi), Q lub Tab — zamiana sióstr, R — od nowa, Esc — menu",
+    "page.controls": "Sterowanie: A/D lub ←/→ — ruch, W lub ↑/Spacja — skok (Kiwi skacze wyżej), ↓/S — schylanie się (Sofi), Q lub Tab — zamiana sióstr, R — od nowa, Esc lub P — pauza",
     "page.rotate": "↻ Obróć urządzenie poziomo, aby grać"
 }

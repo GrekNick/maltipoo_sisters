@@ -1,12 +1,12 @@
 // Gameplay only: level, player, physics, goal. The HUD and finish panel live in UIScene, which listens to the
-// events this scene emits (GameEvent). Started from the title screen; Esc goes back to it.
+// events this scene emits (GameEvent). Started from the title screen; Esc pauses (PauseScene on top).
 import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, SPRITE_SCALE, type AnimationState, type CharacterKey } from '../characters';
 import { PHYSICS, SISTER_PHYSICS } from '../physics';
 import { RUN_START, JUMP_START, nextCrouching, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
 import { FIRST_LEVEL, TILESETS } from '../levels';
 import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/tiled';
-import { loadSettings, recordBestTime } from '../persistence';
+import { loadSettings, recordBestTime, saveSettings } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
 import { addBackdrop } from './art';
 import { GameEvent, SceneKey, SKY_COLOR, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
@@ -41,7 +41,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
     private spaceKey!: Phaser.Input.Keyboard.Key;
     private checkpoint = { x: 0, y: 0 };
-    private startTime = 0;
+    /** Play time (ms), counted in update(), so time spent paused doesn't count */
+    private elapsedMs = 0;
     private treats = 0;
     private run: RunState = RUN_START;
     private jump: JumpState = JUMP_START;
@@ -65,7 +66,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.finished = false;
         this.falls = 0;
         this.treats = 0;
-        this.startTime = this.time.now;
+        this.elapsedMs = 0;
         // Fields keep their values across scene.restart() (the constructor doesn't run again), so reset here
         this.run = RUN_START;
         this.jump = JUMP_START;
@@ -79,16 +80,24 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.createSparkles();
         this.createCamera();
         this.createInput();
-        if (loadSettings().showHitboxes) this.toggleHitboxes();
+        this.setHitboxesVisible(loadSettings().showHitboxes);
 
-        // The HUD runs as its own scene on top; stop it with this one (restart, or Esc to the title).
-        // Its on-screen swap button sends UIEvent.Swap, handled like the Q/Tab keys.
+        // The HUD runs as its own scene on top; stop it with this one (restart, or quitting to the title).
+        // Its on-screen buttons send UIEvents, handled like the matching keys.
         this.scene.launch(SceneKey.UI);
         const ui = this.scene.get(SceneKey.UI);
         ui.events.on(UIEvent.Swap, this.swapSister, this);
+        ui.events.on(UIEvent.Pause, this.pause, this);
+        // Pause when the tab is hidden or the phone locks; resuming is then up to the player
+        this.game.events.on(Phaser.Core.Events.HIDDEN, this.pause, this);
+        this.events.on(Phaser.Scenes.Events.RESUME, this.onResume, this);
         this.events.once('shutdown', () => {
             ui.events.off(UIEvent.Swap, this.swapSister, this);
+            ui.events.off(UIEvent.Pause, this.pause, this);
+            this.game.events.off(Phaser.Core.Events.HIDDEN, this.pause, this);
+            this.events.off(Phaser.Scenes.Events.RESUME, this.onResume, this);
             this.scene.stop(SceneKey.UI);
+            this.scene.stop(SceneKey.Pause);
         });
 
         if (COOP_ENABLED) {
@@ -215,16 +224,31 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         }
         keyboard.on('keydown-H', () => this.toggleHitboxes());
         keyboard.on('keydown-R', () => this.scene.restart());
-        keyboard.on('keydown-ESC', () => this.scene.start(SceneKey.Title));
+        // Esc pauses while playing; on the finish panel it goes back to the title
+        keyboard.on('keydown-ESC', () => (this.finished ? this.scene.start(SceneKey.Title) : this.pause()));
+        keyboard.on('keydown-P', () => this.pause());
     }
 
     elapsedSeconds() {
-        return (this.time.now - this.startTime) / 1000;
+        return this.elapsedMs / 1000;
+    }
+
+    /** Freezes the game (physics, tweens, timers, update) and shows the pause menu on top. */
+    pause() {
+        if (this.finished || !this.scene.isActive()) return;
+        this.scene.pause();
+        this.scene.launch(SceneKey.Pause);
+    }
+
+    /** Back from the pause menu: keys released while paused would otherwise still count as held. */
+    private onResume() {
+        this.input.keyboard?.resetKeys();
+        this.setHitboxesVisible(loadSettings().showHitboxes); // may have changed in Settings
     }
 
     /** Swap to the other sister (Q/Tab or the on-screen button). In place, keeping her speed, even mid-jump. */
     swapSister() {
-        if (this.finished) return;
+        if (this.finished || !this.scene.isActive()) return;
         const next = CHARACTER_KEYS.find(key => key !== this.currentCharacter) ?? this.currentCharacter;
         if (!this.coop) {
             this.switchCharacter(next);
@@ -268,14 +292,18 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         return tiles.length === 0;
     }
 
+    /** H key: same switch as in Settings, and saved like it */
     toggleHitboxes() {
+        const showHitboxes = !this.physics.world.drawDebug;
+        this.setHitboxesVisible(showHitboxes);
+        saveSettings({ ...loadSettings(), showHitboxes });
+    }
+
+    setHitboxesVisible(visible: boolean) {
         const world = this.physics.world;
-        if (!world.debugGraphic) {
-            world.createDebugGraphic(); // also turns drawing on
-            return;
-        }
-        world.drawDebug = !world.drawDebug;
-        world.debugGraphic?.clear();
+        if (visible && !world.debugGraphic) world.createDebugGraphic();
+        world.drawDebug = visible;
+        if (!visible) world.debugGraphic?.clear();
     }
 
     // Respawn point = the furthest checkpoint object (from the map) the dog has reached on foot
@@ -327,6 +355,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
 
     override update(_time: number, delta: number) {
         if (this.finished) return;
+        this.elapsedMs += delta;
         const dt = Math.min(delta, 50) / 1000; // clamp: a long hitch (tab switch) shouldn't launch the dog
         const body = this.player.body;
         const onGround = body.blocked.down || body.touching.down;
