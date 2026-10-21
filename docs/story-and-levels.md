@@ -32,6 +32,18 @@ simply to **find Smok Junior**.
 
 Tone: warm, funny, about friendship and finding each other. Nothing to defeat.
 
+## How the story is told
+*(decided 2026-10-21)* Short, skippable **cutscenes between levels** carry the story, played by one cutscene player
+(roadmap 3.7) from small data files, so adding a scene needs no code:
+- **Intro** before the first level: the salt mine, the red stone, getting separated.
+- **Between levels**, on the map, when a new place opens: where Smok Junior was seen and why the sisters head
+  there (each location's "Story" line below). 3–5 beats each.
+- **Ending** after Wawel: the reunion and the stone glowing in the sun.
+
+Inside levels, the **Smok Junior sightings** near each finish are quick moments, not stops. Pictures carry the
+story; each beat has at most one short line, so translations stay small. Every cutscene can be skipped with a
+tap and replayed from the map.
+
 ## Recurring elements
 | Element | Purpose |
 |---|---|
@@ -105,5 +117,4 @@ Character names stay the same in every language: Kiwi, Sofi, Smok Junior.
 ## Open questions
 - Do Smok Junior's parents appear in the ending?
 - Second skills for later levels (Kiwi pushes crates, Sofi digs or sniffs out hidden treats)?
-- Story delivery: comic panels between levels, speech bubbles in-level, or both?
 - Is the wardrobe a good reward for treats, or should treats unlock something else (bonus levels, map stickers)?

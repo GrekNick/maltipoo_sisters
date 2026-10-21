@@ -1,5 +1,6 @@
 // All playable levels, in order. A level is a Tiled map in levels/ (see docs/level-design.md); Vite bundles the
-// files and gives us their URLs. Adding a level = add the .tmj file + one entry here (tests check both).
+// files and gives us their URLs. Adding a level = add the .tmj file + one entry here + its place in route.ts
+// (tests check all three, and that both lists have the same order).
 import level1Url from '../../levels/level1.tmj?url';
 import placeholderTilesUrl from '../../levels/tilesets/placeholder.png';
 

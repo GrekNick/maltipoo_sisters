@@ -46,10 +46,11 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
 src/main.ts            game config + scene list + screen fitting + translated page text
 src/display.ts         pure: how big to show the 800x600 game in the window (whole-pixel scales preferred)
-src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top) ⇄ Pause; shared.ts has keys/events/sizes
+src/scenes/            Preload → Title ⇄ Settings; Title → Map → Game (+ UI on top) ⇄ Pause; finish → Map; shared.ts has keys/events/sizes
   GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
   UIScene.ts           HUD + finish panel, listens to GameScene's events
   PauseScene.ts        pause menu over the paused (not stopped) GameScene; can open Settings on top
+  MapScene.ts          the level map: places of the route, the sisters walking between them, start a level
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
 src/persistence.ts     settings (incl. language) + progress in localStorage (versioned, never throws)
@@ -60,6 +61,7 @@ src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
 src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
+src/levels/route.ts    places on the map in story order and their levels (= unlock order; must match the registry)
 src/levels/tiled.ts    pure Tiled map parser/validator: solid tiles, surfaces, spawn/goal/checkpoints, pickups,
                        hazards, sister gates (object classes must match levels/maltipoo.tiled-project; tests check)
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)

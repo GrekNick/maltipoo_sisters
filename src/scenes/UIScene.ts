@@ -4,6 +4,7 @@
 import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, type CharacterKey } from '../characters';
 import { t } from '../i18n';
+import { Menu } from '../ui/Menu';
 import { FONT_FAMILY, GameEvent, SceneKey, TEXT_STYLE, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
 
 const SWAP_BUTTON = { x: VIEW.width - 46, y: 46, radius: 32 } as const;
@@ -91,21 +92,24 @@ export class UIScene extends Phaser.Scene {
         this.swapButton.setVisible(false);
         this.pauseButton.setVisible(false);
         const x = VIEW.width / 2;
-        const y = 210;
-        const text = (dy: number, content: string, size: number, color = '#ffffff') =>
-            this.add.text(x, y + dy, content, {
+        const text = (y: number, content: string, size: number, color = '#ffffff') =>
+            this.add.text(x, y, content, {
                 fontFamily: FONT_FAMILY, fontSize: `${size}px`, color, stroke: '#2c3e50', strokeThickness: 4,
             }).setOrigin(0.5);
 
-        this.add.rectangle(x, y, 440, 190, 0x2c3e50, 0.85).setStrokeStyle(3, 0xffffff);
-        text(-55, t('finish.title'), 34);
+        this.add.rectangle(x, 250, 460, 300, 0x2c3e50, 0.85).setStrokeStyle(3, 0xffffff);
+        text(145, t('finish.title'), 34);
         const parts = [t('hud.time', { seconds: seconds.toFixed(1) }), t('hud.falls', { falls })];
         if (totalTreats > 0) parts.push(t('hud.treats', { treats, total: totalTreats }));
-        text(-8, parts.join('    '), 20);
+        text(192, parts.join('    '), 20);
         if (best) {
-            text(24, best.isNew ? t('finish.newBest') : t('finish.best', { seconds: best.seconds.toFixed(1) }), 18,
+            text(224, best.isNew ? t('finish.newBest') : t('finish.best', { seconds: best.seconds.toFixed(1) }), 18,
                 best.isNew ? '#ffe082' : '#cfd8dc');
         }
-        text(62, t('finish.actions'), 18, '#ffe082');
+        // Buttons after the dog has trotted in, so a jump key still held at the finish doesn't press one
+        this.time.delayedCall(600, () => new Menu(this, x, 280, [
+            { label: t('finish.toMap'), onSelect: () => this.events.emit(UIEvent.ToMap) },
+            { label: t('finish.replay'), onSelect: () => this.events.emit(UIEvent.Replay) },
+        ], 240));
     }
 }

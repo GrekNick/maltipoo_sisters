@@ -19,6 +19,20 @@ and it's simply the right default for a family game.
 
 **Alternatives considered:** analytics to learn where kids get stuck. Rejected for now: family playtests give the
 same insight without data collection.
+## 2026-10-21 — Story told by short cutscenes between levels
+
+**Status:** accepted (roadmap 3.7, 6.1, 6.2b).
+
+One cutscene player plays scenes written as data (backgrounds, characters, short speech lines as i18n keys).
+It runs before the first level, on the map when a new place opens, and after the last level. Scenes are
+skippable, play once on their own, and can be replayed from the map.
+
+**Why:** the story (no villains, friends finding each other) needs a few warm moments between levels to feel
+immersive, but kids mostly want to play. Short and skippable keeps both. Data files mean new scenes and
+translations need no code.
+
+**Alternatives considered:** only speech bubbles inside levels (interrupts play, hard to read while moving);
+full animated cinematics (far too much art for the scope).
 
 ---
 

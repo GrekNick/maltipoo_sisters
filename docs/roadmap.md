@@ -58,12 +58,13 @@ The tool we chose in [decisions.md](decisions.md).
 ### M3 — Game shell: start screen, settings, progress
 | Chunk | Done when |
 |---|---|
-| ✅ 3.1 **Title screen**: title, Start and Settings buttons (mouse, touch, keyboard), language flags in the corner, animated dogs. Continue and Credits come later | The game opens on the title screen; Enter, tap or gamepad starts it |
+| ✅ 3.1 **Title screen**: title, Start and Settings buttons (mouse, touch, keyboard), language flags in the corner, animated dogs. Start opens the map at the place to continue (so no separate Continue button); Credits come later | The game opens on the title screen; Enter, tap or gamepad starts it |
 | ◐ 3.2 **Settings** (screen, saving, "show hitboxes" and **language** done; sound comes with 5.3): music and sound volume, **language: English (default) / Ukrainian / Polish**, "show hitboxes" moved here from the H key | Settings survive a page reload |
-| 3.3 **Level select = a map of the route** (Wieliczka → Wawel): locations unlock one by one, each showing its best time and collected treats | Finishing a level unlocks the next one on the map |
+| ✅ 3.3 **Level select = a map of the route** (Wieliczka → Wawel): locations unlock one by one, each showing its best time and collected treats. Route data in `src/levels/route.ts`; placeholder drawing until 7.4 | Finishing a level unlocks the next one on the map |
 | ✅ 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map (to the title screen until the map exists; also pauses when the tab is hidden) | Esc or a tap on the pause icon pauses the game |
 | ✅ 3.5 Save progress (localStorage, versioned): best time and most treats per finished level; levels unlock in order (`src/progress.ts`). The map (3.3) will show it | A refresh keeps unlocked levels and best times |
 | ✅ 3.6 i18n: all UI text comes from `src/i18n/locales/{en,uk,pl}.json`; English is the default and the fallback for missing keys; the first launch picks the browser language if it's supported | Switching language changes every on-screen string; a test fails if a key is missing in any language |
+| 3.7 **Cutscene player**: a `CutsceneScene` plays a short scene from data (e.g. `cutscenes/*.json`: background panels, who's on stage, speech-bubble lines as i18n keys, simple moves and waits). Any key or tap advances, a Skip button skips. Plays once automatically (remembered with the progress) and can be replayed from the map. Hooks: before the first level (intro), on the map when a new place opens (between levels), after the last level (ending) | A test scene plays on the map between two places, is skippable, and doesn't play again unless replayed |
 
 ### M4 — The sisters mechanic
 | Chunk | Done when |
@@ -87,8 +88,9 @@ One PR per location; see [story-and-levels.md](story-and-levels.md).
 
 | Chunk | Done when |
 |---|---|
-| 6.1 Story intro (Wieliczka: the red stone, getting separated) and ending (the reunion at Wawel); comic panels, skippable | The story makes sense without reading much |
+| 6.1 Story intro (Wieliczka: the red stone, getting separated) and ending (the reunion at Wawel), played by the cutscene player (3.7); skippable | The story makes sense without reading much |
 | 6.2 Smok Junior sightings: a short scripted moment near each finish pointing to the next location (not an enemy) | Shows up in every location |
+| 6.2b **Between-level cutscenes**: when the map opens a new place, a short scene (3–5 beats) shows where Smok Junior was seen and why the sisters head there (the "Story" line of each location in story-and-levels.md) | One per location; the whole route tells the story even if you skip the in-level sightings |
 | 6.3 Level finish: a doggy pad by an obwarzanek stand (replaces the dog house) | Every level ends there |
 | 6.4–6.8 Locations 1–5: Wieliczka, Podgórze, Kazimierz, Rynek, Smocza Jama → Wawel | Each one passes the tests and has had a playtest with a kid |
 | 6.9 Collectibles: **smaczki** (bone treats), more of them and better hidden in later levels; counts shown on the map | The map shows how many were found |

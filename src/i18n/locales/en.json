@@ -14,6 +14,18 @@
     "settings.language": "Language: {language}",
     "settings.hint": "Esc to go back",
 
+    "map.title": "The way to Wawel",
+    "map.wieliczka": "Wieliczka",
+    "map.podgorze": "Podgórze",
+    "map.kazimierz": "Kazimierz",
+    "map.rynek": "Main Square",
+    "map.wawel": "Wawel",
+    "map.river": "Vistula",
+    "map.notPlayed": "Not played yet",
+    "map.locked": "Locked: finish the place before it first",
+    "map.soon": "Coming soon",
+    "map.hint": "←/→ choose · Enter play · Esc back",
+
     "hud.time": "Time: {seconds}s",
     "hud.falls": "Falls: {falls}",
     "hud.treats": "Treats: {treats}/{total}",
@@ -23,13 +35,14 @@
     "pause.title": "Paused",
     "pause.resume": "Resume",
     "pause.restart": "Restart",
-    "pause.quit": "Main menu",
+    "pause.quit": "Back to map",
     "pause.hint": "Esc or P to resume",
 
     "finish.title": "Home sweet home!",
     "finish.newBest": "New best time!",
     "finish.best": "Best: {seconds}s",
-    "finish.actions": "R: play again    Esc: menu",
+    "finish.toMap": "Continue",
+    "finish.replay": "Play again",
 
     "page.controls": "Controls: A/D or ←/→ to move, W or ↑/Space to jump (Kiwi jumps higher), ↓/S to duck (Sofi), Q or Tab to swap sisters, R to restart, Esc or P to pause",
     "page.rotate": "↻ Turn your device sideways to play"
