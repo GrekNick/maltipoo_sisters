@@ -5,6 +5,7 @@
     "menu.settings": "Налаштування",
     "menu.back": "Назад",
     "title.hint": "↑/↓ — вибрати · Enter — підтвердити · або клацніть",
+    "title.privacy": "Конфіденційність",
 
     "settings.title": "Налаштування",
     "settings.hitboxes": "Показувати хітбокси: {state}",
@@ -12,6 +13,11 @@
     "settings.off": "Ні",
     "settings.sound": "Звук: незабаром",
     "settings.language": "Мова: {language}",
+    "settings.reset": "Скинути прогрес",
+    "settings.resetQuestion": "Видалити всі рекорди й знайдені смаколики?",
+    "settings.resetNo": "Ні, залишити",
+    "settings.resetYes": "Так, скинути",
+    "settings.resetDone": "Прогрес скинуто.",
     "settings.hint": "Esc — назад",
 
     "map.title": "Дорога до Вавеля",

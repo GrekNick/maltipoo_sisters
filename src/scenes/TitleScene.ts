@@ -35,6 +35,20 @@ export class TitleScene extends Phaser.Scene {
             .setOrigin(0.5);
 
         this.addLanguageFlags();
+        this.addPrivacyLink();
+    }
+
+    /** Bottom right: the privacy notice (privacy.html, a plain page next to the game) in a new tab, for parents */
+    private addPrivacyLink() {
+        const link = this.add.text(VIEW.width - 12, 580, t('title.privacy'), {
+            ...TEXT_STYLE, fontSize: '13px', color: '#e1f5fe',
+        }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+        link.on('pointerover', () => link.setColor('#ffe082'));
+        link.on('pointerout', () => link.setColor('#e1f5fe'));
+        link.on('pointerup', () => {
+            const url = new URL(`privacy.html#${getLanguage()}`, document.baseURI);
+            window.open(url.href, '_blank', 'noopener');
+        });
     }
 
     /** Top-left corner: one flag per language; the current one is framed. Tap or click to switch. */

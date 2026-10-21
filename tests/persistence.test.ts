@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-    DEFAULT_SETTINGS, loadProgress, loadSettings, parseSettings, recordLevelFinish, saveLanguage, saveProgress, saveSettings,
+    DEFAULT_SETTINGS, loadProgress, loadSettings, parseSettings, recordLevelFinish, resetProgress, saveLanguage, saveProgress,
+    saveSettings,
     type KeyValueStore,
 } from '../src/persistence';
 
@@ -10,12 +11,14 @@ function memoryStore(): KeyValueStore & { data: Map<string, string> } {
         data,
         getItem: (key) => data.get(key) ?? null,
         setItem: (key, value) => void data.set(key, value),
+        removeItem: (key) => void data.delete(key),
     };
 }
 
 const throwingStore: KeyValueStore = {
     getItem: () => { throw new Error('SecurityError'); },
     setItem: () => { throw new Error('QuotaExceededError'); },
+    removeItem: () => { throw new Error('SecurityError'); },
 };
 
 describe('settings', () => {
@@ -97,7 +100,19 @@ describe('progress', () => {
         expect(loadProgress(store)).toEqual({ level1: { bestSeconds: 42.5, bestTreats: 4 } });
     });
 
+    it('reset deletes all progress, old-format best times too, and keeps the settings', () => {
+        const store = memoryStore();
+        saveSettings({ showHitboxes: true, language: 'pl' }, store);
+        recordLevelFinish('level1', 30, 5, store);
+        store.data.set('maltipoo.best.level1', '42');
+        expect(resetProgress(store)).toBe(true);
+        expect(loadProgress(store)).toEqual({});
+        expect(loadSettings(store)).toEqual({ showHitboxes: true, language: 'pl' });
+    });
+
     it('never throws when storage is missing or broken', () => {
+        expect(resetProgress(null)).toBe(false);
+        expect(resetProgress(throwingStore)).toBe(false);
         expect(loadProgress(null)).toEqual({});
         expect(loadProgress(throwingStore)).toEqual({});
         expect(recordLevelFinish('level1', 30, 0, null)).toBeNull();

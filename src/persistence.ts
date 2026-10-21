@@ -4,7 +4,7 @@
 import { isLanguage, type Language } from './i18n';
 import { NO_PROGRESS, parseProgress, recordFinish, type FinishResult, type Progress } from './progress';
 
-export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem'>;
+export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 export interface Settings {
     /** Draw the Arcade physics bodies (for grown-ups tuning levels) */
@@ -100,6 +100,17 @@ export function recordLevelFinish(
         return result;
     } catch {
         return null;
+    }
+}
+
+/** Settings → Reset progress: deletes every saved best time and treat count (settings are kept). */
+export function resetProgress(store: KeyValueStore | null = browserStore()): boolean {
+    try {
+        store?.removeItem(PROGRESS_KEY);
+        LEGACY_LEVEL_IDS.forEach(id => store?.removeItem(legacyBestTimeKey(id)));
+        return store !== null;
+    } catch {
+        return false;
     }
 }
 
