@@ -18,9 +18,13 @@ const STANDING = Math.max(...Object.values(CHARACTERS).map(c => c.hitbox.height 
 const DUCKED = Math.max(...Object.values(CHARACTERS).flatMap(c => (c.crouchHitbox ? [c.crouchHitbox.height * SPRITE_SCALE] : [])));
 const MARGIN = 4;
 
-/** Surfaces (and the goal) that can't be reached from the spawn at walking speed. */
+// Both sisters' moves: the player can swap anywhere, so a level may need Kiwi's big jump (roadmap 4.4)
+const SISTERS = Object.values(SISTER_PHYSICS);
+const HIGHEST_JUMP = Math.max(...SISTERS.map(maxJumpHeight));
+
+/** Surfaces (and the goal) that can't be reached from the spawn at walking speed, swapping sisters as needed. */
 function unreachable(level: LevelData): string[] {
-    const reachable = reachableFrom(level.surfaces, level.spawn, PHYSICS);
+    const reachable = reachableFrom(level.surfaces, level.spawn, SISTERS);
     const problems = level.surfaces.filter(s => !reachable.has(s.id)).map(s => `surface ${s.id}`);
     const goal = surfaceAt(level.surfaces, level.goal);
     if (!goal || !reachable.has(goal.id)) problems.push('goal');
@@ -29,14 +33,17 @@ function unreachable(level: LevelData): string[] {
 
 /** Treats that can't be collected: no reachable surface below them within jump height (body height included). */
 function unreachablePickups(level: LevelData): string[] {
-    const reachable = reachableFrom(level.surfaces, level.spawn, PHYSICS);
-    const jumpReach = maxJumpHeight(PHYSICS) * 0.85 + STANDING;
+    const reachable = reachableFrom(level.surfaces, level.spawn, SISTERS);
+    const jumpReach = HIGHEST_JUMP * 0.85 + STANDING;
     return level.pickups
         .filter(p => !level.surfaces.some(s => reachable.has(s.id) && p.x >= s.left && p.x <= s.right && p.y <= s.top && s.top - p.y <= jumpReach))
         .map(p => `pickup at (${Math.round(p.x)}, ${Math.round(p.y)})`);
 }
 
-/** Puddles that are too wide to jump at walking speed, or that sit on the spawn, a checkpoint or the goal. */
+/**
+ * Puddles that are too wide to jump at walking speed, or that sit on the spawn, a checkpoint or the goal.
+ * Stricter than the rest on purpose: every puddle must be jumpable by either sister (shared numbers).
+ */
 function hazardProblems(level: LevelData): string[] {
     const longestJump = (jumpDistance(0, PHYSICS) ?? 0) * 0.85;
     const problems: string[] = [];
@@ -162,8 +169,40 @@ describe('sister skills', () => {
         expect(reachableFrom(level.surfaces, level.spawn, SISTER_PHYSICS.sofi).has(ledge!.id)).toBe(false);
     });
 
-    it('the level checks use the shared numbers, which no sister falls short of', () => {
-        for (const physics of Object.values(SISTER_PHYSICS)) {
+    // Spawn on the left, a Sofi-sized duck gap under a plank, and the goal on a ledge 6 tiles up (Kiwi only)
+    const BOTH_SKILLS = [
+        '..............................',
+        '..............................',
+        '..............................',
+        '......................########',
+        '..............................',
+        '..............................',
+        '........=====.................',
+        '..............................',
+        '..............................',
+        '##############################',
+    ];
+    const bothObjects = [{ type: 'spawn', column: 1, row: 8 }, { type: 'goal', column: 27, row: 2 }];
+
+    it('a level with a Kiwi-only ledge and a Sofi duck gap passes: the checks know you can swap', () => {
+        const level = parseTiledMap('both-skills', asciiMap(BOTH_SKILLS, bothObjects));
+        expect(unreachable(level)).toEqual([]);
+        expect(headroomProblems(level)).toEqual([]); // the gap under the plank is exactly a duck gap (2 tiles)
+        // Without swapping, Sofi alone would be stuck below the ledge
+        const ledge = surfaceAt(level.surfaces, level.goal);
+        expect(ledge && reachableFrom(level.surfaces, level.spawn, SISTER_PHYSICS.sofi).has(ledge.id)).toBe(false);
+    });
+
+    it('a level that needs a skill nobody has fails: a ledge 8 tiles up', () => {
+        const rows = [...BOTH_SKILLS];
+        rows.splice(0, 2); // the ledge row moves up by 2, everything else stays 10 rows tall
+        rows.splice(5, 0, '..............................', '..............................');
+        const level = parseTiledMap('too-high', asciiMap(rows, [{ type: 'spawn', column: 1, row: 8 }, { type: 'goal', column: 27, row: 0 }]));
+        expect(unreachable(level)).toContain('goal');
+    });
+
+    it('every sister jumps at least as high and walks as fast as the shared numbers (puddle checks use them)', () => {
+        for (const physics of SISTERS) {
             expect(maxJumpHeight(physics)).toBeGreaterThanOrEqual(maxJumpHeight(PHYSICS));
             expect(physics.walkSpeed).toBeGreaterThanOrEqual(PHYSICS.walkSpeed);
         }
@@ -196,17 +235,11 @@ describe('the checks catch broken levels', () => {
     });
 
     it('a treat placed out of reach', () => {
+        // 10.5 tiles above the ground: higher than even Kiwi's jump plus her height
         const level = parseTiledMap('high-treat', asciiMap([
-            '..............................',
-            '..............................',
-            '..............................',
-            '..............................',
-            '..............................',
-            '..............................',
-            '..............................',
-            '..............................',
+            ...Array<string>(11).fill('..............................'),
             '##############################',
-        ], [{ type: 'spawn', column: 0, row: 7 }, { type: 'goal', column: 29, row: 7 }, { type: 'pickup', column: 10, row: 0 }]));
+        ], [{ type: 'spawn', column: 0, row: 10 }, { type: 'goal', column: 29, row: 10 }, { type: 'pickup', column: 10, row: 0 }]));
         expect(unreachablePickups(level)).toHaveLength(1);
     });
 

@@ -1,6 +1,7 @@
 // The route through Kraków (docs/story-and-levels.md): the places on the level map, in story order, and which
 // levels each one has. Levels unlock in this order (src/progress.ts). A place without levels yet shows as
 // "coming soon". Pure data and rules, so the map scene stays thin and the rules are tested (tests/route.test.ts).
+import type { CutsceneId } from '../cutscenes';
 import type { MessageKey } from '../i18n';
 import { continueLevel, isUnlocked, type Progress } from '../progress';
 
@@ -12,11 +13,14 @@ export interface Location {
     readonly at: { readonly x: number; readonly y: number };
     /** Level ids (= keys in src/levels/index.ts), in play order */
     readonly levels: readonly string[];
+    /** Cutscene that plays the first time the sisters arrive here on the map (docs/cutscenes.md) */
+    readonly arrival?: CutsceneId;
 }
 
 export const ROUTE: readonly Location[] = [
     // Level 1 is the prototype meadow until the salt mine level is built (roadmap 6.4)
-    { id: 'wieliczka', name: 'map.wieliczka', at: { x: 690, y: 455 }, levels: ['level1'] },
+    // The first place's arrival is the story's intro, so it plays before the very first level
+    { id: 'wieliczka', name: 'map.wieliczka', at: { x: 690, y: 455 }, levels: ['level1'], arrival: 'intro' },
     { id: 'podgorze', name: 'map.podgorze', at: { x: 500, y: 430 }, levels: [] },
     { id: 'kazimierz', name: 'map.kazimierz', at: { x: 450, y: 270 }, levels: [] },
     { id: 'rynek', name: 'map.rynek', at: { x: 330, y: 150 }, levels: [] },
@@ -52,6 +56,12 @@ export function levelToPlay(location: Location, progress: Progress): string | un
 /** Index of the place a level belongs to, or -1 */
 export function locationIndexOf(levelId: string, route: readonly Location[] = ROUTE): number {
     return route.findIndex(location => location.levels.includes(levelId));
+}
+
+/** The arrival scene to play now: the place can be played, has one, and it hasn't been seen yet. */
+export function arrivalToPlay(location: Location, status: LocationStatus, seen: ReadonlySet<string>): CutsceneId | undefined {
+    if (!isPlayable(status) || !location.arrival || seen.has(location.arrival)) return undefined;
+    return location.arrival;
 }
 
 /** Where the map opens: the place of the level to continue with (the first place when nothing is built). */

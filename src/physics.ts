@@ -51,8 +51,7 @@ export const PHYSICS: Physics = {
 /**
  * Each sister moves with the shared numbers plus her skill. Kiwi's is the big jump: about 265px (8 tiles) high instead
  * of about 200px (6 tiles). Sofi's skill, ducking, is a rule in movement.ts, so her numbers are the shared ones.
- * The level tests use the shared numbers, so every level can still be finished by either sister (until levels may
- * need a skill, roadmap M4.4).
+ * The level tests try both sisters' moves (the player can swap anywhere), so a level may need Kiwi's big jump.
  */
 export const SISTER_PHYSICS: Record<CharacterKey, Physics> = {
     kiwi: { ...PHYSICS, jumpVelocity: 830 },

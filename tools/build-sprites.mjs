@@ -68,6 +68,18 @@ const SOURCES = {
     },
 };
 
+// Actors: characters who appear in cutscenes but aren't played (roadmap 3.7). Any pose names, their own cell size.
+// - Smok Junior is true pixel art from his sheet by tools/make-smok.mjs. He talks by alternating his open-mouth and
+//   standing poses, and waddles by alternating his stretched pose and a slightly lifted standing pose.
+const SMOK = (name, options = {}) => ({ file: `smok_pixel/${name}.png`, artPixel: 1, ...options });
+const ACTOR_SOURCES = {
+    smok: {
+        idle: [SMOK('idle')],
+        talk: [SMOK('talk'), SMOK('idle')],
+        walk: [SMOK('walk'), SMOK('idle', { lift: 2 })],
+    },
+};
+
 const entry = (e) => (typeof e === 'string' ? { file: e, lift: 0 } : { lift: 0, ...e });
 const entryKey = ({ file, lift }) => `${file}@${lift}`;
 
@@ -213,47 +225,53 @@ function buildFrame(file, artPixel) {
     return { image: resizeArea(dog, ART_PIXEL / sourceArtPixel), sourceArtPixel };
 }
 
-function main() {
-    // Build each distinct source file once per character
-    const characters = {};
-    for (const [character, states] of Object.entries(SOURCES)) {
-        const characterStates = [...STATES, ...OPTIONAL_STATES.filter(state => states[state])];
-        const entries = [...new Map(characterStates.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
+/** Builds each distinct source file once per character; `statesOf` lists the animation states it has. */
+function buildSets(sources, statesOf) {
+    const sets = {};
+    for (const [name, states] of Object.entries(sources)) {
+        const setStates = statesOf(states);
+        const entries = [...new Map(setStates.flatMap(state => states[state].map(entry)).map(e => [entryKey(e), e])).values()];
         const built = new Map(); // build each raw file once, even if it's used with several lifts
         const artPixelOf = (file) => entries.find(e => e.file === file && e.artPixel)?.artPixel;
-        characters[character] = {
+        sets[name] = {
             entries,
             frames: entries.map(({ file }) => {
                 if (!built.has(file)) built.set(file, buildFrame(path.join(RAW_DIR, file), artPixelOf(file)));
                 return built.get(file);
             }),
-            animations: Object.fromEntries(characterStates.map(state => [
+            animations: Object.fromEntries(setStates.map(state => [
                 state,
                 states[state].map(e => entries.findIndex(x => entryKey(x) === entryKey(entry(e)))),
             ])),
         };
     }
+    return sets;
+}
 
-    // One cell size for every frame of every character keeps hitboxes and placement uniform.
-    const all = Object.values(characters).flatMap(c => c.frames);
+/** One cell size for all frames of the given sets keeps hitboxes and placement uniform. */
+function cellSize(sets) {
+    const all = Object.values(sets).flatMap(c => c.frames);
     // Even sizes: with the origin at the bottom-centre, an odd width would put the sprite's edges on half
     // pixels and blur it even when standing still.
     const even = (n) => n + (n % 2);
-    const frameWidth = even(Math.max(...all.map(f => f.image.width)) + 2 * PADDING);
-    const maxLift = Math.max(...Object.values(characters).flatMap(c => c.entries.map(e => e.lift)));
-    const frameHeight = even(Math.max(...all.map(f => f.image.height)) + Math.max(PADDING, maxLift));
+    const maxLift = Math.max(...Object.values(sets).flatMap(c => c.entries.map(e => e.lift)));
+    return {
+        frameWidth: even(Math.max(...all.map(f => f.image.width)) + 2 * PADDING),
+        frameHeight: even(Math.max(...all.map(f => f.image.height)) + Math.max(PADDING, maxLift)),
+    };
+}
 
-    const meta = { frameWidth, frameHeight, artPixel: ART_PIXEL, states: STATES, optionalStates: OPTIONAL_STATES, characters: {} };
-    fs.mkdirSync(OUT_DIR, { recursive: true });
-
-    for (const [character, { entries, frames, animations }] of Object.entries(characters)) {
+/** Writes one spritesheet per set and returns their sprites.json entries. */
+function writeSheets(sets, { frameWidth, frameHeight }) {
+    const meta = {};
+    for (const [name, { entries, frames, animations }] of Object.entries(sets)) {
         const sheet = blank(frameWidth * frames.length, frameHeight);
         const frameMeta = frames.map(({ image, sourceArtPixel }, index) => {
             const x = Math.round((frameWidth - image.width) / 2);
             const { file, lift } = entries[index];
             const y = frameHeight - image.height - lift; // feet on the bottom edge, unless lifted
             PNG.bitblt(image, sheet, 0, 0, image.width, image.height, index * frameWidth + x, y);
-            console.log(`${character}[${index}] ${file}${lift ? ` lift ${lift}` : ''}: drawn pixel ` +
+            console.log(`${name}[${index}] ${file}${lift ? ` lift ${lift}` : ''}: drawn pixel ` +
                 `${sourceArtPixel.toFixed(2)}px -> ${image.width}x${image.height}`);
             return {
                 source: file,
@@ -262,12 +280,29 @@ function main() {
                 sourceArtPixel: Number(sourceArtPixel.toFixed(2)),
             };
         });
-        meta.characters[character] = { frames: frameMeta, animations };
-        fs.writeFileSync(path.join(OUT_DIR, `${character}.png`), PNG.sync.write(sheet));
+        meta[name] = { frames: frameMeta, animations };
+        fs.writeFileSync(path.join(OUT_DIR, `${name}.png`), PNG.sync.write(sheet));
+    }
+    return meta;
+}
+
+function main() {
+    fs.mkdirSync(OUT_DIR, { recursive: true });
+    const characters = buildSets(SOURCES, states => [...STATES, ...OPTIONAL_STATES.filter(state => states[state])]);
+    const size = cellSize(characters);
+    const meta = { ...size, artPixel: ART_PIXEL, states: STATES, optionalStates: OPTIONAL_STATES, characters: {}, actors: {} };
+    meta.characters = writeSheets(characters, size);
+    console.log(`frame ${size.frameWidth}x${size.frameHeight} -> ${OUT_DIR}/`);
+
+    // Actors have their own poses and cell size, so they never change the playable sisters' sheets
+    for (const [name, states] of Object.entries(ACTOR_SOURCES)) {
+        const set = buildSets({ [name]: states }, s => Object.keys(s));
+        const actorSize = cellSize(set);
+        meta.actors[name] = { ...actorSize, ...writeSheets(set, actorSize)[name] };
+        console.log(`actor ${name}: frame ${actorSize.frameWidth}x${actorSize.frameHeight}`);
     }
 
     fs.writeFileSync(path.join(OUT_DIR, 'sprites.json'), JSON.stringify(meta, null, 2) + '\n');
-    console.log(`frame ${frameWidth}x${frameHeight} -> ${OUT_DIR}/`);
 
     fs.mkdirSync(UI_OUT_DIR, { recursive: true });
     for (const [name, { file, height }] of Object.entries(UI_IMAGES)) {

@@ -33,7 +33,7 @@ simply to **find Smok Junior**.
 Tone: warm, funny, about friendship and finding each other. Nothing to defeat.
 
 ## How the story is told
-*(decided 2026-10-21)* Short, skippable **cutscenes between levels** carry the story, played by one cutscene player
+*(decided 2026-10-21; design in [cutscenes.md](cutscenes.md))* Short, skippable **cutscenes between levels** carry the story, played by one cutscene player
 (roadmap 3.7) from small data files, so adding a scene needs no code:
 - **Intro** before the first level: the salt mine, the red stone, getting separated.
 - **Between levels**, on the map, when a new place opens: where Smok Junior was seen and why the sisters head

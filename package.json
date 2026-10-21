@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit",
     "art:kiwi": "node tools/make-kiwi.mjs",
     "art:sofi": "node tools/make-sofi.mjs",
+    "art:smok": "node tools/make-smok.mjs",
     "art:tileset": "node tools/make-tileset.mjs"
   },
   "keywords": [],

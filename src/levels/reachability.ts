@@ -40,17 +40,25 @@ export function canReach(a: Surface, b: Surface, physics: Physics, safety = 0.85
     return distance !== null && gap <= distance * safety;
 }
 
-/** Ids of all surfaces reachable from the surface under `start` (breadth-first search over jumps). */
+/**
+ * Ids of all surfaces reachable from the surface under `start` (breadth-first search over jumps).
+ *
+ * `moves` is one sister's physics, or several: the player can swap sisters anywhere, so a step counts if any of them
+ * can make it (Kiwi's big jump up a ledge, then Sofi again). Ducking needs no rule here: a duck gap is part of the
+ * surface it's on, and the headroom check makes sure such gaps are exactly Sofi-sized. Like the single-sister check,
+ * ceilings above a jump are not modelled.
+ */
 export function reachableFrom(
-    surfaces: readonly Surface[], start: { x: number; y: number }, physics: Physics, safety?: number,
+    surfaces: readonly Surface[], start: { x: number; y: number }, moves: Physics | readonly Physics[], safety?: number,
 ): Set<string> {
+    const sisters: readonly Physics[] = Array.isArray(moves) ? moves : [moves as Physics];
     const first = surfaceAt(surfaces, start);
     if (!first) return new Set();
     const seen = new Set([first.id]);
     const queue = [first];
     for (let from = queue.shift(); from; from = queue.shift()) {
         for (const to of surfaces) {
-            if (!seen.has(to.id) && canReach(from, to, physics, safety)) {
+            if (!seen.has(to.id) && sisters.some(physics => canReach(from, to, physics, safety))) {
                 seen.add(to.id);
                 queue.push(to);
             }

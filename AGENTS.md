@@ -11,6 +11,7 @@ villains). It's a browser game deployed to GitHub Pages.
 - Plan and milestones: [docs/roadmap.md](docs/roadmap.md). Check which milestone/chunk the task belongs to.
 - Story and level sequence: [docs/story-and-levels.md](docs/story-and-levels.md)
 - Making or changing levels (Tiled): [docs/level-design.md](docs/level-design.md)
+- Cutscenes (how they look, play and are written): [docs/cutscenes.md](docs/cutscenes.md)
 - Art style rules and character briefs: [docs/art-direction.md](docs/art-direction.md). Follow these when adding art.
   Never commit found reference images.
 - Privacy and licensing: [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md). The game collects **no personal
@@ -41,6 +42,7 @@ npm run build          # production build into dist/ (gitignored)
 npm run build:sprites  # regenerate assets/characters/ and assets/ui/ from art/raw/ (commit the output)
 npm run art:kiwi       # regenerate Kiwi's pixel-art frames (art/raw/kiwi_pixel/) from her original image
 npm run art:sofi       # regenerate Sofi's pixel-art frames incl. duck/crawl (art/raw/sofi_pixel/)
+npm run art:smok       # regenerate Smok Junior's frames (art/raw/smok_pixel/) from his sheet
 npm run art:tileset    # regenerate the placeholder level tileset (levels/tilesets/placeholder.png)
 npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
@@ -54,6 +56,7 @@ src/scenes/            Preload → Title ⇄ Settings; Title → Map → Game (+
   UIScene.ts           HUD + finish panel, listens to GameScene's events
   PauseScene.ts        pause menu over the paused (not stopped) GameScene; can open Settings on top
   MapScene.ts          the level map: places of the route, the sisters walking between them, start a level
+  CutsceneScene.ts     plays a cutscene script (bubbles with typewriter text, panels, Skip), then goes back
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
 src/ui/TouchControls.ts  on-screen ◀ ▶ jump duck buttons (multi-touch); rules in src/input/touch.ts, device in device.ts
@@ -65,7 +68,9 @@ src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
 src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
-src/levels/route.ts    places on the map in story order and their levels (= unlock order; must match the registry)
+src/levels/route.ts    places on the map in story order and their levels (= unlock order; must match the registry),
+                       plus each place's arrival cutscene
+src/cutscenes/         cutscene scripts (typed beats: say, move, face, panel, wait, together); design in docs/cutscenes.md
 src/levels/tiled.ts    pure Tiled map parser/validator: solid tiles, surfaces, spawn/goal/checkpoints, pickups,
                        hazards, sister gates (object classes must match levels/maltipoo.tiled-project; tests check)
 src/levels/reachability.ts   pure jump math + "is the level finishable" BFS (used by tests)
@@ -76,6 +81,8 @@ assets/ui/             GENERATED UI images at display size (title logo)
 art/raw/               original art, the input to tools/build-sprites.mjs (logo in art/raw/logo/)
 art/raw/kiwi_pixel/    Kiwi as true 52x52 pixel art (smile, trot, leap), made by tools/make-kiwi.mjs
 art/raw/sofi_pixel/    Sofi as true pixel art + duck/crawl poses, made by tools/make-sofi.mjs
+art/raw/smok_pixel/    Smok Junior (idle, talk, walk) from art/raw/smok_junior/sheet.png, made by tools/make-smok.mjs.
+                       He's a cutscene "actor" (ACTORS in characters.ts): own poses and cell size, not playable
 tools/pixel-art.mjs    shared helpers: extract pixel grid, lift parts, recolour one pose into another palette
 tests/                 Vitest suites (pure logic + data; no Phaser imports)
 docs/                  roadmap, story, decisions
@@ -104,8 +111,9 @@ docs/                  roadmap, story, decisions
 - **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
   tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
   start), so changing them automatically re-validates every level. Each sister plays with `SISTER_PHYSICS[key]`:
-  the shared `PHYSICS` plus her skill (Kiwi: a higher `jumpVelocity`). Level tests use the shared numbers until
-  levels may need a skill (M4.4).
+  the shared `PHYSICS` plus her skill (Kiwi: a higher `jumpVelocity`). Level tests try **both sisters' moves**
+  (`reachableFrom(…, SISTERS)`: you can swap anywhere), so a level may need Kiwi's jump; puddles must still be
+  jumpable by either sister. There are no blocking gates: `sister-gate` signs are hints.
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.

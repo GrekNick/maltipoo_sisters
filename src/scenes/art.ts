@@ -1,7 +1,7 @@
 // Placeholder art drawn in code, shared by the title screen and the game. A Tiled tileset and real art replace
 // this later (docs/decisions.md, roadmap M2/M7).
 import Phaser from 'phaser';
-import { ANIMATION_FRAME_RATE, CHARACTERS, CHARACTER_KEYS, type AnimationState } from '../characters';
+import { ACTORS, ACTOR_FRAME_RATE, ACTOR_KEYS, ANIMATION_FRAME_RATE, CHARACTERS, CHARACTER_KEYS, type ActorPose, type AnimationState } from '../characters';
 import { TILE, VIEW } from './shared';
 
 /** Bakes ground tiles, clouds, hills and the dog house into textures (once; textures outlive scenes). */
@@ -103,6 +103,16 @@ export function createCharacterAnimations(scene: Phaser.Scene): void {
             if (scene.anims.exists(key) || !frameList) return;
             const frames = frameList.map(frame => ({ key: character, frame }));
             scene.anims.create({ key, frames, frameRate: ANIMATION_FRAME_RATE[state], repeat: -1 });
+        });
+    });
+    // Cutscene actors (Smok Junior): their own poses
+    ACTOR_KEYS.forEach(actor => {
+        const animations = ACTORS[actor].sprites.animations;
+        (Object.keys(animations) as ActorPose[]).forEach(pose => {
+            const key = `${actor}_${pose}`;
+            if (scene.anims.exists(key)) return;
+            const frames = animations[pose].map(frame => ({ key: actor, frame }));
+            scene.anims.create({ key, frames, frameRate: ACTOR_FRAME_RATE[pose], repeat: -1 });
         });
     });
 }

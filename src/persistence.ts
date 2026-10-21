@@ -21,7 +21,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = { showHitboxes: false, langu
 const SETTINGS_KEY = 'maltipoo.settings';
 const SETTINGS_VERSION = 1;
 const PROGRESS_KEY = 'maltipoo.progress';
-const PROGRESS_VERSION = 1;
+// v2 (2026-10-21) added which cutscenes were seen; a v1 record is read as "none seen yet"
+const PROGRESS_VERSION = 2;
 // Before v1 of the progress, each best time had its own key. Only level1 existed then.
 const legacyBestTimeKey = (levelId: string) => `maltipoo.best.${levelId}`;
 const LEGACY_LEVEL_IDS = ['level1'];
@@ -71,15 +72,36 @@ export function saveLanguage(language: Language, store: KeyValueStore | null = b
     saveSettings({ ...loadSettings(store), language }, store);
 }
 
+/** Everything saved about the player's progress: finished levels and which cutscenes they've seen. */
+interface SavedProgress {
+    levels: Progress;
+    seenCutscenes: string[];
+}
+
+const NOTHING_SAVED: SavedProgress = { levels: NO_PROGRESS, seenCutscenes: [] };
+
+function readSaved(store: KeyValueStore | null | undefined): SavedProgress {
+    const raw = store?.getItem(PROGRESS_KEY);
+    if (raw === null || raw === undefined) return { levels: legacyProgress(store), seenCutscenes: [] };
+    const saved: unknown = JSON.parse(raw);
+    if (typeof saved !== 'object' || saved === null || !('version' in saved)) return NOTHING_SAVED;
+    // A format this version doesn't know (e.g. saved by a newer game): start fresh rather than misread it
+    if (saved.version !== 1 && saved.version !== PROGRESS_VERSION) return NOTHING_SAVED;
+    const seen = 'seenCutscenes' in saved && Array.isArray(saved.seenCutscenes) ? saved.seenCutscenes : [];
+    return {
+        levels: parseProgress('levels' in saved ? saved.levels : null),
+        seenCutscenes: seen.filter((id): id is string => typeof id === 'string'),
+    };
+}
+
+function writeSaved(saved: SavedProgress, store: KeyValueStore): void {
+    store.setItem(PROGRESS_KEY, JSON.stringify({ version: PROGRESS_VERSION, ...saved }));
+}
+
 /** Finished levels with their best time and treat count. Nothing saved yet: picks up the old best times. */
 export function loadProgress(store: KeyValueStore | null = browserStore()): Progress {
     try {
-        const raw = store?.getItem(PROGRESS_KEY);
-        if (raw === null || raw === undefined) return legacyProgress(store);
-        const saved: unknown = JSON.parse(raw);
-        // A format this version doesn't know (e.g. saved by a newer game): start fresh rather than misread it
-        if (typeof saved !== 'object' || saved === null || !('version' in saved) || saved.version !== PROGRESS_VERSION) return NO_PROGRESS;
-        return parseProgress('levels' in saved ? saved.levels : null);
+        return readSaved(store).levels;
     } catch {
         return NO_PROGRESS;
     }
@@ -87,7 +109,7 @@ export function loadProgress(store: KeyValueStore | null = browserStore()): Prog
 
 export function saveProgress(progress: Progress, store: KeyValueStore | null = browserStore()): void {
     try {
-        store?.setItem(PROGRESS_KEY, JSON.stringify({ version: PROGRESS_VERSION, levels: progress }));
+        if (store) writeSaved({ ...readSaved(store), levels: progress }, store);
     } catch {
         // can't save: progress lasts until the page is closed
     }
@@ -99,15 +121,35 @@ export function recordLevelFinish(
 ): FinishResult | null {
     if (!store) return null;
     try {
-        const result = recordFinish(loadProgress(store), levelId, seconds, treats);
-        store.setItem(PROGRESS_KEY, JSON.stringify({ version: PROGRESS_VERSION, levels: result.progress }));
+        const saved = readSaved(store);
+        const result = recordFinish(saved.levels, levelId, seconds, treats);
+        writeSaved({ ...saved, levels: result.progress }, store);
         return result;
     } catch {
         return null;
     }
 }
 
-/** Settings → Reset progress: deletes every saved best time and treat count (settings are kept). */
+/** Cutscenes the player has already seen (they play on their own only the first time). */
+export function loadSeenCutscenes(store: KeyValueStore | null = browserStore()): ReadonlySet<string> {
+    try {
+        return new Set(readSaved(store).seenCutscenes);
+    } catch {
+        return new Set();
+    }
+}
+
+export function markCutsceneSeen(id: string, store: KeyValueStore | null = browserStore()): void {
+    try {
+        if (!store) return;
+        const saved = readSaved(store);
+        if (!saved.seenCutscenes.includes(id)) writeSaved({ ...saved, seenCutscenes: [...saved.seenCutscenes, id] }, store);
+    } catch {
+        // can't save: the scene may play again next visit
+    }
+}
+
+/** Settings → Reset progress: deletes every saved best time, treat count and seen cutscene (settings are kept). */
 export function resetProgress(store: KeyValueStore | null = browserStore()): boolean {
     try {
         store?.removeItem(PROGRESS_KEY);

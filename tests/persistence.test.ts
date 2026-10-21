@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-    DEFAULT_SETTINGS, loadProgress, loadSettings, parseSettings, recordLevelFinish, resetProgress, saveLanguage, saveProgress,
-    saveSettings,
+    DEFAULT_SETTINGS, loadProgress, loadSeenCutscenes, loadSettings, markCutsceneSeen, parseSettings, recordLevelFinish, resetProgress,
+    saveLanguage, saveProgress, saveSettings,
     type KeyValueStore,
 } from '../src/persistence';
 
@@ -91,7 +91,7 @@ describe('progress', () => {
     it('is saved with a version; an unknown version or corrupt value starts fresh', () => {
         const store = memoryStore();
         saveProgress({ level1: { bestSeconds: 30, bestTreats: 2 } }, store);
-        expect(JSON.parse(store.data.get('maltipoo.progress') ?? '')).toMatchObject({ version: 1 });
+        expect(JSON.parse(store.data.get('maltipoo.progress') ?? '')).toMatchObject({ version: 2 });
         store.data.set('maltipoo.progress', JSON.stringify({ version: 99, levels: { level1: { bestSeconds: 1, bestTreats: 1 } } }));
         expect(loadProgress(store)).toEqual({});
         store.data.set('maltipoo.progress', '{not json');
@@ -116,8 +116,33 @@ describe('progress', () => {
         expect(loadSettings(store)).toEqual({ ...DEFAULT_SETTINGS, showHitboxes: true, language: 'pl' });
     });
 
+    it('remembers seen cutscenes alongside the levels, and reset forgets them', () => {
+        const store = memoryStore();
+        recordLevelFinish('level1', 30, 2, store);
+        markCutsceneSeen('intro', store);
+        markCutsceneSeen('intro', store); // once is enough
+        recordLevelFinish('level1', 25, 2, store); // a later finish keeps the seen list
+        expect([...loadSeenCutscenes(store)]).toEqual(['intro']);
+        expect(loadProgress(store)).toEqual({ level1: { bestSeconds: 25, bestTreats: 2 } });
+        resetProgress(store);
+        expect(loadSeenCutscenes(store).size).toBe(0);
+    });
+
+    it('reads a version 1 record (from before cutscenes) as "nothing seen yet", keeping its levels', () => {
+        const store = memoryStore();
+        store.data.set('maltipoo.progress', JSON.stringify({ version: 1, levels: { level1: { bestSeconds: 40, bestTreats: 1 } } }));
+        expect(loadProgress(store)).toEqual({ level1: { bestSeconds: 40, bestTreats: 1 } });
+        expect(loadSeenCutscenes(store).size).toBe(0);
+        markCutsceneSeen('intro', store);
+        expect(JSON.parse(store.data.get('maltipoo.progress') ?? '')).toEqual({
+            version: 2, levels: { level1: { bestSeconds: 40, bestTreats: 1 } }, seenCutscenes: ['intro'],
+        });
+    });
+
     it('never throws when storage is missing or broken', () => {
         expect(resetProgress(null)).toBe(false);
+        expect(loadSeenCutscenes(throwingStore).size).toBe(0);
+        expect(() => markCutsceneSeen('intro', throwingStore)).not.toThrow();
         expect(resetProgress(throwingStore)).toBe(false);
         expect(loadProgress(null)).toEqual({});
         expect(loadProgress(throwingStore)).toEqual({});

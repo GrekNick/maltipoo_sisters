@@ -5,12 +5,15 @@ import Phaser from 'phaser';
 import { CHARACTER_KEYS } from '../characters';
 import { t } from '../i18n';
 import { LEVELS } from '../levels';
+import type { CutsceneId } from '../cutscenes';
 import {
-    currentLocationIndex, isPlayable, levelToPlay, locationIndexOf, locationStatus, ROUTE, type Location, type LocationStatus,
+    arrivalToPlay, currentLocationIndex, isPlayable, levelToPlay, locationIndexOf, locationStatus, ROUTE, type Location,
+    type LocationStatus,
 } from '../levels/route';
 import { parseTiledMap, type TiledMap } from '../levels/tiled';
-import { loadProgress } from '../persistence';
+import { loadProgress, loadSeenCutscenes } from '../persistence';
 import type { Progress } from '../progress';
+import type { CutsceneSceneData } from './CutsceneScene';
 import type { GameSceneData } from './GameScene';
 import { FONT_FAMILY, SceneKey, TEXT_STYLE, VIEW } from './shared';
 
@@ -46,6 +49,8 @@ export class MapScene extends Phaser.Scene {
     private ring!: Phaser.GameObjects.Arc;
     private infoName!: Phaser.GameObjects.Text;
     private infoDetail!: Phaser.GameObjects.Text;
+    private storyButton!: Phaser.GameObjects.Text;
+    private seen: ReadonlySet<string> = new Set();
     private finishedLevel: string | undefined;
 
     constructor() {
@@ -58,8 +63,16 @@ export class MapScene extends Phaser.Scene {
 
     create() {
         this.progress = loadProgress();
+        this.seen = loadSeenCutscenes();
         this.statuses = ROUTE.map(location => locationStatus(location, this.progress));
         this.walking = false;
+
+        // Start where the last level was finished (or where the player should continue). Arriving at a place for the
+        // first time plays its scene first (on a fresh start: the intro)
+        const finishedAt = this.finishedLevel ? locationIndexOf(this.finishedLevel) : -1;
+        const target = currentLocationIndex(this.progress);
+        this.selected = finishedAt >= 0 ? finishedAt : target;
+        if (finishedAt < 0 && this.playArrival(this.selected)) return;
 
         this.drawLand();
         this.drawPaths();
@@ -68,11 +81,7 @@ export class MapScene extends Phaser.Scene {
         ROUTE.forEach((location, index) => this.drawLocation(location, index));
         this.drawTitleAndPanel();
 
-        // Start where the last level was finished (or where the player should continue), then walk on if a new place
-        // just opened
-        const finishedAt = this.finishedLevel ? locationIndexOf(this.finishedLevel) : -1;
-        const target = currentLocationIndex(this.progress);
-        this.selected = finishedAt >= 0 ? finishedAt : target;
+        // Walk on if the finished level just opened the next place
         this.createSisters();
         this.showSelection();
         if (finishedAt >= 0 && target !== finishedAt && isPlayable(this.statuses[target] ?? 'locked')) {
@@ -113,6 +122,7 @@ export class MapScene extends Phaser.Scene {
             if (!next) {
                 this.walking = false;
                 this.sisters.forEach((sister, i) => sister.play(`${CHARACTER_KEYS[i]}_idle`));
+                this.playArrival(index);
                 return;
             }
             const duration = (Phaser.Math.Distance.BetweenPoints(previous.at, next.at) / WALK_SPEED) * 1000;
@@ -126,6 +136,20 @@ export class MapScene extends Phaser.Scene {
             });
         };
         walkNext(from);
+    }
+
+    /** Plays a place's arrival scene if it hasn't been seen yet; returns whether it did. Comes back to the map. */
+    private playArrival(index: number): boolean {
+        const location = ROUTE[index];
+        const id = location && arrivalToPlay(location, this.statuses[index] ?? 'locked', this.seen);
+        if (!id) return false;
+        this.playCutscene(id);
+        return true;
+    }
+
+    private playCutscene(id: CutsceneId) {
+        const data: CutsceneSceneData = { id, then: { key: SceneKey.Map, data: {} satisfies MapSceneData } };
+        this.scene.start(SceneKey.Cutscene, data);
     }
 
     /** Enter/Space/tap: start the chosen place's level */
@@ -154,6 +178,8 @@ export class MapScene extends Phaser.Scene {
         this.ring.setPosition(location.at.x, location.at.y);
         this.infoName.setText(t(location.name));
         this.infoDetail.setText(this.describe(location, this.statuses[this.selected] ?? 'locked'));
+        // Scenes seen before can be watched again
+        this.storyButton.setVisible(location.arrival !== undefined && this.seen.has(location.arrival));
     }
 
     private describe(location: Location, status: LocationStatus): string {
@@ -271,5 +297,12 @@ export class MapScene extends Phaser.Scene {
         this.infoName = this.add.text(VIEW.width / 2, PANEL_Y - 14, '', { ...TEXT_STYLE, fontSize: '21px', color: '#ffe082' }).setOrigin(0.5);
         this.infoDetail = this.add.text(VIEW.width / 2, PANEL_Y + 15, '', { ...TEXT_STYLE, fontSize: '16px' }).setOrigin(0.5);
         this.add.text(VIEW.width / 2, VIEW.height - 10, t('map.hint'), { ...TEXT_STYLE, fontSize: '13px' }).setOrigin(0.5, 1);
+        this.storyButton = this.add.text(VIEW.width / 2 + 250, PANEL_Y, t('map.story'), {
+            ...TEXT_STYLE, fontSize: '16px', color: '#ffe082', backgroundColor: '#5d3a1a', padding: { x: 10, y: 6 },
+        }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true }).setVisible(false);
+        this.storyButton.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
+            const arrival = ROUTE[this.selected]?.arrival;
+            if (arrival && !this.walking) this.playCutscene(arrival);
+        });
     }
 }

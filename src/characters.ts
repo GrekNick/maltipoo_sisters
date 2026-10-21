@@ -1,5 +1,6 @@
 import kiwiSheet from '../assets/characters/kiwi.png';
 import sofiSheet from '../assets/characters/sofi.png';
+import smokSheet from '../assets/characters/smok.png';
 import spritesJson from '../assets/characters/sprites.json';
 
 /** States every character has */
@@ -34,6 +35,26 @@ export interface SpriteMeta {
     states: BaseAnimationState[];
     optionalStates: CrouchAnimationState[];
     characters: Record<CharacterKey, CharacterSprites>;
+    actors: Record<ActorKey, ActorSprites>;
+}
+
+/** Characters who appear in cutscenes but aren't played: Smok Junior (more locals later) */
+export type ActorKey = 'smok';
+export type ActorPose = 'idle' | 'talk' | 'walk';
+
+export interface ActorSprites {
+    /** Actors have their own cell size, so they never change the sisters' sheets */
+    frameWidth: number;
+    frameHeight: number;
+    frames: FrameInfo[];
+    animations: Record<ActorPose, number[]>;
+}
+
+export interface Actor {
+    name: string;
+    /** Spritesheet URL (resolved by Vite) */
+    sheet: string;
+    sprites: ActorSprites;
 }
 
 export interface CharacterSprites {
@@ -115,6 +136,15 @@ export const CHARACTERS: Record<CharacterKey, Character> = {
 };
 
 export const CHARACTER_KEYS = Object.keys(CHARACTERS) as CharacterKey[];
+
+// Animation keys are `${actor}_${pose}`, like the sisters'. Frames per second; `walk` is sped up with the move speed.
+export const ACTOR_FRAME_RATE: Record<ActorPose, number> = { idle: 4, talk: 8, walk: 6 };
+
+export const ACTORS: Record<ActorKey, Actor> = {
+    smok: { name: 'Smok Junior', sheet: smokSheet, sprites: sprites.actors.smok },
+};
+
+export const ACTOR_KEYS = Object.keys(ACTORS) as ActorKey[];
 
 /** Narrows untrusted strings (DOM select values, network messages) to a known character. */
 export function isCharacterKey(value: unknown): value is CharacterKey {

@@ -1,6 +1,6 @@
 // Loads everything once, shows a loading bar, then opens the title screen.
 import Phaser from 'phaser';
-import { CHARACTERS, FRAME_SIZE } from '../characters';
+import { ACTORS, CHARACTERS, FRAME_SIZE } from '../characters';
 import { t } from '../i18n';
 import logoUrl from '../../assets/ui/logo.png';
 import { LEVELS, TILESETS } from '../levels';
@@ -29,6 +29,9 @@ export class PreloadScene extends Phaser.Scene {
         TILESETS.forEach(tileset => this.load.image(tileset.key, tileset.url));
         Object.entries(CHARACTERS).forEach(([character, { sheet }]) => {
             this.load.spritesheet(character, sheet, { frameWidth: FRAME_SIZE.width, frameHeight: FRAME_SIZE.height });
+        Object.entries(ACTORS).forEach(([actor, { sheet, sprites }]) => {
+            this.load.spritesheet(actor, sheet, { frameWidth: sprites.frameWidth, frameHeight: sprites.frameHeight });
+        });
         });
     }
 
