@@ -1,5 +1,7 @@
 // All movement tuning (px, px/s, px/s², seconds). The game reads these, and so do the level reachability
 // tests, so changing a number here automatically re-checks that every level can still be finished.
+import type { CharacterKey } from './characters';
+
 export interface Physics {
     /** Speed right after you start moving */
     readonly walkSpeed: number;
@@ -44,4 +46,15 @@ export const PHYSICS: Physics = {
     coyoteTime: 0.1,
     jumpBufferTime: 0.12,
     crawlSpeed: 110,
+};
+
+/**
+ * Each sister moves with the shared numbers plus her skill. Kiwi's is the big jump: about 265px (8 tiles) high instead
+ * of about 200px (6 tiles). Sofi's skill, ducking, is a rule in movement.ts, so her numbers are the shared ones.
+ * The level tests use the shared numbers, so every level can still be finished by either sister (until levels may
+ * need a skill, roadmap M4.4).
+ */
+export const SISTER_PHYSICS: Record<CharacterKey, Physics> = {
+    kiwi: { ...PHYSICS, jumpVelocity: 830 },
+    sofi: PHYSICS,
 };

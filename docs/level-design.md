@@ -63,13 +63,18 @@ The tests compute these from `src/physics.ts` with a safety margin, so a level t
 | exactly 2 | only Sofi, ducked (↓/S). Kiwi has to jump on top. This is a "sister moment" |
 | 1 | nobody: the tests reject it, because it looks passable but isn't |
 
-**Jumps** (horizontal gap = empty tiles between the two edges):
+**Jumps** (horizontal gap = empty tiles between the two edges). Kiwi's big jump goes higher; the tests use the
+shared numbers (Sofi's column), so for now every level must work without it. Levels that need Kiwi come with
+sister gates that block (roadmap M4.4).
 
-| Going up by | Largest gap |
-|---|---|
-| 0 – 2 tiles | 4 tiles |
-| 3 – 5 tiles | 3 tiles |
-| 6 or more | impossible: add a step |
+| Going up by | Largest gap (everyone) | Largest gap (Kiwi) |
+|---|---|---|
+| 0 – 1 tiles | 4 tiles | 5 tiles |
+| 2 tiles | 4 tiles | 4 tiles |
+| 3 – 5 tiles | 3 tiles | 4 tiles |
+| 6 tiles | impossible: add a step | 4 tiles |
+| 7 tiles | impossible | 3 tiles |
+| 8 or more | impossible | impossible |
 
 **Objects:**
 - Every treat must be collectable: above ground the dogs can reach, within jump height.

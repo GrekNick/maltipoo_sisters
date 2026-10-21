@@ -2,7 +2,7 @@
 // events this scene emits (GameEvent). Started from the title screen; Esc goes back to it.
 import Phaser from 'phaser';
 import { CHARACTERS, CHARACTER_KEYS, SPRITE_SCALE, type AnimationState, type CharacterKey } from '../characters';
-import { PHYSICS } from '../physics';
+import { PHYSICS, SISTER_PHYSICS } from '../physics';
 import { RUN_START, JUMP_START, nextCrouching, stepRun, stepJump, type Direction, type RunState, type JumpState } from '../movement';
 import { FIRST_LEVEL, TILESETS } from '../levels';
 import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/tiled';
@@ -316,12 +316,16 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             this.applyHitbox();
         }
 
+        // Each sister's own numbers (Kiwi jumps higher). Swapping mid-air keeps the current speed: only the next
+        // jump uses the new sister's numbers.
+        const physics = SISTER_PHYSICS[this.currentCharacter];
+
         // Horizontal: walk speed that ramps up to run speed while a direction is held; capped while crawling
         const left = this.cursors.left.isDown || this.wasd.A.isDown;
         const right = this.cursors.right.isDown || this.wasd.D.isDown;
         const direction: Direction = left === right ? 0 : left ? -1 : 1;
-        const speedLimit = this.crouching ? PHYSICS.crawlSpeed : Infinity;
-        this.run = stepRun({ ...this.run, vx: body.velocity.x }, direction, onGround, dt, PHYSICS, speedLimit);
+        const speedLimit = this.crouching ? physics.crawlSpeed : Infinity;
+        this.run = stepRun({ ...this.run, vx: body.velocity.x }, direction, onGround, dt, physics, speedLimit);
         const pushingWall = (direction < 0 && body.blocked.left) || (direction > 0 && body.blocked.right);
         if (pushingWall) this.run = { ...this.run, heldTime: 0 };
         body.setVelocityX(this.run.vx);
@@ -335,12 +339,12 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             held: jumpKeys.some(key => key.isDown),
             onGround,
             vy: body.velocity.y,
-        }, dt, PHYSICS);
+        }, dt, physics);
         this.jump = step.state;
-        if (step.jump) body.setVelocityY(-PHYSICS.jumpVelocity);
-        if (step.cut) body.setVelocityY(body.velocity.y * PHYSICS.jumpCutMultiplier);
-        // World gravity is the rising gravity; add the difference while falling
-        body.setGravityY(body.velocity.y > 0 ? PHYSICS.fallGravity - PHYSICS.gravity : 0);
+        if (step.jump) body.setVelocityY(-physics.jumpVelocity);
+        if (step.cut) body.setVelocityY(body.velocity.y * physics.jumpCutMultiplier);
+        // World gravity is the (shared) rising gravity; add the difference while falling
+        body.setGravityY(body.velocity.y > 0 ? physics.fallGravity - physics.gravity : 0);
 
         const moving = Math.abs(this.run.vx) > 10;
         const animation: AnimationState = this.crouching ? (moving ? 'crawl' : 'crouch')
@@ -348,8 +352,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             : moving ? 'move' : 'idle';
         this.player.anims.play(`${this.currentCharacter}_${animation}`, true);
         // Legs move faster as the dog speeds up
-        const animationSpeed = animation === 'move' ? Math.abs(this.run.vx) / PHYSICS.walkSpeed
-            : animation === 'crawl' ? Math.abs(this.run.vx) / PHYSICS.crawlSpeed : 1;
+        const animationSpeed = animation === 'move' ? Math.abs(this.run.vx) / physics.walkSpeed
+            : animation === 'crawl' ? Math.abs(this.run.vx) / physics.crawlSpeed : 1;
         this.player.anims.timeScale = animationSpeed;
         this.currentAnimation = animation;
 

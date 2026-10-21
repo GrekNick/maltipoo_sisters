@@ -51,7 +51,7 @@ src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Sp
 src/persistence.ts     settings (incl. language) + best times in localStorage (versioned, never throws)
 src/i18n/              t(), language detection; locales/{en,uk,pl}.json hold every player-facing string
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
-src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
+src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), per sister; shared by game and tests
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
 src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
@@ -92,7 +92,9 @@ docs/                  roadmap, story, decisions
   explained in `docs/level-design.md`.
 - **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
   tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
-  start), so changing them automatically re-validates every level.
+  start), so changing them automatically re-validates every level. Each sister plays with `SISTER_PHYSICS[key]`:
+  the shared `PHYSICS` plus her skill (Kiwi: a higher `jumpVelocity`). Level tests use the shared numbers until
+  levels may need a skill (M4.4).
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.
