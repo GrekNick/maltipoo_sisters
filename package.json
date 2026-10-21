@@ -1,7 +1,8 @@
 {
   "name": "maltipoo_sisters",
+  "private": true,
   "version": "1.0.0",
-  "description": "",
+  "description": "Maltipoo Sisters: a family-friendly browser platformer through Kraków",
   "main": "src/main.js",
   "scripts": {
     "dev": "vite",
@@ -20,7 +21,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "express": "^5.1.0",
     "phaser": "^4.2.1",
