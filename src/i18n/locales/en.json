@@ -18,14 +18,13 @@
     "hud.falls": "Falls: {falls}",
     "hud.treats": "Treats: {treats}/{total}",
     "hud.position": "Position: X: {x}, Y: {y}",
-    "hud.controls": "Move ←/→ or A/D · Jump ↑/W/Space · Duck ↓/S (Sofi) · R restart · Esc menu · H hitboxes",
+    "hud.controls": "Move ←/→ A/D · Jump ↑/W/Space · Duck ↓/S (Sofi) · Swap Q/Tab · R restart · Esc menu",
 
     "finish.title": "Home sweet home!",
     "finish.newBest": "New best time!",
     "finish.best": "Best: {seconds}s",
     "finish.actions": "R: play again    Esc: menu",
 
-    "page.character": "Character:",
-    "page.controls": "Controls: A/D or ←/→ to move, W or ↑/Space to jump, ↓/S to duck (Sofi), R to restart, Esc for the menu",
+    "page.controls": "Controls: A/D or ←/→ to move, W or ↑/Space to jump (Kiwi jumps higher), ↓/S to duck (Sofi), Q or Tab to swap sisters, R to restart, Esc for the menu",
     "page.rotate": "↻ Turn your device sideways to play"
 }

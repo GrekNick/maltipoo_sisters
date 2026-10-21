@@ -9,7 +9,7 @@ import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/t
 import { loadSettings, recordBestTime } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
 import { addBackdrop } from './art';
-import { GameEvent, SceneKey, SKY_COLOR, VIEW, type FinishedState, type HudState } from './shared';
+import { GameEvent, SceneKey, SKY_COLOR, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
 
 // Online co-op is parked behind a build flag (`npm run dev:coop`, see README).
 // When the flag is off the co-op module and socket.io are not bundled at all.
@@ -36,6 +36,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     private hazardZones!: Phaser.Physics.Arcade.StaticGroup;
     private treatGroup!: Phaser.Physics.Arcade.StaticGroup;
     private goalZone!: Phaser.GameObjects.Zone;
+    private sparkles!: Phaser.GameObjects.Particles.ParticleEmitter;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
     private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -75,16 +76,20 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.createGoal(); // before the player so the dog is drawn in front of the house
         this.createLevelObjects();
         this.createPlayer();
+        this.createSparkles();
         this.createCamera();
         this.createInput();
         if (loadSettings().showHitboxes) this.toggleHitboxes();
 
-        // The HUD runs as its own scene on top; stop it with this one (restart, or Esc to the title)
+        // The HUD runs as its own scene on top; stop it with this one (restart, or Esc to the title).
+        // Its on-screen swap button sends UIEvent.Swap, handled like the Q/Tab keys.
         this.scene.launch(SceneKey.UI);
-        this.events.once('shutdown', () => this.scene.stop(SceneKey.UI));
-
-        // Update the UI select dropdown to match the current character
-        this.updateCharacterSelect();
+        const ui = this.scene.get(SceneKey.UI);
+        ui.events.on(UIEvent.Swap, this.swapSister, this);
+        this.events.once('shutdown', () => {
+            ui.events.off(UIEvent.Swap, this.swapSister, this);
+            this.scene.stop(SceneKey.UI);
+        });
 
         if (COOP_ENABLED) {
             import('../coop/CoopSession').then(({ CoopSession }) => {
@@ -170,6 +175,18 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         });
     }
 
+    /** A burst of sparkles around the dog when the sisters swap (drawn in front of her: created after the player) */
+    createSparkles() {
+        this.sparkles = this.add.particles(0, 0, 'sparkle', {
+            speed: { min: 70, max: 170 },
+            lifespan: { min: 250, max: 450 },
+            alpha: { start: 1, end: 0 },
+            scale: { start: 1, end: 0.5 },
+            tint: [0xffffff, 0xffe082, 0xffd54f],
+            emitting: false,
+        });
+    }
+
     createCamera() {
         const camera = this.cameras.main;
         // Maps are 19 tiles (608px) tall and the view is 600px: show the bottom of the map (the ground) and don't
@@ -192,6 +209,10 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             D: Phaser.Input.Keyboard.KeyCodes.D
         }) as GameScene['wasd'];
         this.spaceKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        // Swap sisters. addKey captures the key, so Tab doesn't also move the browser's focus.
+        for (const code of [Phaser.Input.Keyboard.KeyCodes.Q, Phaser.Input.Keyboard.KeyCodes.TAB]) {
+            keyboard.addKey(code).on('down', () => this.swapSister());
+        }
         keyboard.on('keydown-H', () => this.toggleHitboxes());
         keyboard.on('keydown-R', () => this.scene.restart());
         keyboard.on('keydown-ESC', () => this.scene.start(SceneKey.Title));
@@ -201,24 +222,31 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         return (this.time.now - this.startTime) / 1000;
     }
 
-    updateCharacterSelect() {
-        const select = document.getElementById('character-select');
-        if (select instanceof HTMLSelectElement) {
-            select.value = this.currentCharacter;
+    /** Swap to the other sister (Q/Tab or the on-screen button). In place, keeping her speed, even mid-jump. */
+    swapSister() {
+        if (this.finished) return;
+        const next = CHARACTER_KEYS.find(key => key !== this.currentCharacter) ?? this.currentCharacter;
+        if (!this.coop) {
+            this.switchCharacter(next);
+        } else if (this.coop.canSwap()) {
+            this.coop.requestCharacterChange(next);
         }
     }
 
-    switchCharacter(character: CharacterKey) {
-        if (!this.player) return;
+    /** Returns false if the swap isn't possible here (a ducked Sofi under a low ceiling can't become Kiwi). */
+    switchCharacter(character: CharacterKey): boolean {
+        if (!this.player || character === this.currentCharacter) return false;
         if (this.crouching && !CHARACTERS[character].crouchHitbox) {
             // The other sister can't duck: only swap where there's room to stand, or she'd be stuck in the ceiling
-            if (!this.hasHeadroom()) return this.updateCharacterSelect();
+            if (!this.hasHeadroom()) return false;
             this.crouching = false;
+            this.currentAnimation = 'idle';
         }
         this.currentCharacter = character;
         this.player.anims.play(`${character}_${this.currentAnimation}`);
         this.applyHitbox();
-        this.updateCharacterSelect();
+        this.sparkles.explode(14, this.player.x, this.player.y - this.player.displayHeight / 2);
+        return true;
     }
 
     applyHitbox() {
@@ -365,7 +393,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.coop?.update();
 
         const hud: HudState = {
-            characterName: CHARACTERS[this.currentCharacter].name,
+            character: this.currentCharacter,
             seconds: this.elapsedSeconds(),
             falls: this.falls,
             treats: this.treats,

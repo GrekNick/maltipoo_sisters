@@ -1,4 +1,5 @@
 // Things several scenes share: screen size, scene keys, the events GameScene sends to UIScene, text styles.
+import type { CharacterKey } from '../characters';
 import type { BestTime } from '../persistence';
 
 export const VIEW = { width: 800, height: 600 } as const;
@@ -22,8 +23,14 @@ export const GameEvent = {
     Finished: 'finished',
 } as const;
 
+/** Events UIScene emits on its own `events` emitter when on-screen buttons are tapped; GameScene listens. */
+export const UIEvent = {
+    /** Swap sisters (same as Q/Tab) */
+    Swap: 'swap',
+} as const;
+
 export interface HudState {
-    characterName: string;
+    character: CharacterKey;
     seconds: number;
     falls: number;
     treats: number;

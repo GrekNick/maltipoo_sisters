@@ -1,24 +1,33 @@
 // The HUD and the finish panel, drawn in their own scene on top of GameScene. GameScene doesn't know about any
 // of this; it only emits GameEvent.Hud / GameEvent.Finished. Like a view subscribing to a model's events.
+// The other way round, taps on HUD buttons go out as UIEvent on this scene's emitter.
 import Phaser from 'phaser';
+import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, type CharacterKey } from '../characters';
 import { t } from '../i18n';
-import { FONT_FAMILY, GameEvent, SceneKey, TEXT_STYLE, VIEW, type FinishedState, type HudState } from './shared';
+import { FONT_FAMILY, GameEvent, SceneKey, TEXT_STYLE, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
+
+const SWAP_BUTTON = { x: VIEW.width - 46, y: 46, radius: 32 } as const;
 
 export class UIScene extends Phaser.Scene {
     private statusText!: Phaser.GameObjects.Text;
     private positionText!: Phaser.GameObjects.Text;
+    private swapButton!: Phaser.GameObjects.Container;
+    private swapIcon!: Phaser.GameObjects.Image;
+    private character: CharacterKey | null = null;
 
     constructor() {
         super(SceneKey.UI);
     }
 
     create() {
+        this.character = null; // fields survive restarts; the first HUD update sets the swap button's icon
         this.statusText = this.add.text(16, 16, '', TEXT_STYLE);
         this.positionText = this.add.text(16, 38, '', TEXT_STYLE);
         // Controls along the bottom edge, where they don't collide with the character dropdown (top right)
         this.add.text(VIEW.width / 2, VIEW.height - 20,
             t('hud.controls'),
             { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
+        this.createSwapButton();
 
         const game = this.scene.get(SceneKey.Game);
         game.events.on(GameEvent.Hud, this.updateHud, this);
@@ -29,14 +38,38 @@ export class UIScene extends Phaser.Scene {
         });
     }
 
-    private updateHud({ characterName, seconds, falls, treats, totalTreats, x, y }: HudState) {
-        const parts = [characterName, t('hud.time', { seconds: seconds.toFixed(1) }), t('hud.falls', { falls })];
+    /** Top right: a round button showing the other sister; tap it to swap (same as Q/Tab). */
+    private createSwapButton() {
+        // Character frames are drawn at half size here: their art pixels are 2x2, so at 0.5 each becomes exactly one
+        // screen pixel and stays sharp as long as the image sits on whole pixels (origin 0, integer position).
+        const { x, y, radius } = SWAP_BUTTON;
+        const circle = this.add.circle(0, 0, radius, 0x2c3e50, 0.6).setStrokeStyle(3, 0xffffff);
+        this.swapIcon = this.add.image(-Math.round(FRAME_SIZE.width / 4), -Math.round(FRAME_SIZE.height / 4) - 2, CHARACTER_KEYS[0] ?? 'kiwi', 0)
+            .setOrigin(0, 0).setScale(0.5);
+        const keys = this.add.text(0, radius + 10, 'Q / Tab', { ...TEXT_STYLE, fontSize: '12px' }).setOrigin(0.5);
+        this.swapButton = this.add.container(x, y, [circle, this.swapIcon, keys]).setVisible(false);
+
+        circle.setInteractive({ useHandCursor: true });
+        circle.on('pointerover', () => circle.setFillStyle(0x2c3e50, 0.85));
+        circle.on('pointerout', () => circle.setFillStyle(0x2c3e50, 0.6));
+        circle.on('pointerdown', () => this.events.emit(UIEvent.Swap));
+    }
+
+    private updateHud({ character, seconds, falls, treats, totalTreats, x, y }: HudState) {
+        if (character !== this.character) {
+            this.character = character;
+            const other = CHARACTER_KEYS.find(key => key !== character) ?? character;
+            this.swapIcon.setTexture(other, 0);
+            this.swapButton.setVisible(true);
+        }
+        const parts = [CHARACTERS[character].name, t('hud.time', { seconds: seconds.toFixed(1) }), t('hud.falls', { falls })];
         if (totalTreats > 0) parts.push(t('hud.treats', { treats, total: totalTreats }));
         this.statusText.setText(parts.join('   '));
         this.positionText.setText(t('hud.position', { x: Math.floor(x), y: Math.floor(y) }));
     }
 
     private showFinishPanel({ seconds, falls, treats, totalTreats, best }: FinishedState) {
+        this.swapButton.setVisible(false);
         const x = VIEW.width / 2;
         const y = 210;
         const text = (dy: number, content: string, size: number, color = '#ffffff') =>

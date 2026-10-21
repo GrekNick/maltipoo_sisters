@@ -41,7 +41,7 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.ts            game config + scene list + screen fitting + DOM character select
+src/main.ts            game config + scene list + screen fitting + translated page text
 src/display.ts         pure: how big to show the 800x600 game in the window (whole-pixel scales preferred)
 src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
   GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
@@ -99,12 +99,14 @@ docs/                  roadmap, story, decisions
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.
 - **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
-  `scenes/shared.ts`) and `UIScene` draws them. Scene instances survive `restart()`/`start()` (the constructor runs
-  once), so reset per-run state in `create()`.
+  `scenes/shared.ts`) and `UIScene` draws them. Taps on HUD buttons go the other way as `UIEvent` (e.g. the swap
+  button), which `GameScene` handles like the matching key. Scene instances survive `restart()`/`start()` (the
+  constructor runs once), so reset per-run state in `create()`.
 - **Sister skills are data + pure rules**: a character can duck if its sprites have a `crouch` animation (then it
   gets a `crouchHitbox`, same width and feet line). The rules live in `movement.ts` (`nextCrouching`): duck only on
   the ground, no jumping while ducked, crawl at `crawlSpeed`, and never stand up (or swap to a sister who can't
-  duck) without headroom, so nobody gets stuck in a ceiling.
+  duck) without headroom, so nobody gets stuck in a ceiling. Swapping (`swapSister()`, Q/Tab/button) keeps position
+  and speed, even mid-jump; it's refused only where the other sister wouldn't fit.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions

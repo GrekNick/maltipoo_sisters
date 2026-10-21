@@ -8,7 +8,7 @@ export interface CoopHost {
     readonly add: Phaser.GameObjects.GameObjectFactory;
     readonly player: Phaser.GameObjects.Sprite;
     readonly currentAnimation: AnimationState;
-    switchCharacter(character: CharacterKey): void;
+    switchCharacter(character: CharacterKey): boolean;
 }
 
 interface MovementState {
@@ -80,12 +80,10 @@ export class CoopSession {
             Object.values(players).forEach((info) => {
                 if (info.id !== socket.id) this.addOtherPlayer(info);
             });
-            this.updateSelectLock();
         });
 
         socket.on('newPlayer', (info) => {
             this.addOtherPlayer(info);
-            this.updateSelectLock();
         });
 
         socket.on('playerMoved', (info) => {
@@ -111,7 +109,6 @@ export class CoopSession {
         socket.on('playerDisconnected', (id) => {
             this.otherPlayers.get(id)?.sprite.destroy();
             this.otherPlayers.delete(id);
-            this.updateSelectLock();
         });
     }
 
@@ -137,13 +134,9 @@ export class CoopSession {
         this.socket.emit('characterChange', { character });
     }
 
-    // Character switching is only allowed while playing alone.
-    private updateSelectLock(): void {
-        const select = document.getElementById('character-select');
-        if (!(select instanceof HTMLSelectElement)) return;
-        const multiplayer = this.otherPlayers.size > 0;
-        select.disabled = multiplayer;
-        select.title = multiplayer ? 'Character selection disabled in multiplayer mode' : 'Select your character';
+    /** Swapping sisters is only allowed while playing alone (the server rejects it otherwise). */
+    canSwap(): boolean {
+        return this.otherPlayers.size === 0;
     }
 
     // Called every frame by the scene; only sends when the local state actually changed.
