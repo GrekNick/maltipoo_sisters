@@ -79,7 +79,8 @@ The tool we chose in [decisions.md](decisions.md).
 | Chunk | Done when |
 |---|---|
 | ✅ 5.1 Jump feel: coyote time, jump buffering, variable jump height; plus a walk → run speed ramp and faster falling | Jumps feel forgiving; tested on the pure movement logic |
-| 5.2 Touch controls (on-screen buttons) and gamepad | Playable on a tablet and with a controller |
+| ✅ 5.2 Touch controls (on-screen buttons): shown automatically on touch screens, or forced on/off in Settings | Playable on a tablet |
+| 5.2b Gamepad: move, jump, duck, swap and pause in play, plus menus and the map (↑/↓/A/B) | Playable with a controller from title to finish |
 | 5.3 Sound: jump, land, collect, swap, finish; a music loop per location | Volume settings apply |
 | 5.4 Juice: dust puffs, squash and stretch on landing, camera nudge, treat sparkle | Players notice it feels alive |
 
