@@ -13,6 +13,9 @@ villains). It's a browser game deployed to GitHub Pages.
 - Making or changing levels (Tiled): [docs/level-design.md](docs/level-design.md)
 - Art style rules and character briefs: [docs/art-direction.md](docs/art-direction.md). Follow these when adding art.
   Never commit found reference images.
+- Privacy and licensing: [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md). The game collects **no personal
+  data**: no analytics, ads, accounts, names, chat, servers or files from other sites without updating that doc
+  first. Every new `localStorage` key and every art file's source goes in it (or `art/raw/SOURCES.md`).
 - Why things are the way they are: [docs/decisions.md](docs/decisions.md). Read it before proposing
   architecture changes, and add an entry when you make a hard-to-reverse choice.
 - `microservices_game_architecture.md` is an early brainstorm and **not** the plan. Don't build toward it.

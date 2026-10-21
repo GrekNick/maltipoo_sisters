@@ -232,9 +232,10 @@ If animations look laggy:
 - Try closing other tabs/applications
 - Make sure you're using a modern browser (Chrome, Firefox, Safari, Edge)
 
-## License
+## License and privacy
 
-See LICENSE file for details.
+The code is under the MIT license (see LICENSE). How the art and characters are licensed is being decided, and
+the game collects no personal data: see [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md).
 
 ## Have Fun! 🎉
 

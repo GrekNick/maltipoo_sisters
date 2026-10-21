@@ -5,6 +5,20 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-21 — No personal data: a kids' game that collects nothing
+
+**Status:** accepted. Details and checklist: [privacy-and-licensing.md](privacy-and-licensing.md).
+
+The game has no accounts, analytics, ads, chat or third-party requests. Settings and progress stay in the
+player's browser. Any new data flow (analytics, a server, external fonts or scripts) needs a privacy review
+first.
+
+**Why:** the audience is children. Laws for kids' services (COPPA, GDPR Art. 8, the UK Children's Code) are mostly
+triggered by collecting personal data; collecting none avoids consent flows, banners and parental verification,
+and it's simply the right default for a family game.
+
+**Alternatives considered:** analytics to learn where kids get stuck. Rejected for now: family playtests give the
+same insight without data collection.
 ## 2026-10-21 — Story told by short cutscenes between levels
 
 **Status:** accepted (roadmap 3.7, 6.1, 6.2b).
