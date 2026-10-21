@@ -5,6 +5,30 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-21 — Cutscenes: staged scenes + a few panels, typed scripts, typewriter text; no blocking sister gates
+
+**Status:** accepted. Design: [cutscenes.md](cutscenes.md); roadmap 3.7 and 4.4.
+
+- **Look:** mostly staged scenes (the game's sprites acting on a backdrop, speech bubbles), plus one illustrated
+  panel for each big moment (the red stone glowing, the reunion).
+- **Format:** one typed TypeScript file per scene in `src/cutscenes/` (a list of beats: say, move, face, panel, wait,
+  together). Text is i18n keys in the locale files.
+- **Text:** a fast typewriter; a tap shows the whole line, the next tap goes on; nothing auto-advances; Skip ends it.
+- **Sister gates:** dropped as blockers. Levels make the right sister obvious by their shape; the `sister-gate`
+  signs stay as optional hints. The level tests become skill-aware instead (4.4).
+
+**Why:** staged scenes reuse the art we have and grow with the art pass; panels are kept for the moments that
+deserve a picture. Typed scripts give autocomplete and compile errors for typos and keep text in the existing
+translation files. Kids read at different speeds, so tapping drives the pace. Gates that block add rules to learn
+without adding fun; a low gap or a high ledge already says which sister to use.
+
+**Alternatives considered:** only illustrated comic panels (an image per beat: too much art), only staged scenes
+(the big moments would feel flat), JSON scripts (no autocomplete, typos found only by tests), a dialogue tool like
+Ink or Yarn (built for branching dialogue we don't have; a new dependency and language), auto-advancing text (too
+fast for young readers).
+
+---
+
 ## 2026-10-21 — Code MIT, art and characters all rights reserved; the found sprite gets purged
 
 **Status:** accepted. Details: [privacy-and-licensing.md](privacy-and-licensing.md).

@@ -11,6 +11,7 @@ villains). It's a browser game deployed to GitHub Pages.
 - Plan and milestones: [docs/roadmap.md](docs/roadmap.md). Check which milestone/chunk the task belongs to.
 - Story and level sequence: [docs/story-and-levels.md](docs/story-and-levels.md)
 - Making or changing levels (Tiled): [docs/level-design.md](docs/level-design.md)
+- Cutscenes (how they look, play and are written): [docs/cutscenes.md](docs/cutscenes.md)
 - Art style rules and character briefs: [docs/art-direction.md](docs/art-direction.md). Follow these when adding art.
   Never commit found reference images.
 - Privacy and licensing: [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md). The game collects **no personal

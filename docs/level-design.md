@@ -48,7 +48,7 @@ unfinishable level fails CI instead of reaching players. No code is needed to ch
 | `checkpoint` | Insert Point | respawn point after a fall or a puddle (the furthest one reached on foot) | dropped onto the ground; put one after each pit or tricky section |
 | `pickup` | Insert Point | a treat (smaczek) to collect; counted in the HUD and finish panel | **stays exactly where you put it**: float treats in the air to reward jumps, or hide them in Sofi-only gaps |
 | `hazard` | **Insert Rectangle** | a puddle: touching it sends the dog back to the last checkpoint | draw the water area, e.g. 2 tiles wide and half a tile tall, sunk into the grass |
-| `sister-gate` | Insert Point | a sign showing which sister a spot needs; set its **sister** property (`sofi` by default, or `kiwi`) | dropped onto the ground, just before the spot |
+| `sister-gate` | Insert Point | a sign hinting which sister a spot needs (a hint only, it never blocks); set its **sister** property (`sofi` by default, or `kiwi`) | dropped onto the ground, just before the spot |
 
 ## Rules for a fair level (in tiles)
 
@@ -65,7 +65,7 @@ The tests compute these from `src/physics.ts` with a safety margin, so a level t
 
 **Jumps** (horizontal gap = empty tiles between the two edges). Kiwi's big jump goes higher; the tests use the
 shared numbers (Sofi's column), so for now every level must work without it. Levels that need Kiwi come with
-sister gates that block (roadmap M4.4).
+skill-aware level checks (roadmap 4.4).
 
 | Going up by | Largest gap (everyone) | Largest gap (Kiwi) |
 |---|---|---|

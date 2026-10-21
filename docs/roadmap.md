@@ -49,7 +49,7 @@ The tool we chose in [decisions.md](decisions.md).
 
 | Chunk | Done when |
 |---|---|
-| ✅ 2.1 Tiled project in `levels/` (`.tiled-project`, object types: `spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`) plus a placeholder tileset (32 px; generated, Kenney later). Pickups = treats, hazards = puddles (back to checkpoint), sister gates = signs (blocking comes with 4.4) | Opening the project in Tiled shows ready-to-use object types |
+| ✅ 2.1 Tiled project in `levels/` (`.tiled-project`, object types: `spawn`, `goal`, `checkpoint`, `pickup`, `hazard`, `sister-gate`) plus a placeholder tileset (32 px; generated, Kenney later). Pickups = treats, hazards = puddles (back to checkpoint), sister gates = signs (hints only, they never block) | Opening the project in Tiled shows ready-to-use object types |
 | ✅ 2.2 Loader: `make.tilemap` + layers (`Background`, `Ground`, `Foreground`, `Objects`) → solids, spawn, goal, checkpoints | A test map loads with no coordinates in code |
 | ✅ 2.3 Rebuild level 1 in Tiled; delete `src/levels/level1.ts` | Level 1 plays the same as today |
 | ✅ 2.4 Tests read Tiled JSON: reachability, headroom, a spawn and a goal exist, all object types are known | `npm test` validates every map in `levels/` |
@@ -64,7 +64,7 @@ The tool we chose in [decisions.md](decisions.md).
 | ✅ 3.4 **Pause menu**: Resume / Restart / Settings / Quit to map (to the title screen until the map exists; also pauses when the tab is hidden) | Esc or a tap on the pause icon pauses the game |
 | ✅ 3.5 Save progress (localStorage, versioned): best time and most treats per finished level; levels unlock in order (`src/progress.ts`). The map (3.3) will show it | A refresh keeps unlocked levels and best times |
 | ✅ 3.6 i18n: all UI text comes from `src/i18n/locales/{en,uk,pl}.json`; English is the default and the fallback for missing keys; the first launch picks the browser language if it's supported | Switching language changes every on-screen string; a test fails if a key is missing in any language |
-| 3.7 **Cutscene player**: a `CutsceneScene` plays a short scene from data (e.g. `cutscenes/*.json`: background panels, who's on stage, speech-bubble lines as i18n keys, simple moves and waits). Any key or tap advances, a Skip button skips. Plays once automatically (remembered with the progress) and can be replayed from the map. Hooks: before the first level (intro), on the map when a new place opens (between levels), after the last level (ending) | A test scene plays on the map between two places, is skippable, and doesn't play again unless replayed |
+| 3.7 **Cutscene player** ([design](cutscenes.md)): a `CutsceneScene` plays a typed script from `src/cutscenes/*.ts`: staged scenes with the game's sprites and speech bubbles (typewriter text, tap to finish or go on), plus a few illustrated panels. Skip button. Plays once on its own (saved with the progress, format v2) and can be replayed from the map. Hooks: before the first level, on the map when a new place opens, after the last level. Needs Smok Junior's idle and walk frames (from 7.2) and code-drawn backdrops | A test scene plays on the map between two places, is skippable, and doesn't play again unless replayed |
 
 ### M4 — The sisters mechanic
 | Chunk | Done when |
@@ -72,7 +72,7 @@ The tool we chose in [decisions.md](decisions.md).
 | ✅ 4.1 **Swap** (Tab, Q or a button tap): instant switch in place, short sparkle effect. Replaced the character dropdown | You can swap mid-jump with no physics glitches |
 | ✅ 4.2 **Kiwi: big jump** (higher jump: ~8 tiles instead of ~6; `SISTER_PHYSICS` in `src/physics.ts`) | A ledge in a test map is reachable only by Kiwi |
 | ✅ 4.3 **Sofi: duck** (↓/S: lies low, crawls, can't jump; stays down under low ceilings) | Level 1's low ledge: Sofi ducks under, Kiwi jumps over |
-| 4.4 **Sister gates** in Tiled (e.g. a sign showing which sister is needed) and the reachability test made aware of skills | Tests prove each level is finishable with swapping |
+| 4.4 **Skill-aware level checks**: the reachability test knows both sisters' moves (Kiwi's big jump, Sofi's duck gaps) and that you can swap anywhere, so a level may need either skill. No blocking gates: levels make the right sister obvious by their shape, and `sister-gate` signs are hints only | A test level that needs both skills passes; one that needs a skill nobody has fails |
 | 4.5 The inactive sister follows as a companion (cosmetic, teleports when left behind) | Both dogs are always on screen together |
 
 ### M5 — Game feel and kid-friendly controls
