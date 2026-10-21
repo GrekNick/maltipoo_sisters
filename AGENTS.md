@@ -17,7 +17,8 @@ villains). It's a browser game deployed to GitHub Pages.
   data**: no analytics, ads, accounts, names, chat, servers or files from other sites without updating that doc
   first. Every new `localStorage` key goes in it **and** in the player-facing notice `privacy.html` (EN/UK/PL); every
   art file's source goes in `art/raw/SOURCES.md`. Code is MIT, the art/characters/story are all rights reserved
-  (`ASSETS-LICENSE.md`).
+  (`ASSETS-LICENSE.md`). Fonts: system fonts by name only (`FONT_FAMILY`); a bundled font must be OFL/CC0 and
+  self-hosted, never from the Google Fonts servers.
 - Why things are the way they are: [docs/decisions.md](docs/decisions.md). Read it before proposing
   architecture changes, and add an entry when you make a hard-to-reverse choice.
 - `microservices_game_architecture.md` is an early brainstorm and **not** the plan. Don't build toward it.

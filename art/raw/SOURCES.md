@@ -36,6 +36,11 @@ tools derive from them is on firmer ground.
 |---|---|---|
 | `assets/characters/smok_jr.png` (Smok Junior sheet) | AI (Gemini or Claude), from the owner's prompts after the brief in docs/art-direction.md | Move to `art/raw/smok_junior/`, give it a transparent background, and add a row above |
 
+## Fonts
+
+None bundled. The game names fonts already on the player's device (`FONT_FAMILY` in `src/scenes/shared.ts`); see
+docs/privacy-and-licensing.md for the rules if we ever add one (OFL or CC0, self-hosted).
+
 ## Third-party files
 
 None yet. When adding some (e.g. a Kenney tileset, CC0), list the file, author, license and link here, and
@@ -43,5 +48,5 @@ credit them in the game.
 
 ## Never
 Found images (from search results, other games, stock sites) are not committed or used as an image-to-image base
-(docs/art-direction.md). A test sprite of unknown origin that was once committed (`assests/test_man_sprites/`) is
-removed from the git history; see docs/decisions.md.
+(docs/art-direction.md). A test sprite of unknown origin that was once committed (`assests/test_man_sprites/`) is in
+no branch any more; GitHub Support is asked to purge the orphaned commit (docs/decisions.md).
