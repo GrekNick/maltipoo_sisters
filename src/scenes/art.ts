@@ -48,6 +48,12 @@ export function bakePlaceholderTextures(scene: Phaser.Scene): void {
     g.fillStyle(0xffffff).fillRect(7, 5, 9, 1);
     g.generateTexture('treat', 24, 14);
 
+    // Sparkle for the sister swap: a 4-point star with a darker gold rim, so it shows on Sofi's cream fur too
+    g.clear();
+    g.fillStyle(0xe6a100).fillRect(5, 0, 4, 14).fillRect(0, 5, 14, 4).fillRect(3, 3, 8, 8);
+    g.fillStyle(0xffffff).fillRect(6, 1, 2, 12).fillRect(1, 6, 12, 2).fillRect(4, 4, 6, 6);
+    g.generateTexture('sparkle', 14, 14);
+
     // Sister signs: a post with a board showing the sister's paw, in her fur colour
     for (const [key, fur] of [['sign-kiwi', 0xe08a2c], ['sign-sofi', 0xf3d9a4]] as const) {
         g.clear();

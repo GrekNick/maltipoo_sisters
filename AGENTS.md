@@ -41,7 +41,7 @@ npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 
 ## Layout
 ```
-src/main.ts            game config + scene list + screen fitting + DOM character select
+src/main.ts            game config + scene list + screen fitting + translated page text
 src/display.ts         pure: how big to show the 800x600 game in the window (whole-pixel scales preferred)
 src/scenes/            Preload → Title ⇄ Settings; Title → Game (+ UI on top); shared.ts has keys/events/sizes
   GameScene.ts         gameplay only; emits GameEvent.Hud / Finished, knows nothing about the HUD
@@ -51,7 +51,7 @@ src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Sp
 src/persistence.ts     settings (incl. language) + best times in localStorage (versioned, never throws)
 src/i18n/              t(), language detection; locales/{en,uk,pl}.json hold every player-facing string
 src/characters.ts      spritesheets, animation states, hitbox rule (derived from sprites.json)
-src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), shared by game and tests
+src/physics.ts         all movement tuning (speeds, ramp, gravity, jump, coyote/buffer), per sister; shared by game and tests
 src/movement.ts        pure per-frame movement rules (run ramp, jump buffer/coyote/cut), tested in movement.test.ts
 levels/                Tiled project, maps (*.tmj) and tilesets: the levels themselves (data, no code)
 src/levels/index.ts    level + tileset registry (every .tmj must be listed; tests check it)
@@ -92,17 +92,21 @@ docs/                  roadmap, story, decisions
   explained in `docs/level-design.md`.
 - **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
   tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
-  start), so changing them automatically re-validates every level.
+  start), so changing them automatically re-validates every level. Each sister plays with `SISTER_PHYSICS[key]`:
+  the shared `PHYSICS` plus her skill (Kiwi: a higher `jumpVelocity`). Level tests use the shared numbers until
+  levels may need a skill (M4.4).
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.
 - **Scenes are like routes**: one job each. `GameScene` contains no HUD/menu code; it emits events (`GameEvent` in
-  `scenes/shared.ts`) and `UIScene` draws them. Scene instances survive `restart()`/`start()` (the constructor runs
-  once), so reset per-run state in `create()`.
+  `scenes/shared.ts`) and `UIScene` draws them. Taps on HUD buttons go the other way as `UIEvent` (e.g. the swap
+  button), which `GameScene` handles like the matching key. Scene instances survive `restart()`/`start()` (the
+  constructor runs once), so reset per-run state in `create()`.
 - **Sister skills are data + pure rules**: a character can duck if its sprites have a `crouch` animation (then it
   gets a `crouchHitbox`, same width and feet line). The rules live in `movement.ts` (`nextCrouching`): duck only on
   the ground, no jumping while ducked, crawl at `crawlSpeed`, and never stand up (or swap to a sister who can't
-  duck) without headroom, so nobody gets stuck in a ceiling.
+  duck) without headroom, so nobody gets stuck in a ceiling. Swapping (`swapSister()`, Q/Tab/button) keeps position
+  and speed, even mid-jump; it's refused only where the other sister wouldn't fit.
 - **Kid-friendly by design**: no game over or lives; falls respawn at a checkpoint (see the design pillars in the roadmap).
 
 ## Workflow conventions

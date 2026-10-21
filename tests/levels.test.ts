@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { LEVELS, TILESETS } from '../src/levels';
 import { DEFAULT_GATE_SISTER, headroomAbove, OBJECT_TYPES, parseTiledMap, TILE_SIZE, type LevelData, type TiledMap } from '../src/levels/tiled';
 import { jumpDistance, maxJumpHeight, reachableFrom, surfaceAt } from '../src/levels/reachability';
-import { PHYSICS } from '../src/physics';
+import { PHYSICS, SISTER_PHYSICS } from '../src/physics';
 import { CHARACTERS, SPRITE_SCALE } from '../src/characters';
 import { asciiMap } from './helpers/asciiMap';
 
@@ -139,6 +139,34 @@ describe.each(MAP_FILES)('%s', (file) => {
 
     it('every puddle can be jumped and keeps away from spawn, checkpoints and goal', () => {
         expect(hazardProblems(level())).toEqual([]);
+    });
+});
+
+describe('sister skills', () => {
+    it("Kiwi's big jump reaches a ledge 6 tiles up; Sofi's jump doesn't", () => {
+        const level = parseTiledMap('high-ledge', asciiMap([
+            '..............................',
+            '..............................',
+            '..............................',
+            '..........=====...............',
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '..............................',
+            '##############################',
+        ], [{ type: 'spawn', column: 0, row: 8 }, { type: 'goal', column: 29, row: 8 }]));
+        const ledge = level.surfaces.find(s => s.top === 3 * TILE_SIZE);
+        expect(ledge).toBeDefined();
+        expect(reachableFrom(level.surfaces, level.spawn, SISTER_PHYSICS.kiwi).has(ledge!.id)).toBe(true);
+        expect(reachableFrom(level.surfaces, level.spawn, SISTER_PHYSICS.sofi).has(ledge!.id)).toBe(false);
+    });
+
+    it('the level checks use the shared numbers, which no sister falls short of', () => {
+        for (const physics of Object.values(SISTER_PHYSICS)) {
+            expect(maxJumpHeight(physics)).toBeGreaterThanOrEqual(maxJumpHeight(PHYSICS));
+            expect(physics.walkSpeed).toBeGreaterThanOrEqual(PHYSICS.walkSpeed);
+        }
     });
 });
 

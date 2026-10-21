@@ -1,7 +1,6 @@
-// Entry point: game config + scene list, and the character dropdown next to the canvas.
+// Entry point: game config + scene list, translated page text, and fitting the canvas to the window.
 // Scenes (like routes): Preload → Title ⇄ Settings, Title → Game (+ UI on top) → Esc back to Title.
 import Phaser from 'phaser';
-import { isCharacterKey } from './characters';
 import { displayScale } from './display';
 import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type MessageKey } from './i18n';
 import { loadSettings } from './persistence';
@@ -11,7 +10,7 @@ import { PreloadScene } from './scenes/PreloadScene';
 import { SettingsScene } from './scenes/SettingsScene';
 import { TitleScene } from './scenes/TitleScene';
 import { UIScene } from './scenes/UIScene';
-import { SceneKey, VIEW } from './scenes/shared';
+import { VIEW } from './scenes/shared';
 
 declare global {
     interface Window {
@@ -72,22 +71,3 @@ game.events.once(Phaser.Core.Events.READY, () => {
 
 // Handy for poking at the game from the browser console during development
 if (import.meta.env.DEV) window.game = game;
-
-// The character dropdown next to the canvas: switches the dog in play, or picks the one to start with.
-// (Temporary: swapping sisters in-game replaces it in roadmap M4.)
-window.addEventListener('DOMContentLoaded', () => {
-    const select = document.getElementById('character-select');
-    if (!(select instanceof HTMLSelectElement)) return;
-    select.addEventListener('change', () => {
-        const character = select.value;
-        const scene = game.scene.getScene<GameScene>(SceneKey.Game);
-        if (!scene || !isCharacterKey(character)) return;
-        if (!game.scene.isActive(SceneKey.Game)) {
-            scene.currentCharacter = character;
-        } else if (scene.coop) {
-            scene.coop.requestCharacterChange(character);
-        } else {
-            scene.switchCharacter(character);
-        }
-    });
-});

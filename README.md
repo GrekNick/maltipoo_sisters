@@ -53,10 +53,11 @@ http://localhost:5173
 
 - **Move Left:** A or ← (Left Arrow)
 - **Move Right:** D or → (Right Arrow)
-- **Jump:** W or ↑ (Up Arrow) or Space
+- **Jump:** W or ↑ (Up Arrow) or Space (Kiwi jumps higher)
+- **Duck / crawl (Sofi):** S or ↓ (Down Arrow)
+- **Swap sisters:** Q or Tab, or tap the round button in the top-right corner
 - **Restart:** R
 - **Show hitboxes:** H
-- **Switch Character:** Use the dropdown menu in the top-right corner
 
 **Goal:** run through the level, jump over the pits, and reach the dog house. Your time, falls and best time
 (saved in this browser) are shown at the end.
