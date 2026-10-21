@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { PNG } from 'pngjs';
 import sprites from '../assets/characters/sprites.json';
-import { CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, ANIMATION_STATES, SPRITE_SCALE } from '../src/characters';
+import { ACTORS, ACTOR_KEYS, CHARACTERS, CHARACTER_KEYS, FRAME_SIZE, ANIMATION_STATES, SPRITE_SCALE } from '../src/characters';
 
 // src/characters.ts narrows the JSON's `states: string[]` to the AnimationState union; prove that's safe.
 it('sprites.json lists exactly the animation states the game knows', () => {
@@ -62,5 +62,34 @@ describe.each(CHARACTER_KEYS)('%s sprites', (key) => {
         const png = PNG.sync.read(fs.readFileSync(`assets/characters/${key}.png`));
         expect(png.width).toBe(FRAME_SIZE.width * frames.length);
         expect(png.height).toBe(FRAME_SIZE.height);
+    });
+});
+
+describe.each(ACTOR_KEYS)('%s (cutscene actor) sprites', (key) => {
+    const { frameWidth, frameHeight, frames, animations } = ACTORS[key].sprites;
+
+    it('has even frame sizes, poses idle/talk/walk with frames in the sheet, and moving mouth and legs', () => {
+        expect(frameWidth % 2).toBe(0);
+        expect(frameHeight % 2).toBe(0);
+        expect(Object.keys(animations).sort()).toEqual(['idle', 'talk', 'walk']);
+        for (const [pose, list] of Object.entries(animations)) {
+            for (const index of list) expect(frames[index], `${pose} -> ${index}`).toBeDefined();
+        }
+        expect(new Set(animations.talk).size).toBeGreaterThan(1);
+        expect(new Set(animations.walk).size).toBeGreaterThan(1);
+    });
+
+    it('every frame fits in the cell with the feet on the bottom edge (or lifted on purpose)', () => {
+        frames.forEach(({ bounds: { x, y, width, height }, source, lift }) => {
+            expect(x).toBeGreaterThanOrEqual(0);
+            expect(x + width).toBeLessThanOrEqual(frameWidth);
+            expect(y + height + lift, source).toBe(frameHeight);
+        });
+    });
+
+    it('spritesheet image matches sprites.json (rerun `npm run build:sprites` if not)', () => {
+        const png = PNG.sync.read(fs.readFileSync(`assets/characters/${key}.png`));
+        expect(png.width).toBe(frameWidth * frames.length);
+        expect(png.height).toBe(frameHeight);
     });
 });

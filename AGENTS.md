@@ -42,6 +42,7 @@ npm run build          # production build into dist/ (gitignored)
 npm run build:sprites  # regenerate assets/characters/ and assets/ui/ from art/raw/ (commit the output)
 npm run art:kiwi       # regenerate Kiwi's pixel-art frames (art/raw/kiwi_pixel/) from her original image
 npm run art:sofi       # regenerate Sofi's pixel-art frames incl. duck/crawl (art/raw/sofi_pixel/)
+npm run art:smok       # regenerate Smok Junior's frames (art/raw/smok_pixel/) from his sheet
 npm run art:tileset    # regenerate the placeholder level tileset (levels/tilesets/placeholder.png)
 npm run dev:coop       # + `npm run coop:server`: parked online co-op prototype
 ```
@@ -77,6 +78,8 @@ assets/ui/             GENERATED UI images at display size (title logo)
 art/raw/               original art, the input to tools/build-sprites.mjs (logo in art/raw/logo/)
 art/raw/kiwi_pixel/    Kiwi as true 52x52 pixel art (smile, trot, leap), made by tools/make-kiwi.mjs
 art/raw/sofi_pixel/    Sofi as true pixel art + duck/crawl poses, made by tools/make-sofi.mjs
+art/raw/smok_pixel/    Smok Junior (idle, talk, walk) from art/raw/smok_junior/sheet.png, made by tools/make-smok.mjs.
+                       He's a cutscene "actor" (ACTORS in characters.ts): own poses and cell size, not playable
 tools/pixel-art.mjs    shared helpers: extract pixel grid, lift parts, recolour one pose into another palette
 tests/                 Vitest suites (pure logic + data; no Phaser imports)
 docs/                  roadmap, story, decisions

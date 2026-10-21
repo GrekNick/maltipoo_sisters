@@ -19,6 +19,7 @@ tools derive from them is on firmer ground.
 | `sofi_sprites/smiley.png`, `smiley_move.png`, `smiley_jump.png` | AI (Gemini or Claude) | 2025-10-11/12 | Sofi's design; input to `tools/make-sofi.mjs`. Her leap is also Kiwi's (recoloured) |
 | `sofi_sprites/sad.png` | AI (Gemini or Claude) | 2025-10-11 | Not used yet |
 | `logo/logo_roses.png` | AI (Gemini or Claude), provided by the owner | 2026-10-12 | Title logo; shrunk by `tools/build-sprites.mjs` |
+| `smok_junior/sheet.png` | AI (Gemini or Claude), from the owner's prompts after the brief in docs/art-direction.md | 2026-10-21 | Smok Junior: 3 poses × 2 variants; input to `tools/make-smok.mjs` (the lighter row is used) |
 
 ## Made by our tools (code in `tools/`, rerun with the npm scripts)
 
@@ -26,15 +27,10 @@ tools derive from them is on firmer ground.
 |---|---|---|
 | `kiwi_pixel/*.png` | `npm run art:kiwi` (`tools/make-kiwi.mjs`) | `kiwi_sprites/chill.png`, Sofi's leap recoloured |
 | `sofi_pixel/*.png` | `npm run art:sofi` (`tools/make-sofi.mjs`) | `sofi_sprites/smiley*.png`; duck and crawl composed from her standing pose |
+| `smok_pixel/*.png` | `npm run art:smok` (`tools/make-smok.mjs`) | `smok_junior/sheet.png`, sampled on its 4px grid, background removed |
 | `assets/characters/*.png`, `sprites.json`, `assets/ui/logo.png` | `npm run build:sprites` | the files above |
 | `levels/tilesets/placeholder.png` | `npm run art:tileset` (`tools/make-tileset.mjs`) | drawn in code |
 | Textures baked at runtime (ground, clouds, dog house, treat, signs, flags, sparkle) | `src/scenes/art.ts` | drawn in code |
-
-## Not committed yet
-
-| File | Source | Before committing |
-|---|---|---|
-| `assets/characters/smok_jr.png` (Smok Junior sheet) | AI (Gemini or Claude), from the owner's prompts after the brief in docs/art-direction.md | Move to `art/raw/smok_junior/`, give it a transparent background, and add a row above |
 
 ## Fonts
 

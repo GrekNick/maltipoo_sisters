@@ -198,5 +198,70 @@
         ]
       }
     }
+  },
+  "actors": {
+    "smok": {
+      "frameWidth": 100,
+      "frameHeight": 98,
+      "frames": [
+        {
+          "source": "smok_pixel/idle.png",
+          "lift": 0,
+          "bounds": {
+            "x": 5,
+            "y": 4,
+            "width": 90,
+            "height": 94
+          },
+          "sourceArtPixel": 1
+        },
+        {
+          "source": "smok_pixel/talk.png",
+          "lift": 0,
+          "bounds": {
+            "x": 5,
+            "y": 4,
+            "width": 90,
+            "height": 94
+          },
+          "sourceArtPixel": 1
+        },
+        {
+          "source": "smok_pixel/walk.png",
+          "lift": 0,
+          "bounds": {
+            "x": 4,
+            "y": 12,
+            "width": 92,
+            "height": 86
+          },
+          "sourceArtPixel": 1
+        },
+        {
+          "source": "smok_pixel/idle.png",
+          "lift": 2,
+          "bounds": {
+            "x": 5,
+            "y": 2,
+            "width": 90,
+            "height": 94
+          },
+          "sourceArtPixel": 1
+        }
+      ],
+      "animations": {
+        "idle": [
+          0
+        ],
+        "talk": [
+          1,
+          0
+        ],
+        "walk": [
+          2,
+          3
+        ]
+      }
+    }
   }
 }

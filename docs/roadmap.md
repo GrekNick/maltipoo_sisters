@@ -101,7 +101,7 @@ One PR per location; see [story-and-levels.md](story-and-levels.md).
 | Chunk | Done when |
 |---|---|
 | 7.1 Real animation frames: walk cycle (4–6 frames), jump up/down, idle blink, swap pose. Same pipeline (`build:sprites`) | No more single-frame animations |
-| 7.2 Smok Junior sprite set following [art-direction.md](art-direction.md), then obwarzanek stand, doggy pad, treat icons. `build:sprites` gains per-character pose lists (the dragon has `fly` and `wave`, not the dogs' states) | Smok Junior passes the readability check on the darkest level background |
+| ◐ 7.2 Smok Junior sprite set following [art-direction.md](art-direction.md) (first set done: idle, talk, walk from his sheet, `npm run art:smok`; `fly` and `wave` still to come), then obwarzanek stand, doggy pad, treat icons. `build:sprites` gains per-character pose lists (the dragon has `fly` and `wave`, not the dogs' states) | Smok Junior passes the readability check on the darkest level background |
 | 7.3 Tileset per location (or one shared tileset with themed decor) | Kenney placeholders replaced |
 | 7.4 Title logo, map illustration, UI icons | |
 
