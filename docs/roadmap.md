@@ -102,13 +102,26 @@ One PR per location; see [story-and-levels.md](story-and-levels.md).
 | 7.3 Tileset per location (or one shared tileset with themed decor) | Kenney placeholders replaced |
 | 7.4 Title logo, map illustration, UI icons | |
 
+### Privacy and licensing (cross-cutting)
+The game collects no personal data; keep it that way. Details, reasons and the full checklist:
+[privacy-and-licensing.md](privacy-and-licensing.md).
+
+| Chunk | When | Done when |
+|---|---|---|
+| P.1 Split the license: code MIT, art/characters/logo/story under their own terms (`ASSETS-LICENSE.md`); `package.json` license + `"private": true` | Soon: the repo is public | LICENSE, README and package.json agree on what covers what |
+| P.2 Art provenance: `art/raw/SOURCES.md` with each image's source (drawn / generator + date / our tool) and license; check the generator's terms | Soon | Every file in `art/raw/` and `assets/` has a line |
+| P.3 Clean-up decisions: the found test sprite in git history (ask its author; keep or rewrite history), the Smok Junior sheet's source, a contributor OK from Vadym | Soon | Each is decided and noted in decisions.md |
+| P.4 Privacy notice (EN/UK/PL), linked from the game and README; "Reset progress" in Settings | Before sharing widely (M8) | A parent can read what's stored and delete it in the game |
+| P.5 Store readiness, if we go beyond GitHub Pages: privacy policy URL, age rating (IARC), kids-section rules | With M8, only for stores | Store forms answered from the notice |
+
 ### M8 — Release 1.0
-Credits screen, performance pass on mobile, accessibility check (colours, text size), itch.io page and
+Credits screen (incl. third-party licenses and "not affiliated with" the real places), performance pass on mobile, accessibility check (colours, text size), itch.io page and
 GitHub Pages, and a family playtest feedback round.
 
 ### Later (parked)
 - More levels per location (each location becomes 2–3 levels).
-- Online co-op (code exists, behind `VITE_COOP`) or local 2-player co-op.
+- Online co-op (code exists, behind `VITE_COOP`) or local 2-player co-op. Online needs a privacy review first
+  (a server sees IPs; no names or chat for kids): see privacy-and-licensing.md.
 - Part 2: another city or world.
 
 ## Working agreement
