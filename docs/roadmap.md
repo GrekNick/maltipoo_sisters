@@ -72,7 +72,7 @@ The tool we chose in [decisions.md](decisions.md).
 | ✅ 4.1 **Swap** (Tab, Q or a button tap): instant switch in place, short sparkle effect. Replaced the character dropdown | You can swap mid-jump with no physics glitches |
 | ✅ 4.2 **Kiwi: big jump** (higher jump: ~8 tiles instead of ~6; `SISTER_PHYSICS` in `src/physics.ts`) | A ledge in a test map is reachable only by Kiwi |
 | ✅ 4.3 **Sofi: duck** (↓/S: lies low, crawls, can't jump; stays down under low ceilings) | Level 1's low ledge: Sofi ducks under, Kiwi jumps over |
-| 4.4 **Skill-aware level checks**: the reachability test knows both sisters' moves (Kiwi's big jump, Sofi's duck gaps) and that you can swap anywhere, so a level may need either skill. No blocking gates: levels make the right sister obvious by their shape, and `sister-gate` signs are hints only | A test level that needs both skills passes; one that needs a skill nobody has fails |
+| ✅ 4.4 **Skill-aware level checks**: the reachability test knows both sisters' moves (Kiwi's big jump, Sofi's duck gaps) and that you can swap anywhere, so a level may need either skill. No blocking gates: levels make the right sister obvious by their shape, and `sister-gate` signs are hints only | A test level that needs both skills passes; one that needs a skill nobody has fails |
 | 4.5 The inactive sister follows as a companion (cosmetic, teleports when left behind) | Both dogs are always on screen together |
 
 ### M5 — Game feel and kid-friendly controls

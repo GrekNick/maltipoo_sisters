@@ -105,8 +105,9 @@ docs/                  roadmap, story, decisions
 - **Movement numbers live in `src/physics.ts` only**, and the rules in `src/movement.ts` (pure, no Phaser). The level
   tests compute reachability from those numbers at *walking* speed (levels must be finishable without a running
   start), so changing them automatically re-validates every level. Each sister plays with `SISTER_PHYSICS[key]`:
-  the shared `PHYSICS` plus her skill (Kiwi: a higher `jumpVelocity`). Level tests use the shared numbers until
-  levels may need a skill (M4.4).
+  the shared `PHYSICS` plus her skill (Kiwi: a higher `jumpVelocity`). Level tests try **both sisters' moves**
+  (`reachableFrom(…, SISTERS)`: you can swap anywhere), so a level may need Kiwi's jump; puddles must still be
+  jumpable by either sister. There are no blocking gates: `sister-gate` signs are hints.
 - **Co-op stays behind the flag**: nothing outside `src/coop/` may import `socket.io-client` (main.ts only
   `import type`s it). Co-op sees the scene only through the `CoopHost` interface; the scene talks to co-op only
   via `this.coop?.update()` and `requestCharacterChange()`.

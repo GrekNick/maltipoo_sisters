@@ -53,7 +53,7 @@ unfinishable level fails CI instead of reaching players. No code is needed to ch
 ## Rules for a fair level (in tiles)
 
 The tests compute these from `src/physics.ts` with a safety margin, so a level that passes is beatable at
-**walking speed**, without a perfect run-up. Running and jumping goes further; that's the fun part, not a requirement.
+**walking speed**, without a perfect run-up, swapping sisters where needed. Running and jumping goes further; that's the fun part, not a requirement.
 
 **Headroom over anything you can stand on:**
 
@@ -63,9 +63,9 @@ The tests compute these from `src/physics.ts` with a safety margin, so a level t
 | exactly 2 | only Sofi, ducked (↓/S). Kiwi has to jump on top. This is a "sister moment" |
 | 1 | nobody: the tests reject it, because it looks passable but isn't |
 
-**Jumps** (horizontal gap = empty tiles between the two edges). Kiwi's big jump goes higher; the tests use the
-shared numbers (Sofi's column), so for now every level must work without it. Levels that need Kiwi come with
-skill-aware level checks (roadmap 4.4).
+**Jumps** (horizontal gap = empty tiles between the two edges). Kiwi's big jump goes higher, and the tests know the
+player can swap anywhere, so a spot may need Kiwi (use her column). Make it obvious: a ledge clearly too high for
+Sofi, maybe a Kiwi sign in front. Puddles are stricter: every puddle must be jumpable by either sister.
 
 | Going up by | Largest gap (everyone) | Largest gap (Kiwi) |
 |---|---|---|
