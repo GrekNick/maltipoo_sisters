@@ -1,7 +1,8 @@
-// Settings and best times, kept in this browser (localStorage). Storage can be missing or throw (private mode,
+// Settings and progress, kept in this browser (localStorage). Storage can be missing or throw (private mode,
 // previews), so every function degrades to defaults instead of failing. Functions take an optional store so
-// tests can pass a fake one.
+// tests can pass a fake one. Each value is saved with a version number, so a later format can migrate it.
 import { isLanguage, type Language } from './i18n';
+import { NO_PROGRESS, parseProgress, recordFinish, type FinishResult, type Progress } from './progress';
 
 export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem'>;
 
@@ -16,7 +17,11 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = { showHitboxes: false, langu
 
 const SETTINGS_KEY = 'maltipoo.settings';
 const SETTINGS_VERSION = 1;
-const bestTimeKey = (levelId: string) => `maltipoo.best.${levelId}`;
+const PROGRESS_KEY = 'maltipoo.progress';
+const PROGRESS_VERSION = 1;
+// Before v1 of the progress, each best time had its own key. Only level1 existed then.
+const legacyBestTimeKey = (levelId: string) => `maltipoo.best.${levelId}`;
+const LEGACY_LEVEL_IDS = ['level1'];
 
 function browserStore(): KeyValueStore | null {
     try {
@@ -62,23 +67,47 @@ export function saveLanguage(language: Language, store: KeyValueStore | null = b
     saveSettings({ ...loadSettings(store), language }, store);
 }
 
-export interface BestTime {
-    seconds: number;
-    /** True when this run beat an earlier best time (not on the very first finish) */
-    isNew: boolean;
+/** Finished levels with their best time and treat count. Nothing saved yet: picks up the old best times. */
+export function loadProgress(store: KeyValueStore | null = browserStore()): Progress {
+    try {
+        const raw = store?.getItem(PROGRESS_KEY);
+        if (raw === null || raw === undefined) return legacyProgress(store);
+        const saved: unknown = JSON.parse(raw);
+        // A format this version doesn't know (e.g. saved by a newer game): start fresh rather than misread it
+        if (typeof saved !== 'object' || saved === null || !('version' in saved) || saved.version !== PROGRESS_VERSION) return NO_PROGRESS;
+        return parseProgress('levels' in saved ? saved.levels : null);
+    } catch {
+        return NO_PROGRESS;
+    }
 }
 
-/** Saves `seconds` if it beats the stored best time and returns the best time to show, or null without storage. */
-export function recordBestTime(levelId: string, seconds: number, store: KeyValueStore | null = browserStore()): BestTime | null {
+export function saveProgress(progress: Progress, store: KeyValueStore | null = browserStore()): void {
+    try {
+        store?.setItem(PROGRESS_KEY, JSON.stringify({ version: PROGRESS_VERSION, levels: progress }));
+    } catch {
+        // can't save: progress lasts until the page is closed
+    }
+}
+
+/** Saves a finished run and returns the records to show, or null without working storage. */
+export function recordLevelFinish(
+    levelId: string, seconds: number, treats: number, store: KeyValueStore | null = browserStore(),
+): FinishResult | null {
     if (!store) return null;
     try {
-        const previous = Number(store.getItem(bestTimeKey(levelId))) || Infinity;
-        if (seconds < previous) {
-            store.setItem(bestTimeKey(levelId), String(seconds));
-            return { seconds, isNew: previous !== Infinity };
-        }
-        return { seconds: previous, isNew: false };
+        const result = recordFinish(loadProgress(store), levelId, seconds, treats);
+        store.setItem(PROGRESS_KEY, JSON.stringify({ version: PROGRESS_VERSION, levels: result.progress }));
+        return result;
     } catch {
         return null;
     }
+}
+
+function legacyProgress(store: KeyValueStore | null | undefined): Progress {
+    const progress: Record<string, unknown> = {};
+    for (const id of LEGACY_LEVEL_IDS) {
+        const seconds = Number(store?.getItem(legacyBestTimeKey(id)));
+        if (seconds > 0) progress[id] = { bestSeconds: seconds, bestTreats: 0 };
+    }
+    return parseProgress(progress);
 }

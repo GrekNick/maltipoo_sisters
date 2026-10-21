@@ -1,18 +1,32 @@
 // Settings, saved in the browser. Sound arrives with roadmap M5.3 (audio).
+// Opened from the title screen, or from the pause menu (then without the language row: language is only changed on
+// the title screen, not in the middle of a level).
 import Phaser from 'phaser';
 import { getLanguage, languageName, LANGUAGES, setLanguage, t } from '../i18n';
 import { loadSettings, saveLanguage, saveSettings, type Settings } from '../persistence';
-import { Menu } from '../ui/Menu';
+import { Menu, type MenuItem } from '../ui/Menu';
 import { addBackdrop, addGroundStrip } from './art';
 import { FONT_FAMILY, SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
 const GROUND_Y = 520;
 
+/** Data passed to scene.launch(SceneKey.Settings, …) */
+export interface SettingsSceneData {
+    /** The sleeping scene to wake on Back; without it, Back starts the title screen */
+    returnTo?: typeof SceneKey.Pause;
+}
+
 export class SettingsScene extends Phaser.Scene {
     private settings!: Settings;
+    private returnTo: SettingsSceneData['returnTo'];
 
     constructor() {
         super(SceneKey.Settings);
+    }
+
+    /** Runs before create() on every start; restart() (after a language change) keeps the same data */
+    init(data: SettingsSceneData = {}) {
+        this.returnTo = data.returnTo;
     }
 
     create() {
@@ -25,8 +39,12 @@ export class SettingsScene extends Phaser.Scene {
             fontFamily: FONT_FAMILY, fontSize: '48px', fontStyle: 'bold', color: '#ffe082', stroke: '#5d3a1a', strokeThickness: 8,
         }).setOrigin(0.5);
 
-        const back = () => this.scene.start(SceneKey.Title);
-        const menu = new Menu(this, VIEW.width / 2, 190, [
+        const back = () => {
+            if (!this.returnTo) return this.scene.start(SceneKey.Title);
+            this.scene.wake(this.returnTo);
+            this.scene.stop();
+        };
+        const items: MenuItem[] = [
             {
                 label: this.hitboxLabel(),
                 onSelect: () => {
@@ -36,9 +54,12 @@ export class SettingsScene extends Phaser.Scene {
                 },
             },
             { label: t('settings.sound'), enabled: false },
-            { label: t('settings.language', { language: languageName(getLanguage()) }), onSelect: () => this.nextLanguage() },
+            ...(this.returnTo ? [] : [
+                { label: t('settings.language', { language: languageName(getLanguage()) }), onSelect: () => this.nextLanguage() },
+            ]),
             { label: t('menu.back'), onSelect: back },
-        ], 420);
+        ];
+        const menu = new Menu(this, VIEW.width / 2, 190, items, 420);
 
         this.input.keyboard?.on('keydown-ESC', back);
         this.add.text(VIEW.width / 2, 580, t('settings.hint'), { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);

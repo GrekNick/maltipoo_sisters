@@ -1,6 +1,6 @@
 // Things several scenes share: screen size, scene keys, the events GameScene sends to UIScene, text styles.
 import type { CharacterKey } from '../characters';
-import type { BestTime } from '../persistence';
+import type { BestTime } from '../progress';
 
 export const VIEW = { width: 800, height: 600 } as const;
 export const TILE = 32;
@@ -13,6 +13,7 @@ export const SceneKey = {
     Settings: 'Settings',
     Game: 'Game',
     UI: 'UI',
+    Pause: 'Pause',
 } as const;
 
 /** Events GameScene emits on its own `events` emitter; UIScene listens and draws the HUD. */
@@ -27,6 +28,8 @@ export const GameEvent = {
 export const UIEvent = {
     /** Swap sisters (same as Q/Tab) */
     Swap: 'swap',
+    /** Pause (same as Esc/P) */
+    Pause: 'pause',
 } as const;
 
 export interface HudState {

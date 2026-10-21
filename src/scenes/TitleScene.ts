@@ -4,6 +4,7 @@ import { Menu } from '../ui/Menu';
 import { getLanguage, languageName, LANGUAGES, setLanguage, t, type Language } from '../i18n';
 import { saveLanguage } from '../persistence';
 import { addBackdrop, addGroundStrip, FLAG_SIZE } from './art';
+import type { SettingsSceneData } from './SettingsScene';
 import { SceneKey, SKY_COLOR, TEXT_STYLE, VIEW } from './shared';
 
 const GROUND_Y = 520;
@@ -25,7 +26,8 @@ export class TitleScene extends Phaser.Scene {
 
         new Menu(this, VIEW.width / 2, 370, [
             { label: t('menu.start'), onSelect: () => this.scene.start(SceneKey.Game) },
-            { label: t('menu.settings'), onSelect: () => this.scene.start(SceneKey.Settings) },
+            // Explicit empty data: a scene started without data keeps its previous data (e.g. "back to the pause menu")
+            { label: t('menu.settings'), onSelect: () => this.scene.start(SceneKey.Settings, {} satisfies SettingsSceneData) },
         ]);
 
         this.add.text(VIEW.width / 2, 580, t('title.hint'), { ...TEXT_STYLE, fontSize: '14px' })

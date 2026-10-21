@@ -7,11 +7,13 @@ import { t } from '../i18n';
 import { FONT_FAMILY, GameEvent, SceneKey, TEXT_STYLE, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
 
 const SWAP_BUTTON = { x: VIEW.width - 46, y: 46, radius: 32 } as const;
+const PAUSE_BUTTON = { x: VIEW.width - 114, y: 46, radius: 20 } as const;
 
 export class UIScene extends Phaser.Scene {
     private statusText!: Phaser.GameObjects.Text;
     private positionText!: Phaser.GameObjects.Text;
     private swapButton!: Phaser.GameObjects.Container;
+    private pauseButton!: Phaser.GameObjects.Container;
     private swapIcon!: Phaser.GameObjects.Image;
     private character: CharacterKey | null = null;
 
@@ -28,6 +30,7 @@ export class UIScene extends Phaser.Scene {
             t('hud.controls'),
             { ...TEXT_STYLE, fontSize: '14px' }).setOrigin(0.5);
         this.createSwapButton();
+        this.createPauseButton();
 
         const game = this.scene.get(SceneKey.Game);
         game.events.on(GameEvent.Hud, this.updateHud, this);
@@ -55,6 +58,22 @@ export class UIScene extends Phaser.Scene {
         circle.on('pointerdown', () => this.events.emit(UIEvent.Swap));
     }
 
+    /** Next to the swap button: pause (same as Esc/P), for touch screens */
+    private createPauseButton() {
+        const { x, y, radius } = PAUSE_BUTTON;
+        const circle = this.add.circle(0, 0, radius, 0x2c3e50, 0.6).setStrokeStyle(3, 0xffffff);
+        const bars = [-5, 5].map(dx => this.add.rectangle(dx, 0, 6, 18, 0xffffff));
+        this.pauseButton = this.add.container(x, y, [circle, ...bars]);
+
+        circle.setInteractive({ useHandCursor: true });
+        circle.on('pointerover', () => circle.setFillStyle(0x2c3e50, 0.85));
+        circle.on('pointerout', () => circle.setFillStyle(0x2c3e50, 0.6));
+        circle.on('pointerdown', () => {
+            circle.setFillStyle(0x2c3e50, 0.6); // the pause menu covers it, so pointerout won't come
+            this.events.emit(UIEvent.Pause);
+        });
+    }
+
     private updateHud({ character, seconds, falls, treats, totalTreats, x, y }: HudState) {
         if (character !== this.character) {
             this.character = character;
@@ -70,6 +89,7 @@ export class UIScene extends Phaser.Scene {
 
     private showFinishPanel({ seconds, falls, treats, totalTreats, best }: FinishedState) {
         this.swapButton.setVisible(false);
+        this.pauseButton.setVisible(false);
         const x = VIEW.width / 2;
         const y = 210;
         const text = (dy: number, content: string, size: number, color = '#ffffff') =>
