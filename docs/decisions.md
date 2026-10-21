@@ -5,6 +5,25 @@ Newest first. Add an entry when a choice would be expensive to reverse or easy t
 
 ---
 
+## 2026-10-21 — Code MIT, art and characters all rights reserved; the found sprite gets purged
+
+**Status:** accepted. Details: [privacy-and-licensing.md](privacy-and-licensing.md).
+
+- The MIT license covers the source code only. The characters, art, logo, story and level designs are all rights
+  reserved ([ASSETS-LICENSE.md](../ASSETS-LICENSE.md)). Art sources are recorded in `art/raw/SOURCES.md`.
+- A test sprite of unknown origin (`assests/test_man_sprites/`, February 2026) must not stay downloadable. We had
+  decided on a history rewrite, but no branch, tag or pull request contains it any more: it's an orphaned commit
+  on GitHub, so GitHub Support purges it instead (no force-push, nobody re-clones).
+- Fonts: none are bundled; the game names system fonts only. A bundled font must be OFL or CC0 and self-hosted.
+
+**Why:** the dogs and Smok Junior are the heart of the project, and the repository is public. It's easy to open
+up a license later and impossible to take one back. Keeping possibly-unlicensed art downloadable has no upside.
+
+**Alternatives considered:** CC BY-NC for the art (allows non-commercial reuse; can still be chosen later). Keeping
+the sprite (low risk, since it's not in the game).
+
+---
+
 ## 2026-10-21 — No personal data: a kids' game that collects nothing
 
 **Status:** accepted. Details and checklist: [privacy-and-licensing.md](privacy-and-licensing.md).

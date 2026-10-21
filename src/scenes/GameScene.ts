@@ -9,6 +9,7 @@ import { LAYER, parseTiledMap, type LevelData, type TiledMap } from '../levels/t
 import { loadSettings, recordLevelFinish, saveSettings } from '../persistence';
 import type { CoopHost, CoopSession } from '../coop/CoopSession';
 import type { MapSceneData } from './MapScene';
+import { NO_TOUCH, type TouchState } from '../input/touch';
 import { addBackdrop } from './art';
 import { GameEvent, SceneKey, SKY_COLOR, UIEvent, VIEW, type FinishedState, type HudState } from './shared';
 
@@ -49,6 +50,9 @@ export class GameScene extends Phaser.Scene implements CoopHost {
     private jump: JumpState = JUMP_START;
     /** Ducked (Sofi's skill): lower hitbox, crawl speed, no jumping */
     private crouching = false;
+    /** The on-screen buttons (UIScene sends UIEvent.Touch); merged with the keyboard in update() */
+    private touch: TouchState = NO_TOUCH;
+    private touchJumpWasDown = false;
 
     constructor() {
         super(SceneKey.Game);
@@ -72,6 +76,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         this.run = RUN_START;
         this.jump = JUMP_START;
         this.crouching = false;
+        this.touch = NO_TOUCH;
+        this.touchJumpWasDown = false;
 
         addBackdrop(this, this.level.width, this.level.spawn.y);
         this.createLevel();
@@ -91,6 +97,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         ui.events.on(UIEvent.Pause, this.pause, this);
         ui.events.on(UIEvent.ToMap, this.backToMap, this);
         ui.events.on(UIEvent.Replay, this.replay, this);
+        ui.events.on(UIEvent.Touch, this.onTouch, this);
         // Pause when the tab is hidden or the phone locks; resuming is then up to the player
         this.game.events.on(Phaser.Core.Events.HIDDEN, this.pause, this);
         this.events.on(Phaser.Scenes.Events.RESUME, this.onResume, this);
@@ -99,6 +106,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
             ui.events.off(UIEvent.Pause, this.pause, this);
             ui.events.off(UIEvent.ToMap, this.backToMap, this);
             ui.events.off(UIEvent.Replay, this.replay, this);
+            ui.events.off(UIEvent.Touch, this.onTouch, this);
             this.game.events.off(Phaser.Core.Events.HIDDEN, this.pause, this);
             this.events.off(Phaser.Scenes.Events.RESUME, this.onResume, this);
             this.scene.stop(SceneKey.UI);
@@ -236,6 +244,10 @@ export class GameScene extends Phaser.Scene implements CoopHost {
 
     elapsedSeconds() {
         return this.elapsedMs / 1000;
+    }
+
+    private onTouch(state: TouchState) {
+        this.touch = state;
     }
 
     replay() {
@@ -379,7 +391,7 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         // Ducking (Sofi only): ↓/S on the ground; stays down under a low ceiling (src/movement.ts)
         const character = CHARACTERS[this.currentCharacter];
         const crouching = nextCrouching(this.crouching, {
-            wantsCrouch: this.cursors.down.isDown || this.wasd.S.isDown,
+            wantsCrouch: this.cursors.down.isDown || this.wasd.S.isDown || this.touch.down,
             canCrouch: character.crouchHitbox !== null,
             onGround,
             hasHeadroom: !this.crouching || this.hasHeadroom(),
@@ -394,8 +406,8 @@ export class GameScene extends Phaser.Scene implements CoopHost {
         const physics = SISTER_PHYSICS[this.currentCharacter];
 
         // Horizontal: walk speed that ramps up to run speed while a direction is held; capped while crawling
-        const left = this.cursors.left.isDown || this.wasd.A.isDown;
-        const right = this.cursors.right.isDown || this.wasd.D.isDown;
+        const left = this.cursors.left.isDown || this.wasd.A.isDown || this.touch.left;
+        const right = this.cursors.right.isDown || this.wasd.D.isDown || this.touch.right;
         const direction: Direction = left === right ? 0 : left ? -1 : 1;
         const speedLimit = this.crouching ? physics.crawlSpeed : Infinity;
         this.run = stepRun({ ...this.run, vx: body.velocity.x }, direction, onGround, dt, physics, speedLimit);
@@ -406,10 +418,13 @@ export class GameScene extends Phaser.Scene implements CoopHost {
 
         // Vertical: jump buffer, coyote time, variable height, faster falling. No jumping while ducked.
         const jumpKeys = [this.cursors.up, this.wasd.W, this.spaceKey];
-        const jumpPressed = jumpKeys.some(key => Phaser.Input.Keyboard.JustDown(key));
+        // A fresh press: a key that just went down, or the jump button just touched (not held from before)
+        const touchJumpPressed = this.touch.jump && !this.touchJumpWasDown;
+        this.touchJumpWasDown = this.touch.jump;
+        const jumpPressed = jumpKeys.some(key => Phaser.Input.Keyboard.JustDown(key)) || touchJumpPressed;
         const step = stepJump(this.jump, {
             pressed: jumpPressed && !this.crouching,
-            held: jumpKeys.some(key => key.isDown),
+            held: jumpKeys.some(key => key.isDown) || this.touch.jump,
             onGround,
             vy: body.velocity.y,
         }, dt, physics);

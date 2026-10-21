@@ -35,6 +35,8 @@ export const UIEvent = {
     ToMap: 'toMap',
     /** Finish panel: play the level again (same as R) */
     Replay: 'replay',
+    /** On-screen buttons changed: payload is a TouchState (src/input/touch.ts) */
+    Touch: 'touch',
 } as const;
 
 export interface HudState {

@@ -234,8 +234,11 @@ If animations look laggy:
 
 ## License and privacy
 
-The code is under the MIT license (see LICENSE). How the art and characters are licensed is being decided, and
-the game collects no personal data: see [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md).
+- **Code:** MIT, see [LICENSE](LICENSE).
+- **Art, characters (Kiwi, Sofi, Smok Junior), logo, story and level designs:** all rights reserved, see
+  [ASSETS-LICENSE.md](ASSETS-LICENSE.md). Please don't reuse them without asking.
+- **Privacy:** the game collects no personal data. See the [privacy notice](https://greknick.github.io/maltipoo_sisters/privacy.html)
+  (also linked from the title screen) and [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md).
 
 ## Have Fun! 🎉
 

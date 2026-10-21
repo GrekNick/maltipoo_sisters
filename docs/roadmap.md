@@ -79,7 +79,8 @@ The tool we chose in [decisions.md](decisions.md).
 | Chunk | Done when |
 |---|---|
 | ✅ 5.1 Jump feel: coyote time, jump buffering, variable jump height; plus a walk → run speed ramp and faster falling | Jumps feel forgiving; tested on the pure movement logic |
-| 5.2 Touch controls (on-screen buttons) and gamepad | Playable on a tablet and with a controller |
+| ✅ 5.2 Touch controls (on-screen buttons): shown automatically on touch screens, or forced on/off in Settings | Playable on a tablet |
+| 5.2b Gamepad: move, jump, duck, swap and pause in play, plus menus and the map (↑/↓/A/B) | Playable with a controller from title to finish |
 | 5.3 Sound: jump, land, collect, swap, finish; a music loop per location | Volume settings apply |
 | 5.4 Juice: dust puffs, squash and stretch on landing, camera nudge, treat sparkle | Players notice it feels alive |
 
@@ -110,10 +111,10 @@ The game collects no personal data; keep it that way. Details, reasons and the f
 
 | Chunk | When | Done when |
 |---|---|---|
-| P.1 Split the license: code MIT, art/characters/logo/story under their own terms (`ASSETS-LICENSE.md`); `package.json` license + `"private": true` | Soon: the repo is public | LICENSE, README and package.json agree on what covers what |
-| P.2 Art provenance: `art/raw/SOURCES.md` with each image's source (drawn / generator + date / our tool) and license; check the generator's terms | Soon | Every file in `art/raw/` and `assets/` has a line |
-| P.3 Clean-up decisions: the found test sprite in git history (ask its author; keep or rewrite history), the Smok Junior sheet's source, a contributor OK from Vadym | Soon | Each is decided and noted in decisions.md |
-| P.4 Privacy notice (EN/UK/PL), linked from the game and README; "Reset progress" in Settings | Before sharing widely (M8) | A parent can read what's stored and delete it in the game |
+| ✅ P.1 Split the license: code MIT, art/characters/logo/story under their own terms (`ASSETS-LICENSE.md`); `package.json` license + `"private": true` | Soon: the repo is public | LICENSE, README and package.json agree on what covers what |
+| ✅ P.2 Art provenance: `art/raw/SOURCES.md` with each image's source (drawn / generator + date / our tool) and license; check the generator's terms | Soon | Every file in `art/raw/` and `assets/` has a line |
+| ◐ P.3 Clean-up decisions: the found test sprite (in no branch any more; GitHub Support purges the orphaned commit), the Smok Junior sheet's source (recorded), a contributor OK from Vadym (pending) | Soon | Each is decided and noted in decisions.md |
+| ✅ P.4 Privacy notice (EN/UK/PL, `privacy.html`), linked from the game and README; "Reset progress" in Settings | Before sharing widely (M8) | A parent can read what's stored and delete it in the game |
 | P.5 Store readiness, if we go beyond GitHub Pages: privacy policy URL, age rating (IARC), kids-section rules | With M8, only for stores | Store forms answered from the notice |
 
 ### M8 — Release 1.0

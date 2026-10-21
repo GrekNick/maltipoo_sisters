@@ -15,7 +15,10 @@ villains). It's a browser game deployed to GitHub Pages.
   Never commit found reference images.
 - Privacy and licensing: [docs/privacy-and-licensing.md](docs/privacy-and-licensing.md). The game collects **no personal
   data**: no analytics, ads, accounts, names, chat, servers or files from other sites without updating that doc
-  first. Every new `localStorage` key and every art file's source goes in it (or `art/raw/SOURCES.md`).
+  first. Every new `localStorage` key goes in it **and** in the player-facing notice `privacy.html` (EN/UK/PL); every
+  art file's source goes in `art/raw/SOURCES.md`. Code is MIT, the art/characters/story are all rights reserved
+  (`ASSETS-LICENSE.md`). Fonts: system fonts by name only (`FONT_FAMILY`); a bundled font must be OFL/CC0 and
+  self-hosted, never from the Google Fonts servers.
 - Why things are the way they are: [docs/decisions.md](docs/decisions.md). Read it before proposing
   architecture changes, and add an entry when you make a hard-to-reverse choice.
 - `microservices_game_architecture.md` is an early brainstorm and **not** the plan. Don't build toward it.
@@ -53,6 +56,7 @@ src/scenes/            Preload → Title ⇄ Settings; Title → Map → Game (+
   MapScene.ts          the level map: places of the route, the sisters walking between them, start a level
   art.ts               placeholder textures, character animations, backdrop, ground strips
 src/ui/Menu.ts         buttons with mouse, touch and keyboard (↑/↓, Enter/Space) support
+src/ui/TouchControls.ts  on-screen ◀ ▶ jump duck buttons (multi-touch); rules in src/input/touch.ts, device in device.ts
 src/persistence.ts     settings (incl. language) + progress in localStorage (versioned, never throws)
 src/progress.ts        pure progress rules: per-level best time/treats, unlocking in order, where Continue goes
 src/i18n/              t(), language detection; locales/{en,uk,pl}.json hold every player-facing string
@@ -141,6 +145,9 @@ Unit tests don't cover rendering, so also play-test:
   between steps when checking tweens.
 - The game **pauses itself when the page is hidden** (pause menu on top). Press Esc or call
   `game.scene.getScene('Pause')` → Resume before stepping further.
+- **Touch:** Phaser only listens to touch events if the device has a touchscreen at startup, so emulate a phone
+  (a viewport narrower than 768px emulates touch) and reload. Synthetic `Touch` objects need `pageX`/`pageY` (Phaser
+  reads those), not only `clientX`/`clientY`. Settings → On-screen controls: On shows the buttons with a mouse.
 - The Arcade debug view toggles with **H** in game (saved, like the Settings switch).
 - To check on-screen steadiness, record `Math.round(player.x - player.displayOriginX - camera.scrollX)` every frame
   while running: it should not change once the camera is scrolling.
